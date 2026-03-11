@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Search, ShoppingCart, ChevronDown } from 'lucide-react'
 
 
-const Header = () => {
+ Header = () => {
   return (
     <div>
       <div className="w-full h-[0.5cm] bg-[#4B187C]" />

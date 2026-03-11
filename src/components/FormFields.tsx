@@ -3,11 +3,10 @@ import { AlertCircle, CheckCircle } from 'lucide-react';
 
 // Input field with validation
 export const FormInput = ({
-  label,
-  name,
+  name= '', 
   type = 'text',
-  placeholder,
-  value,
+  placeholder= '',
+  value='',
   onChange,
   error,
   required = false,

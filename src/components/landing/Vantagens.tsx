@@ -14,7 +14,7 @@ const Vantagens = () => {
             icon: <Box className="w-8 h-8 text-gray-400" />
 
         },
-        {
+        {  
             titulo:'Comunidade Confiável',
             descricao:'Só Estudantes verificados. Sem burlas, sem esquemas.',
             icon: <Users className="w-8 h-8 text-gray-400" />
