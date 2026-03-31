@@ -1,7 +1,6 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
 import { Search, ShoppingCart, ChevronDown } from 'lucide-react'
-
+import Link from 'next'
 
  Header = () => {
   return (
@@ -10,7 +9,7 @@ import { Search, ShoppingCart, ChevronDown } from 'lucide-react'
       <header className="w-full bg-white border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex flex-row items-center justify-between gap-4 text-gray-900">
           {/* logo + text */}
-          <Link to="/home" className="flex items-center gap-2 min-w-fit">
+          <Link href="/home" className="flex items-center gap-2 min-w-fit">
             
             <span className="font-bold text-2xl text-[#4B187C]">marketU</span>
           </Link>

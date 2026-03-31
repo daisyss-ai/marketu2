@@ -6,7 +6,7 @@ const Vantagens = () => {
         {
            titulo:'Preços',
            descricao:'Compra itens usados a preços acessíveis.',
-            icon: < DollarSign className="w-8 h-8 text-gray-400" />
+           icon: < DollarSign className="w-8 h-8 text-gray-400" />
         },
         {
             titulo:'Entrega Rápida',
