@@ -69,7 +69,7 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
   };
 
   return (
-    <div className="flex bg-white rounded-2xl overflow-hidden shadow-xl w-full max-w-4xl min-h-[500px]">
+    <div className="flex bg-surface rounded-2xl overflow-hidden shadow-xl w-full max-w-4xl min-h-[500px]">
       {/* Left Side - Light Gray */}
       <div className="hidden md:flex md:w-1/2 bg-background items-center justify-center relative">
         <div className="text-center p-8">
@@ -82,8 +82,8 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
       {/* Right Side - Primary Action Color */}
       <div className="w-full md:w-1/2 bg-primary flex items-center justify-center px-8 py-12">
         <div className="w-full">
-          <h1 className="text-3xl font-bold text-white mb-2">Entrar</h1>
-          <p className="text-purple-100 mb-8 text-sm">Acede à tua conta Marketu</p>
+          <h1 className="text-3xl font-bold text-primary-foreground mb-2">Entrar</h1>
+          <p className="text-primary-foreground/80 mb-8 text-sm">Acede à tua conta Marketu</p>
 
           {success && (
             <div className="mb-4 p-3 bg-green-100 text-green-700 rounded text-sm">
@@ -112,8 +112,8 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
                 }}
                 className={`w-full px-4 py-3 rounded-xl border-0 focus:outline-none focus:ring-4 transition-all text-sm ${
                   errors.studentId
-                    ? 'bg-red-50 text-error focus:ring-red-400/50'
-                    : 'bg-white text-foreground focus:ring-white/40'
+                    ? 'bg-error/5 text-error focus:ring-error/30'
+                    : 'bg-surface text-foreground focus:ring-primary/40'
                 }`}
                 placeholder="2034xx-xxx ou 9xx..."
                 aria-invalid={!!errors.studentId}
@@ -138,8 +138,8 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
                   }}
                   className={`w-full px-4 py-3 pr-12 rounded-xl border-0 focus:outline-none focus:ring-4 transition-all text-sm ${
                     errors.password
-                      ? 'bg-red-50 text-error focus:ring-red-400/50'
-                      : 'bg-white text-foreground focus:ring-white/40'
+                      ? 'bg-error/5 text-error focus:ring-error/30'
+                      : 'bg-surface text-foreground focus:ring-primary/40'
                   }`}
                   placeholder="Min. 6 caracteres"
                   aria-invalid={!!errors.password}
@@ -177,18 +177,18 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-primary font-bold py-3.5 rounded-xl hover:bg-gray-50 disabled:bg-white/50 disabled:text-primary/50 transition-all text-sm mt-4 shadow-lg active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-white/40"
+              className="w-full bg-surface text-primary font-bold py-3.5 rounded-xl hover:bg-background disabled:opacity-50 transition-all text-sm mt-4 shadow-lg active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-primary/40"
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-purple-100 text-xs">
+            <p className="text-primary-foreground/80 text-xs">
               Ainda não tens conta?{' '}
               <button 
                 onClick={handleSwitch}
-                className="text-white hover:underline font-bold"
+                className="text-primary-foreground hover:underline font-bold"
               >
                 Criar agora
               </button>

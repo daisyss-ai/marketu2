@@ -30,15 +30,16 @@ export async function updateSession(request: NextRequest) {
   // IMPORTANT: Avoid writing any logic between createServerClient and
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
-  
+
+  /*
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   // Definição de rotas protegidas (por exemplo /home, /profile, /sell, etc)
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/home') ||
-                           request.nextUrl.pathname.startsWith('/profile') ||
-                           request.nextUrl.pathname.startsWith('/sell');
+    request.nextUrl.pathname.startsWith('/profile') ||
+    request.nextUrl.pathname.startsWith('/sell');
 
   if (isProtectedRoute && !user) {
     // Redireciona para o login se não houver um utilizador logado e for tentar aceder a uma destas rotas.
@@ -56,4 +57,5 @@ export async function updateSession(request: NextRequest) {
   }
 
   return supabaseResponse;
+  */
 }

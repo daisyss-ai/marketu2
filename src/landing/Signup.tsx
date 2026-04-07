@@ -255,7 +255,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
   };
 
   return (
-    <div className="flex bg-white rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl min-h-[600px] border border-muted/10">
+    <div className="flex bg-surface rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl min-h-[600px] border border-muted/10">
       <div className="hidden md:flex md:w-1/2 bg-primary items-center justify-center p-12 text-white relative">
         <div className="relative z-10 text-center">
           <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
@@ -266,7 +266,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
         </div>
         {/* Decorative elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
-          <div className="absolute -top-24 -left-24 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute -top-24 -left-24 w-64 h-64 bg-surface rounded-full blur-3xl"></div>
           <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-primary-foreground rounded-full blur-3xl"></div>
         </div>
       </div>
