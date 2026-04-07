@@ -1,0 +1,324 @@
+﻿src/components/FilterBar.tsx(5,27): error TS7031: Binding element 'label' implicitly has an 'any' type.
+src/components/FilterBar.tsx(5,34): error TS7031: Binding element 'options' implicitly has an 'any' type.
+src/components/FilterBar.tsx(5,43): error TS7031: Binding element 'value' implicitly has an 'any' type.
+src/components/FilterBar.tsx(5,50): error TS7031: Binding element 'onChange' implicitly has an 'any' type.
+src/components/FilterBar.tsx(5,66): error TS7031: Binding element 'Icon' implicitly has an 'any' type.
+src/components/FilterBar.tsx(11,33): error TS7006: Parameter 'event' implicitly has an 'any' type.
+src/components/FilterBar.tsx(12,55): error TS2339: Property 'contains' does not exist on type 'never'.
+src/components/FilterBar.tsx(21,25): error TS7006: Parameter 'optionValue' implicitly has an 'any' type.
+src/components/FilterBar.tsx(27,21): error TS7006: Parameter 'opt' implicitly has an 'any' type.
+src/components/FilterBar.tsx(60,25): error TS7006: Parameter 'option' implicitly has an 'any' type.
+src/components/FilterBar.tsx(79,31): error TS7031: Binding element 'value' implicitly has an 'any' type.
+src/components/FilterBar.tsx(79,38): error TS7031: Binding element 'onChange' implicitly has an 'any' type.
+src/components/FilterBar.tsx(84,33): error TS7006: Parameter 'event' implicitly has an 'any' type.
+src/components/FilterBar.tsx(85,55): error TS2339: Property 'contains' does not exist on type 'never'.
+src/components/FilterBar.tsx(101,25): error TS7006: Parameter 'min' implicitly has an 'any' type.
+src/components/FilterBar.tsx(101,30): error TS7006: Parameter 'max' implicitly has an 'any' type.
+src/components/FilterBar.tsx(162,3): error TS7031: Binding element 'filters' implicitly has an 'any' type.
+src/components/FilterBar.tsx(163,3): error TS7031: Binding element 'onFilterChange' implicitly has an 'any' type.
+src/components/FilterBar.tsx(164,3): error TS7031: Binding element 'onPriceChange' implicitly has an 'any' type.
+src/components/FilterBar.tsx(165,3): error TS7031: Binding element 'onSortChange' implicitly has an 'any' type.
+src/components/FilterBar.tsx(166,3): error TS7031: Binding element 'onClearAll' implicitly has an 'any' type.
+src/components/FilterBar.tsx(167,3): error TS7031: Binding element 'sorting' implicitly has an 'any' type.
+src/components/FilterBar.tsx(168,3): error TS7031: Binding element 'hasActiveFilters' implicitly has an 'any' type.
+src/components/FilterBar.tsx(169,3): error TS7031: Binding element 'activeFilterCount' implicitly has an 'any' type.
+src/components/FilterBar.tsx(205,14): error TS2741: Property 'icon' is missing in type '{ label: string; options: { label: string; value: string; }[]; value: any; onChange: (value: any) => any; }' but required in type '{ label: any; options: any; value: any; onChange: any; icon: any; }'.
+src/components/FilterBar.tsx(209,26): error TS7006: Parameter 'value' implicitly has an 'any' type.
+src/components/FilterBar.tsx(217,14): error TS2741: Property 'icon' is missing in type '{ label: string; options: { label: string; value: string; }[]; value: any; onChange: (value: any) => any; }' but required in type '{ label: any; options: any; value: any; onChange: any; icon: any; }'.
+src/components/FilterBar.tsx(221,26): error TS7006: Parameter 'value' implicitly has an 'any' type.
+src/components/FilterBar.tsx(224,14): error TS2741: Property 'icon' is missing in type '{ label: string; options: { label: string; value: number; }[]; value: any; onChange: (value: any) => any; }' but required in type '{ label: any; options: any; value: any; onChange: any; icon: any; }'.
+src/components/FilterBar.tsx(228,26): error TS7006: Parameter 'value' implicitly has an 'any' type.
+src/components/FormFields.tsx(7,3): error TS7031: Binding element 'label' implicitly has an 'any' type.
+src/components/FormFields.tsx(8,3): error TS7031: Binding element 'name' implicitly has an 'any' type.
+src/components/FormFields.tsx(10,3): error TS7031: Binding element 'placeholder' implicitly has an 'any' type.
+src/components/FormFields.tsx(11,3): error TS7031: Binding element 'value' implicitly has an 'any' type.
+src/components/FormFields.tsx(12,3): error TS7031: Binding element 'onChange' implicitly has an 'any' type.
+src/components/FormFields.tsx(13,3): error TS7031: Binding element 'error' implicitly has an 'any' type.
+src/components/FormFields.tsx(16,3): error TS7031: Binding element 'maxLength' implicitly has an 'any' type.
+src/components/FormFields.tsx(17,3): error TS7031: Binding element 'hint' implicitly has an 'any' type.
+src/components/FormFields.tsx(59,3): error TS7031: Binding element 'label' implicitly has an 'any' type.
+src/components/FormFields.tsx(60,3): error TS7031: Binding element 'name' implicitly has an 'any' type.
+src/components/FormFields.tsx(61,3): error TS7031: Binding element 'placeholder' implicitly has an 'any' type.
+src/components/FormFields.tsx(62,3): error TS7031: Binding element 'value' implicitly has an 'any' type.
+src/components/FormFields.tsx(63,3): error TS7031: Binding element 'onChange' implicitly has an 'any' type.
+src/components/FormFields.tsx(64,3): error TS7031: Binding element 'error' implicitly has an 'any' type.
+src/components/FormFields.tsx(67,3): error TS7031: Binding element 'maxLength' implicitly has an 'any' type.
+src/components/FormFields.tsx(69,3): error TS7031: Binding element 'hint' implicitly has an 'any' type.
+src/components/FormFields.tsx(110,3): error TS7031: Binding element 'label' implicitly has an 'any' type.
+src/components/FormFields.tsx(111,3): error TS7031: Binding element 'name' implicitly has an 'any' type.
+src/components/FormFields.tsx(112,3): error TS7031: Binding element 'value' implicitly has an 'any' type.
+src/components/FormFields.tsx(113,3): error TS7031: Binding element 'onChange' implicitly has an 'any' type.
+src/components/FormFields.tsx(114,3): error TS7031: Binding element 'options' implicitly has an 'any' type.
+src/components/FormFields.tsx(115,3): error TS7031: Binding element 'error' implicitly has an 'any' type.
+src/components/FormFields.tsx(118,3): error TS7031: Binding element 'placeholder' implicitly has an 'any' type.
+src/components/FormFields.tsx(142,24): error TS7006: Parameter 'option' implicitly has an 'any' type.
+src/components/FormFields.tsx(154,45): error TS7031: Binding element 'message' implicitly has an 'any' type.
+src/components/FormFields.tsx(154,54): error TS7031: Binding element 'onClose' implicitly has an 'any' type.
+src/components/FormFields.tsx(170,85): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ error: string; success: string; warning: string; info: string; }'.
+  No index signature with a parameter of type 'string' was found on type '{ error: string; success: string; warning: string; info: string; }'.
+src/components/FormFields.tsx(172,10): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ error: Element; success: Element; warning: Element; info: Element; }'.
+  No index signature with a parameter of type 'string' was found on type '{ error: Element; success: Element; warning: Element; info: Element; }'.
+src/components/FormFields.tsx(194,26): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ sm: string; md: string; lg: string; }'.
+  No index signature with a parameter of type 'string' was found on type '{ sm: string; md: string; lg: string; }'.
+src/components/FormFields.tsx(202,3): error TS7031: Binding element 'label' implicitly has an 'any' type.
+src/components/FormFields.tsx(203,3): error TS7031: Binding element 'onFilesSelected' implicitly has an 'any' type.
+src/components/FormFields.tsx(204,3): error TS7031: Binding element 'error' implicitly has an 'any' type.
+src/components/FormFields.tsx(214,29): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/FormFields.tsx(223,14): error TS2345: Argument of type 'unknown[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type 'unknown[]' is not assignable to type 'never[]'.
+    Type 'unknown' is not assignable to type 'never'.
+src/components/FormFields.tsx(226,75): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Blob | MediaSource'.
+src/components/FormFields.tsx(227,19): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type 'string[]' is not assignable to type 'never[]'.
+    Type 'string' is not assignable to type 'never'.
+src/components/FormFields.tsx(233,23): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/components/FormFields.tsx(241,28): error TS2339: Property 'value' does not exist on type 'never'.
+src/components/FormFields.tsx(245,27): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/FormFields.tsx(250,28): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/FormFields.tsx(254,23): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/FormFields.tsx(261,61): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'File'.
+src/components/FormFields.tsx(262,13): error TS2339: Property 'files' does not exist on type 'never'.
+src/components/FormFields.tsx(296,48): error TS2339: Property 'click' does not exist on type 'never'.
+src/components/layout/Header.tsx(5,18): error TS2307: Cannot find module '../../assets/marketu-logo.png' or its corresponding type declarations.
+src/components/layout/Header.tsx(43,15): error TS2322: Type '{ children: string; to: string; className: string; }' is not assignable to type 'IntrinsicAttributes & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps<any>> & LinkProps<...> & { ...; } & RefAttributes<...>'.
+  Property 'to' does not exist on type 'IntrinsicAttributes & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps<any>> & LinkProps<...> & { ...; } & RefAttributes<...>'.
+src/components/layout/Navbar.tsx(3,36): error TS2307: Cannot find module 'react-scroll' or its corresponding type declarations.
+src/components/layout/Navbar.tsx(4,31): error TS2307: Cannot find module 'react-icons/ai' or its corresponding type declarations.
+src/components/layout/Navbar.tsx(17,30): error TS2304: Cannot find name 'RouterLink'.
+src/components/layout/Navbar.tsx(17,111): error TS2304: Cannot find name 'RouterLink'.
+src/components/layout/Navbar.tsx(24,22): error TS2304: Cannot find name 'RouterLink'.
+src/components/layout/Navbar.tsx(24,87): error TS2304: Cannot find name 'RouterLink'.
+src/components/layout/Navbar.tsx(25,22): error TS2304: Cannot find name 'RouterLink'.
+src/components/layout/Navbar.tsx(25,133): error TS2304: Cannot find name 'RouterLink'.
+src/components/layout/Navbar.tsx(45,22): error TS2304: Cannot find name 'RouterLink'.
+src/components/layout/Navbar.tsx(45,107): error TS2304: Cannot find name 'RouterLink'.
+src/components/layout/Navbar.tsx(46,22): error TS2304: Cannot find name 'RouterLink'.
+src/components/layout/Navbar.tsx(46,158): error TS2304: Cannot find name 'RouterLink'.
+src/components/produtos/ProductCard.tsx(5,24): error TS7031: Binding element 'product' implicitly has an 'any' type.
+src/components/produtos/ProductCard.tsx(5,33): error TS7031: Binding element 'onToggleFavorite' implicitly has an 'any' type.
+src/components/produtos/ProductCard.tsx(5,51): error TS7031: Binding element 'isFavorited' implicitly has an 'any' type.
+src/components/produtos/ProductCard.tsx(9,32): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/produtos/ProductGrid.tsx(16,3): error TS7031: Binding element 'products' implicitly has an 'any' type.
+src/components/produtos/ProductGrid.tsx(17,3): error TS7031: Binding element 'loading' implicitly has an 'any' type.
+src/components/produtos/ProductGrid.tsx(18,3): error TS7031: Binding element 'error' implicitly has an 'any' type.
+src/components/produtos/ProductGrid.tsx(19,3): error TS7031: Binding element 'totalProducts' implicitly has an 'any' type.
+src/components/produtos/ProductGrid.tsx(20,3): error TS7031: Binding element 'page' implicitly has an 'any' type.
+src/components/produtos/ProductGrid.tsx(21,3): error TS7031: Binding element 'totalPages' implicitly has an 'any' type.
+src/components/produtos/ProductGrid.tsx(22,3): error TS7031: Binding element 'onPageChange' implicitly has an 'any' type.
+src/components/produtos/ProductGrid.tsx(23,3): error TS7031: Binding element 'onToggleFavorite' implicitly has an 'any' type.
+src/components/produtos/ProductGrid.tsx(24,3): error TS7031: Binding element 'favorites' implicitly has an 'any' type.
+src/components/produtos/ProductGrid.tsx(77,24): error TS7006: Parameter 'product' implicitly has an 'any' type.
+src/components/RequireAuth.tsx(5,24): error TS7031: Binding element 'children' implicitly has an 'any' type.
+src/components/RequireAuth.tsx(9,13): error TS2304: Cannot find name 'Navigate'.
+src/home/Home.tsx(10,21): error TS2307: Cannot find module '../assets/hero-section-image.png' or its corresponding type declarations.
+src/home/Home.tsx(65,42): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/home/Profile.tsx(39,38): error TS7006: Parameter 'productId' implicitly has an 'any' type.
+src/home/Profile.tsx(42,25): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type '(prevState: null) => null'.
+src/home/Profile.tsx(48,9): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type '(prevState: null) => null'.
+src/home/Profile.tsx(49,15): error TS18046: 'error' is of type 'unknown'.
+src/home/Profile.tsx(73,28): error TS2339: Property 'stats' does not exist on type 'never'.
+src/home/Profile.tsx(96,30): error TS2339: Property 'stats' does not exist on type 'never'.
+src/home/Profile.tsx(130,29): error TS2339: Property 'stats' does not exist on type 'never'.
+src/home/Profile.tsx(135,29): error TS2339: Property 'stats' does not exist on type 'never'.
+src/home/Profile.tsx(146,29): error TS2339: Property 'stats' does not exist on type 'never'.
+src/home/Profile.tsx(156,32): error TS2339: Property 'type' does not exist on type 'never'.
+src/home/Profile.tsx(157,35): error TS2339: Property 'text' does not exist on type 'never'.
+src/home/Profile.tsx(191,34): error TS2339: Property 'id' does not exist on type 'never'.
+src/home/Profile.tsx(193,32): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/home/Profile.tsx(194,30): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/home/Profile.tsx(194,37): error TS2349: This expression is not callable.
+  Type 'AppRouterInstance' has no call signatures.
+src/home/Profile.tsx(272,21): error TS7031: Binding element 'icon' implicitly has an 'any' type.
+src/home/Profile.tsx(272,27): error TS7031: Binding element 'label' implicitly has an 'any' type.
+src/home/Profile.tsx(272,34): error TS7031: Binding element 'value' implicitly has an 'any' type.
+src/home/Profile.tsx(283,24): error TS7031: Binding element 'product' implicitly has an 'any' type.
+src/home/Profile.tsx(283,33): error TS7031: Binding element 'onDelete' implicitly has an 'any' type.
+src/home/Profile.tsx(283,43): error TS7031: Binding element 'onEdit' implicitly has an 'any' type.
+src/home/Profile.tsx(328,22): error TS7031: Binding element 'active' implicitly has an 'any' type.
+src/home/Profile.tsx(328,30): error TS7031: Binding element 'onClick' implicitly has an 'any' type.
+src/home/Profile.tsx(328,39): error TS7031: Binding element 'children' implicitly has an 'any' type.
+src/home/Profile.tsx(342,23): error TS7031: Binding element 'icon' implicitly has an 'any' type.
+src/home/Profile.tsx(342,29): error TS7031: Binding element 'title' implicitly has an 'any' type.
+src/home/Profile.tsx(342,36): error TS7031: Binding element 'description' implicitly has an 'any' type.
+src/home/Profile.tsx(342,49): error TS7031: Binding element 'onClick' implicitly has an 'any' type.
+src/home/Profile.tsx(354,23): error TS7031: Binding element 'title' implicitly has an 'any' type.
+src/home/Profile.tsx(354,30): error TS7031: Binding element 'description' implicitly has an 'any' type.
+src/home/Profile.tsx(354,43): error TS7031: Binding element 'onAction' implicitly has an 'any' type.
+src/home/Profile.tsx(354,53): error TS7031: Binding element 'actionText' implicitly has an 'any' type.
+src/home/Recommendations.tsx(55,14): error TS2740: Type '{ products: { id: number; title: string; category: string; price: string; seller: string; img: string; statusColor: string; }[]; }' is missing the following properties from type '{ products: any; loading: any; error: any; totalProducts: any; page: any; totalPages: any; onPageChange: any; onToggleFavorite: any; favorites: any; }': loading, error, totalProducts, page, and 4 more.
+src/home/Sell.tsx(79,30): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/home/Sell.tsx(86,9): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{}'.
+src/home/Sell.tsx(94,38): error TS7006: Parameter 'files' implicitly has an 'any' type.
+src/home/Sell.tsx(97,29): error TS7006: Parameter 'file' implicitly has an 'any' type.
+src/home/Sell.tsx(108,14): error TS2339: Property 'title' does not exist on type '{}'.
+src/home/Sell.tsx(110,14): error TS2339: Property 'title' does not exist on type '{}'.
+src/home/Sell.tsx(114,14): error TS2339: Property 'description' does not exist on type '{}'.
+src/home/Sell.tsx(116,14): error TS2339: Property 'description' does not exist on type '{}'.
+src/home/Sell.tsx(118,14): error TS2339: Property 'description' does not exist on type '{}'.
+src/home/Sell.tsx(122,14): error TS2339: Property 'category' does not exist on type '{}'.
+src/home/Sell.tsx(126,14): error TS2339: Property 'condition' does not exist on type '{}'.
+src/home/Sell.tsx(130,14): error TS2339: Property 'price' does not exist on type '{}'.
+src/home/Sell.tsx(132,14): error TS2339: Property 'price' does not exist on type '{}'.
+src/home/Sell.tsx(136,14): error TS2339: Property 'location' does not exist on type '{}'.
+src/home/Sell.tsx(140,14): error TS2339: Property 'images' does not exist on type '{}'.
+src/home/Sell.tsx(146,31): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/home/Sell.tsx(219,20): error TS2741: Property 'onClose' is missing in type '{ type: string; message: never; }' but required in type '{ type?: string | undefined; message: any; onClose: any; }'.
+src/home/Sell.tsx(235,39): error TS2339: Property 'images' does not exist on type '{}'.
+src/home/Sell.tsx(249,14): error TS2741: Property 'hint' is missing in type '{ label: string; name: string; placeholder: string; value: string; onChange: (e: any) => void; error: any; required: true; maxLength: number; }' but required in type '{ [x: string]: any; label: any; name: any; type?: string | undefined; placeholder: any; value: any; onChange: any; error: any; required?: boolean | undefined; disabled?: boolean | undefined; maxLength: any; hint: any; }'.
+src/home/Sell.tsx(255,39): error TS2339: Property 'title' does not exist on type '{}'.
+src/home/Sell.tsx(266,39): error TS2339: Property 'description' does not exist on type '{}'.
+src/home/Sell.tsx(280,41): error TS2339: Property 'category' does not exist on type '{}'.
+src/home/Sell.tsx(291,41): error TS2339: Property 'condition' does not exist on type '{}'.
+src/home/Sell.tsx(298,16): error TS2739: Type '{ label: string; name: string; type: string; placeholder: string; value: string; onChange: (e: any) => void; error: any; required: true; min: string; step: string; }' is missing the following properties from type '{ [x: string]: any; label: any; name: any; type?: string | undefined; placeholder: any; value: any; onChange: any; error: any; required?: boolean | undefined; disabled?: boolean | undefined; maxLength: any; hint: any; }': maxLength, hint
+src/home/Sell.tsx(305,41): error TS2339: Property 'price' does not exist on type '{}'.
+src/home/Sell.tsx(317,41): error TS2339: Property 'location' does not exist on type '{}'.
+src/hooks/useAPI.ts(7,32): error TS7006: Parameter 'userId' implicitly has an 'any' type.
+src/hooks/useAPI.ts(31,18): error TS18046: 'err' is of type 'unknown'.
+src/hooks/useAPI.ts(45,33): error TS7006: Parameter 'userId' implicitly has an 'any' type.
+src/hooks/useAPI.ts(62,18): error TS18046: 'err' is of type 'unknown'.
+src/hooks/useAPI.ts(81,44): error TS7006: Parameter 'productData' implicitly has an 'any' type.
+src/hooks/useAPI.ts(91,28): error TS18046: 'err' is of type 'unknown'.
+src/hooks/useAPI.ts(132,18): error TS18046: 'err' is of type 'unknown'.
+src/hooks/useAPI.ts(149,44): error TS7006: Parameter 'productId' implicitly has an 'any' type.
+src/hooks/useAPI.ts(156,28): error TS18046: 'err' is of type 'unknown'.
+src/hooks/useAPI.ts(172,43): error TS7006: Parameter 'files' implicitly has an 'any' type.
+src/hooks/useAPI.ts(179,77): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Blob | MediaSource'.
+src/hooks/useAPI.ts(183,28): error TS18046: 'err' is of type 'unknown'.
+src/hooks/useFilters.ts(6,43): error TS2552: Cannot find name 'useSearchParams'. Did you mean 'setSearchParams'?
+src/hooks/useFilters.ts(31,34): error TS7006: Parameter 'newFilters' implicitly has an 'any' type.
+src/hooks/useFilters.ts(31,46): error TS7006: Parameter 'newSort' implicitly has an 'any' type.
+src/hooks/useFilters.ts(31,55): error TS7006: Parameter 'newPage' implicitly has an 'any' type.
+src/hooks/useFilters.ts(47,44): error TS7006: Parameter 'filterParams' implicitly has an 'any' type.
+src/hooks/useFilters.ts(47,58): error TS7006: Parameter 'sortParam' implicitly has an 'any' type.
+src/hooks/useFilters.ts(47,69): error TS7006: Parameter 'pageParam' implicitly has an 'any' type.
+src/hooks/useFilters.ts(58,46): error TS2339: Property 'condition' does not exist on type '{ page: any; limit: number; sort: any; }'.
+src/hooks/useFilters.ts(59,45): error TS2339: Property 'category' does not exist on type '{ page: any; limit: number; sort: any; }'.
+src/hooks/useFilters.ts(60,74): error TS2339: Property 'minPrice' does not exist on type '{ page: any; limit: number; sort: any; }'.
+src/hooks/useFilters.ts(61,83): error TS2339: Property 'maxPrice' does not exist on type '{ page: any; limit: number; sort: any; }'.
+src/hooks/useFilters.ts(62,47): error TS2339: Property 'search' does not exist on type '{ page: any; limit: number; sort: any; }'.
+src/hooks/useFilters.ts(71,16): error TS2345: Argument of type '"Erro ao carregar produtos. Tente novamente."' is not assignable to parameter of type 'SetStateAction<null>'.
+src/hooks/useFilters.ts(85,43): error TS7006: Parameter 'filterType' implicitly has an 'any' type.
+src/hooks/useFilters.ts(85,55): error TS7006: Parameter 'value' implicitly has an 'any' type.
+src/hooks/useFilters.ts(94,42): error TS7006: Parameter 'min' implicitly has an 'any' type.
+src/hooks/useFilters.ts(94,47): error TS7006: Parameter 'max' implicitly has an 'any' type.
+src/hooks/useFilters.ts(104,41): error TS7006: Parameter 'newSort' implicitly has an 'any' type.
+src/hooks/useFilters.ts(110,41): error TS7006: Parameter 'newPage' implicitly has an 'any' type.
+src/hooks/useFilters.ts(131,42): error TS7006: Parameter 'filterType' implicitly has an 'any' type.
+src/hooks/useFilters.ts(140,45): error TS7006: Parameter 'productId' implicitly has an 'any' type.
+src/hooks/useFilters.ts(141,19): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/hooks/useFilters.ts(143,24): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/landing/AuthFlip.tsx(34,18): error TS2322: Type '{ onFlipToSignup: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'onFlipToSignup' does not exist on type 'IntrinsicAttributes'.
+src/landing/AuthFlip.tsx(45,19): error TS2322: Type '{ onFlipToLogin: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'onFlipToLogin' does not exist on type 'IntrinsicAttributes'.
+src/landing/AuthSlide.tsx(20,20): error TS2322: Type '{ onSlideToSignup: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'onSlideToSignup' does not exist on type 'IntrinsicAttributes'.
+src/landing/AuthSlide.tsx(23,21): error TS2322: Type '{ onSlideToLogin: () => void; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'onSlideToLogin' does not exist on type 'IntrinsicAttributes'.
+src/landing/Login.tsx(22,17): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Login.tsx(24,17): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Login.tsx(29,17): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Login.tsx(31,17): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Login.tsx(37,31): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/landing/Login.tsx(55,18): error TS2345: Argument of type '{ id: string; }' is not assignable to parameter of type 'User'.
+  Property 'email' is missing in type '{ id: string; }' but required in type 'User'.
+src/landing/Login.tsx(97,19): error TS2339: Property 'submit' does not exist on type '{}'.
+src/landing/Login.tsx(99,23): error TS2339: Property 'submit' does not exist on type '{}'.
+src/landing/Login.tsx(115,30): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Login.tsx(118,26): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Login.tsx(124,23): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Login.tsx(125,66): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Login.tsx(140,32): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Login.tsx(143,28): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Login.tsx(167,23): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Login.tsx(168,66): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Recover.tsx(30,25): error TS7006: Parameter 'stepNumber' implicitly has an 'any' type.
+src/landing/Recover.tsx(36,21): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Recover.tsx(38,21): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Recover.tsx(42,21): error TS2339: Property 'email' does not exist on type '{}'.
+src/landing/Recover.tsx(44,21): error TS2339: Property 'email' does not exist on type '{}'.
+src/landing/Recover.tsx(50,19): error TS2339: Property 'smsCode' does not exist on type '{}'.
+src/landing/Recover.tsx(52,19): error TS2339: Property 'smsCode' does not exist on type '{}'.
+src/landing/Recover.tsx(56,19): error TS2339: Property 'newPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(58,19): error TS2339: Property 'newPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(60,19): error TS2339: Property 'newPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(64,19): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(66,19): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(127,32): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/landing/Recover.tsx(127,39): error TS7006: Parameter 'value' implicitly has an 'any' type.
+src/landing/Recover.tsx(190,31): error TS2345: Argument of type '"phone"' is not assignable to parameter of type 'SetStateAction<null>'.
+src/landing/Recover.tsx(201,31): error TS2345: Argument of type '"email"' is not assignable to parameter of type 'SetStateAction<null>'.
+src/landing/Recover.tsx(229,26): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Recover.tsx(232,22): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Recover.tsx(239,19): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Recover.tsx(240,62): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Recover.tsx(253,26): error TS2339: Property 'email' does not exist on type '{}'.
+src/landing/Recover.tsx(256,22): error TS2339: Property 'email' does not exist on type '{}'.
+src/landing/Recover.tsx(263,19): error TS2339: Property 'email' does not exist on type '{}'.
+src/landing/Recover.tsx(264,62): error TS2339: Property 'email' does not exist on type '{}'.
+src/landing/Recover.tsx(313,19): error TS2322: Type 'string' is not assignable to type 'number'.
+src/landing/Recover.tsx(348,21): error TS2339: Property 'smsCode' does not exist on type '{}'.
+src/landing/Recover.tsx(349,76): error TS2339: Property 'smsCode' does not exist on type '{}'.
+src/landing/Recover.tsx(382,26): error TS2339: Property 'newPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(385,22): error TS2339: Property 'newPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(409,17): error TS2339: Property 'newPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(410,60): error TS2339: Property 'newPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(424,26): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(427,22): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(454,17): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Recover.tsx(455,60): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Signup.tsx(46,25): error TS7006: Parameter 'stepNumber' implicitly has an 'any' type.
+src/landing/Signup.tsx(51,19): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Signup.tsx(53,19): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Signup.tsx(57,19): error TS2339: Property 'fullName' does not exist on type '{}'.
+src/landing/Signup.tsx(59,19): error TS2339: Property 'fullName' does not exist on type '{}'.
+src/landing/Signup.tsx(63,19): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Signup.tsx(65,19): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Signup.tsx(70,19): error TS2339: Property 'smsCode' does not exist on type '{}'.
+src/landing/Signup.tsx(72,19): error TS2339: Property 'smsCode' does not exist on type '{}'.
+src/landing/Signup.tsx(76,19): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Signup.tsx(78,19): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Signup.tsx(80,19): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Signup.tsx(84,19): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Signup.tsx(86,19): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Signup.tsx(143,32): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/landing/Signup.tsx(143,39): error TS7006: Parameter 'value' implicitly has an 'any' type.
+src/landing/Signup.tsx(200,38): error TS7006: Parameter 'pwd' implicitly has an 'any' type.
+src/landing/Signup.tsx(234,24): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Signup.tsx(237,20): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Signup.tsx(244,17): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Signup.tsx(245,60): error TS2339: Property 'studentId' does not exist on type '{}'.
+src/landing/Signup.tsx(258,24): error TS2339: Property 'fullName' does not exist on type '{}'.
+src/landing/Signup.tsx(261,20): error TS2339: Property 'fullName' does not exist on type '{}'.
+src/landing/Signup.tsx(268,17): error TS2339: Property 'fullName' does not exist on type '{}'.
+src/landing/Signup.tsx(269,60): error TS2339: Property 'fullName' does not exist on type '{}'.
+src/landing/Signup.tsx(324,15): error TS2339: Property 'submit' does not exist on type '{}'.
+src/landing/Signup.tsx(326,19): error TS2339: Property 'submit' does not exist on type '{}'.
+src/landing/Signup.tsx(363,24): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Signup.tsx(366,20): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Signup.tsx(373,17): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Signup.tsx(374,60): error TS2339: Property 'phone' does not exist on type '{}'.
+src/landing/Signup.tsx(422,19): error TS2322: Type 'string' is not assignable to type 'number'.
+src/landing/Signup.tsx(457,21): error TS2339: Property 'smsCode' does not exist on type '{}'.
+src/landing/Signup.tsx(458,76): error TS2339: Property 'smsCode' does not exist on type '{}'.
+src/landing/Signup.tsx(493,26): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Signup.tsx(496,22): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Signup.tsx(536,17): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Signup.tsx(537,60): error TS2339: Property 'password' does not exist on type '{}'.
+src/landing/Signup.tsx(551,26): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Signup.tsx(554,22): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Signup.tsx(581,17): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Signup.tsx(582,60): error TS2339: Property 'confirmPassword' does not exist on type '{}'.
+src/landing/Signup.tsx(622,15): error TS2339: Property 'submit' does not exist on type '{}'.
+src/landing/Signup.tsx(624,19): error TS2339: Property 'submit' does not exist on type '{}'.
+src/middleware.ts(2,31): error TS2307: Cannot find module '@/utils/supabase/middleware' or its corresponding type declarations.
+src/utils/filterHelpers.ts(5,29): error TS7006: Parameter 'price' implicitly has an 'any' type.
+src/utils/filterHelpers.ts(13,34): error TS7006: Parameter 'price' implicitly has an 'any' type.
+src/utils/filterHelpers.ts(40,34): error TS7006: Parameter 'filters' implicitly has an 'any' type.
+src/utils/filterHelpers.ts(40,43): error TS7006: Parameter 'sorting' implicitly has an 'any' type.
+src/utils/filterHelpers.ts(40,52): error TS7006: Parameter 'page' implicitly has an 'any' type.
+src/utils/filterHelpers.ts(55,39): error TS7006: Parameter 'filters' implicitly has an 'any' type.
+src/utils/filterHelpers.ts(65,36): error TS7006: Parameter 'filters' implicitly has an 'any' type.
+src/utils/filterHelpers.ts(76,32): error TS7006: Parameter 'stock' implicitly has an 'any' type.
+src/utils/supabase/utils.ts(15,30): error TS2339: Property 'getAll' does not exist on type 'Promise<ReadonlyRequestCookies>'.
+src/utils/supabase/utils.ts(19,76): error TS2339: Property 'set' does not exist on type 'Promise<ReadonlyRequestCookies>'.

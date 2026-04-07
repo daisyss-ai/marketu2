@@ -1,5 +1,19 @@
+'use client';
 import React from 'react';
 import ProductCard from './ProductCard';
+import { Product } from '../../types';
+
+interface ProductGridProps {
+  products: Product[];
+  loading?: boolean;
+  error?: string | null;
+  totalProducts?: number;
+  page?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  onToggleFavorite?: (id: string | number) => void;
+  favorites?: (string | number)[];
+}
 
 // Skeleton loader component
 const SkeletonCard = () => (
@@ -12,26 +26,24 @@ const SkeletonCard = () => (
 );
 
 const ProductGrid = ({
-  products,
-  loading,
-  error,
-  totalProducts,
-  page,
-  totalPages,
-  onPageChange,
-  onToggleFavorite,
-  favorites,
-}) => {
+  products = [],
+  loading = false,
+  error = null,
+  totalProducts = 0,
+  page = 1,
+  totalPages = 1,
+  onPageChange = () => {},
+  onToggleFavorite = () => {},
+  favorites = [],
+}: ProductGridProps) => {
   // Show loading skeletons
   if (loading && products.length === 0) {
     return (
-      <>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8 mb-8">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      </>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8 mb-8">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </div>
     );
   }
 
@@ -66,10 +78,12 @@ const ProductGrid = ({
   return (
     <div>
       {/* Product count */}
-      <div className="mb-4 text-sm text-gray-600">
-        Mostrando <span className="font-semibold">{products.length}</span> de{' '}
-        <span className="font-semibold">{totalProducts}</span> produtos
-      </div>
+      {totalProducts > 0 && (
+        <div className="mb-4 text-sm text-gray-600">
+          Mostrando <span className="font-semibold">{products.length}</span> de{' '}
+          <span className="font-semibold">{totalProducts}</span> produtos
+        </div>
+      )}
 
       {/* Product grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8 mb-8">
@@ -79,7 +93,7 @@ const ProductGrid = ({
             className="animate-fade-in"
             style={{
               animation: 'fadeIn 0.3s ease-in-out',
-            }}
+            } as React.CSSProperties}
           >
             <ProductCard
               product={product}

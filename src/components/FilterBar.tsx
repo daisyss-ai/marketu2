@@ -1,14 +1,24 @@
+'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, X, SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, X, LucideIcon } from 'lucide-react';
+import { FilterState, FilterOption } from '../types';
 
-const FilterDropdown = ({ label, options, value, onChange, icon: Icon }) => {
+interface FilterDropdownProps {
+  label: string;
+  options: FilterOption[];
+  value: any;
+  onChange: (value: any) => void;
+  icon?: LucideIcon;
+}
+
+const FilterDropdown = ({ label, options, value, onChange, icon: Icon }: FilterDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -17,7 +27,7 @@ const FilterDropdown = ({ label, options, value, onChange, icon: Icon }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelect = (optionValue) => {
+  const handleSelect = (optionValue: string | number) => {
     onChange(optionValue === 'clear' ? null : optionValue);
     setIsOpen(false);
   };
@@ -30,28 +40,32 @@ const FilterDropdown = ({ label, options, value, onChange, icon: Icon }) => {
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`bg-gray-100 hover:bg-gray-200 hover:border-gray-300 px-4 py-2 rounded-full text-xs md:text-sm flex items-center gap-2 border-2 transition-all duration-200 ${
-          value ? 'border-purple-300 bg-purple-50 text-purple-900' : 'border-gray-200 text-gray-700'
+        className={`px-4 py-2.5 rounded-full text-xs md:text-sm flex items-center gap-2 border-2 transition-all duration-200 font-medium focus:outline-none focus:ring-4 ${
+          value 
+            ? 'border-primary/30 bg-primary/10 text-primary focus:ring-primary/20' 
+            : 'bg-surface border-muted/10 text-muted hover:border-primary/30 hover:bg-muted/5 focus:ring-primary/10'
         }`}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
       >
-        {Icon && <Icon className="w-3 h-3" />}
+        {Icon && <Icon className="w-3.5 h-3.5" />}
         <span className="hidden xs:inline">
           {value ? `${label}: ${displayValue}` : label}
         </span>
         <span className="xs:hidden">{label}</span>
         <ChevronDown
-          className={`w-3 h-3 transition-transform duration-200 ${
+          className={`w-3.5 h-3.5 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-max">
+        <div className="absolute top-full left-0 mt-2 bg-surface border border-muted/10 rounded-2xl shadow-xl z-50 min-w-[200px] py-1 animate-in fade-in zoom-in-95 duration-200">
           {value && (
             <button
               onClick={() => handleSelect('clear')}
-              className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 border-b border-gray-100 font-medium"
+              className="w-full text-left px-4 py-2.5 text-xs text-error hover:bg-error/5 border-b border-muted/10 font-bold transition-colors"
             >
               Limpar Filtro
             </button>
@@ -60,10 +74,10 @@ const FilterDropdown = ({ label, options, value, onChange, icon: Icon }) => {
             <button
               key={option.value}
               onClick={() => handleSelect(option.value)}
-              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 transition-colors ${
+              className={`w-full text-left px-4 py-3 text-sm transition-colors ${
                 value === option.value
-                  ? 'bg-purple-100 text-purple-900 font-semibold'
-                  : 'text-gray-700'
+                  ? 'bg-primary/10 text-primary font-bold'
+                  : 'text-muted hover:bg-muted/5'
               }`}
             >
               {option.label}
@@ -75,13 +89,18 @@ const FilterDropdown = ({ label, options, value, onChange, icon: Icon }) => {
   );
 };
 
-const PriceRangeDropdown = ({ value, onChange }) => {
+interface PriceRangeDropdownProps {
+  value: { min: number; max: number };
+  onChange: (min: number, max: number) => void;
+}
+
+const PriceRangeDropdown = ({ value, onChange }: PriceRangeDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -97,7 +116,7 @@ const PriceRangeDropdown = ({ value, onChange }) => {
     { label: '50.000+ Kz', min: 50000, max: Infinity },
   ];
 
-  const handleSelect = (min, max) => {
+  const handleSelect = (min: number, max: number) => {
     onChange(min, max);
     setIsOpen(false);
   };
@@ -113,27 +132,30 @@ const PriceRangeDropdown = ({ value, onChange }) => {
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`bg-gray-100 hover:bg-gray-200 hover:border-gray-300 px-4 py-2 rounded-full text-xs md:text-sm flex items-center gap-2 border-2 transition-all duration-200 ${
-          isActive ? 'border-purple-300 bg-purple-50 text-purple-900' : 'border-gray-200 text-gray-700'
+        className={`px-4 py-2.5 rounded-full text-xs md:text-sm flex items-center gap-2 border-2 transition-all duration-200 font-medium focus:outline-none focus:ring-4 ${
+          isActive 
+            ? 'border-primary/30 bg-primary/10 text-primary focus:ring-primary/20' 
+            : 'bg-surface border-muted/10 text-muted hover:border-primary/30 hover:bg-muted/5 focus:ring-primary/10'
         }`}
+        aria-expanded={isOpen}
       >
         <span className="hidden xs:inline">
           {isActive ? `Preço: ${displayValue}` : 'Preço'}
         </span>
         <span className="xs:hidden">Preço</span>
         <ChevronDown
-          className={`w-3 h-3 transition-transform duration-200 ${
+          className={`w-3.5 h-3.5 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-max">
+        <div className="absolute top-full left-0 mt-2 bg-surface border border-muted/10 rounded-2xl shadow-xl z-50 min-w-[200px] py-1 animate-in fade-in zoom-in-95 duration-200">
           {isActive && (
             <button
               onClick={() => handleSelect(0, Infinity)}
-              className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 border-b border-gray-100 font-medium"
+              className="w-full text-left px-4 py-2.5 text-xs text-error hover:bg-error/5 border-b border-muted/10 font-bold transition-colors"
             >
               Limpar Filtro
             </button>
@@ -142,10 +164,10 @@ const PriceRangeDropdown = ({ value, onChange }) => {
             <button
               key={range.label}
               onClick={() => handleSelect(range.min, range.max)}
-              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 transition-colors ${
+              className={`w-full text-left px-4 py-3 text-sm transition-colors ${
                 value.min === range.min && value.max === range.max
-                  ? 'bg-purple-100 text-purple-900 font-semibold'
-                  : 'text-gray-700'
+                  ? 'bg-primary/10 text-primary font-bold'
+                  : 'text-muted hover:bg-muted/5'
               }`}
             >
               {range.label}
@@ -157,6 +179,17 @@ const PriceRangeDropdown = ({ value, onChange }) => {
   );
 };
 
+interface FilterBarProps {
+  filters: FilterState;
+  onFilterChange: (type: keyof FilterState, value: any) => void;
+  onPriceChange: (min: number, max: number) => void;
+  onSortChange: (sort: string) => void;
+  onClearAll: () => void;
+  sorting: string;
+  hasActiveFilters: boolean;
+  activeFilterCount: number;
+}
+
 const FilterBar = ({
   filters,
   onFilterChange,
@@ -166,7 +199,7 @@ const FilterBar = ({
   sorting,
   hasActiveFilters,
   activeFilterCount,
-}) => {
+}: FilterBarProps) => {
   const conditionOptions = [
     { label: 'Novo', value: 'novo' },
     { label: 'Como Novo', value: 'como_novo' },
@@ -196,7 +229,7 @@ const FilterBar = ({
   ];
 
   return (
-    <div className="bg-white border-y border-gray-100 sticky top-0 z-40">
+    <div className="bg-surface border-b border-muted/10 sticky top-[73px] z-40 backdrop-blur-md bg-surface/80">
       <div className="max-w-6xl mx-auto px-6 py-4">
         {/* Filter buttons and sort dropdown */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
@@ -230,20 +263,21 @@ const FilterBar = ({
             {hasActiveFilters && (
               <button
                 onClick={onClearAll}
-                className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 px-4 py-2 rounded-full text-xs md:text-sm flex items-center gap-2 transition-colors"
+                className="bg-error/10 hover:bg-error/20 border border-error/20 text-error px-4 py-2.5 rounded-full text-xs md:text-sm flex items-center gap-2 transition-all font-bold focus:ring-4 focus:ring-error/20"
               >
-                <X className="w-3 h-3" />
-                <span>Limpar Tudo</span>
+                <X className="w-3.5 h-3.5" />
+                <span>Limpar Todos</span>
               </button>
             )}
           </div>
 
           {/* Sort dropdown - right side */}
-          <div className="mt-2 md:mt-0">
+          <div className="mt-2 md:mt-0 flex items-center gap-3">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider hidden lg:block">Ordenar por:</span>
             <select
               value={sorting}
               onChange={(e) => onSortChange(e.target.value)}
-              className="border-2 border-gray-200 hover:border-purple-300 rounded-full px-4 py-2 text-xs md:text-sm text-gray-700 bg-white focus:outline-none focus:border-purple-400 transition-colors cursor-pointer"
+              className="bg-surface border-2 border-muted/10 hover:border-primary/30 rounded-full px-5 py-2.5 text-xs md:text-sm text-foreground font-semibold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all cursor-pointer appearance-none pr-10 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
             >
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -256,47 +290,51 @@ const FilterBar = ({
 
         {/* Active filters display */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="text-gray-600">Filtros ativos:</span>
+          <div className="flex flex-wrap items-center gap-2 text-xs pt-3 border-t border-muted/5">
+            <span className="text-muted font-bold uppercase tracking-widest text-[10px]">Filtros ativos:</span>
             {filters.condition && (
-              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full flex items-center gap-2">
+              <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
                 Condição: {conditionOptions.find((o) => o.value === filters.condition)?.label}
                 <button
                   onClick={() => onFilterChange('condition', null)}
-                  className="hover:text-purple-900"
+                  className="hover:scale-110 transition-transform p-0.5"
+                  aria-label="Remover filtro de condição"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </span>
             )}
             {(filters.priceMin > 0 || filters.priceMax !== Infinity) && (
-              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full flex items-center gap-2">
+              <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
                 Preço: {filters.priceMin} - {filters.priceMax === Infinity ? '+' : filters.priceMax} Kz
                 <button
                   onClick={() => onPriceChange(0, Infinity)}
-                  className="hover:text-purple-900"
+                  className="hover:scale-110 transition-transform p-0.5"
+                  aria-label="Remover filtro de preço"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </span>
             )}
             {filters.category && (
-              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full flex items-center gap-2">
+              <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
                 Categoria: {categoryOptions.find((o) => o.value === filters.category)?.label}
                 <button
                   onClick={() => onFilterChange('category', null)}
-                  className="hover:text-purple-900"
+                  className="hover:scale-110 transition-transform p-0.5"
+                  aria-label="Remover filtro de categoria"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </span>
             )}
             {filters.rating && (
-              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full flex items-center gap-2">
+              <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
                 Avaliação: {filters.rating}+ Estrelas
                 <button
                   onClick={() => onFilterChange('rating', null)}
-                  className="hover:text-purple-900"
+                  className="hover:scale-110 transition-transform p-0.5"
+                  aria-label="Remover filtro de avaliação"
                 >
                   <X className="w-3 h-3" />
                 </button>

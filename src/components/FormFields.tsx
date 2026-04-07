@@ -1,12 +1,23 @@
-import React from 'react';
+'use client';
+import React, { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes, ChangeEvent, DragEvent } from 'react';
 import { AlertCircle, CheckCircle } from 'lucide-react';
+import { FormOption } from '../types';
+
+interface FormInputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  name: string;
+  error?: string;
+  hint?: string;
+  maxLength?: number;
+}
 
 // Input field with validation
 export const FormInput = ({
-  name= '', 
+  label,
+  name,
   type = 'text',
-  placeholder= '',
-  value='',
+  placeholder,
+  value,
   onChange,
   error,
   required = false,
@@ -14,17 +25,21 @@ export const FormInput = ({
   maxLength,
   hint,
   ...props
-}) => {
+}: FormInputProps) => {
+  const errorId = `${name}-error`;
+  const hintId = `${name}-hint`;
+
   return (
-    <div className="mb-4">
+    <div className="mb-5">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor={name} className="block text-sm font-semibold text-foreground mb-2">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-error ml-1" aria-hidden="true">*</span>}
         </label>
       )}
       <div className="relative">
         <input
+          id={name}
           type={type}
           name={name}
           placeholder={placeholder}
@@ -32,25 +47,47 @@ export const FormInput = ({
           onChange={onChange}
           maxLength={maxLength}
           disabled={disabled}
-          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+          aria-invalid={!!error}
+          aria-describedby={`${error ? errorId : ''} ${hint ? hintId : ''}`.trim() || undefined}
+          className={`w-full px-4 py-3 min-h-[48px] border rounded-lg focus:outline-none focus:ring-2 transition-all ${
             error
-              ? 'border-red-500 focus:ring-red-300 bg-red-50'
-              : 'border-gray-300 focus:ring-purple-300 focus:border-purple-500'
-          } ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+              ? 'border-error focus:ring-error/30 bg-error/5'
+              : 'border-muted/30 focus:ring-focus/30 focus:border-focus'
+          } ${disabled ? 'bg-muted/10 text-muted cursor-not-allowed opacity-70' : 'bg-surface text-foreground'}`}
           {...props}
         />
-        {error && <AlertCircle className="absolute right-3 top-3 w-5 h-5 text-red-500" />}
+        {error && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+            <AlertCircle className="w-5 h-5 text-error" aria-hidden="true" />
+          </div>
+        )}
       </div>
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-      {hint && <p className="text-gray-500 text-xs mt-1">{hint}</p>}
+      {error && (
+        <p id={errorId} className="text-error text-sm mt-1.5 flex items-center gap-1 font-medium">
+          {error}
+        </p>
+      )}
+      {hint && (
+        <p id={hintId} className="text-muted text-xs mt-1.5 leading-relaxed">
+          {hint}
+        </p>
+      )}
       {maxLength && (
-        <p className="text-gray-400 text-xs mt-1">
-          {value?.length || 0}/{maxLength}
+        <p className="text-muted text-xs mt-1.5 text-right font-medium" aria-hidden="true">
+          {String(value || '').length} / {maxLength}
         </p>
       )}
     </div>
   );
 };
+
+interface FormTextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: string;
+  name: string;
+  error?: string;
+  hint?: string;
+  maxLength?: number;
+}
 
 // Textarea field with character counter
 export const FormTextarea = ({
@@ -66,17 +103,21 @@ export const FormTextarea = ({
   rows = 4,
   hint,
   ...props
-}) => {
+}: FormTextareaProps) => {
+  const errorId = `${name}-error`;
+  const hintId = `${name}-hint`;
+
   return (
-    <div className="mb-4">
+    <div className="mb-5">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor={name} className="block text-sm font-semibold text-foreground mb-2">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-error ml-1" aria-hidden="true">*</span>}
         </label>
       )}
       <div className="relative">
         <textarea
+          id={name}
           name={name}
           placeholder={placeholder}
           value={value}
@@ -84,24 +125,47 @@ export const FormTextarea = ({
           maxLength={maxLength}
           disabled={disabled}
           rows={rows}
-          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-all resize-none ${
+          aria-invalid={!!error}
+          aria-describedby={`${error ? errorId : ''} ${hint ? hintId : ''}`.trim() || undefined}
+          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all resize-none ${
             error
-              ? 'border-red-500 focus:ring-red-300 bg-red-50'
-              : 'border-gray-300 focus:ring-purple-300 focus:border-purple-500'
-          } ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+              ? 'border-error focus:ring-error/30 bg-error/5'
+              : 'border-muted/30 focus:ring-focus/30 focus:border-focus'
+          } ${disabled ? 'bg-muted/10 text-muted cursor-not-allowed opacity-70' : 'bg-surface text-foreground'}`}
           {...props}
         />
+        {error && (
+          <div className="absolute right-3 top-3 pointer-events-none">
+            <AlertCircle className="w-5 h-5 text-error" aria-hidden="true" />
+          </div>
+        )}
       </div>
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-      {hint && <p className="text-gray-500 text-xs mt-1">{hint}</p>}
+      {error && (
+        <p id={errorId} className="text-error text-sm mt-1.5 flex items-center gap-1 font-medium">
+          {error}
+        </p>
+      )}
+      {hint && (
+        <p id={hintId} className="text-muted text-xs mt-1.5 leading-relaxed">
+          {hint}
+        </p>
+      )}
       {maxLength && (
-        <p className="text-gray-400 text-xs mt-1">
-          {value?.length || 0}/{maxLength}
+        <p className="text-muted text-xs mt-1.5 text-right font-medium" aria-hidden="true">
+          {String(value || '').length} / {maxLength}
         </p>
       )}
     </div>
   );
 };
+
+interface FormSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label?: string;
+  name: string;
+  options: FormOption[];
+  error?: string;
+  placeholder?: string;
+}
 
 // Select/dropdown field
 export const FormSelect = ({
@@ -115,63 +179,92 @@ export const FormSelect = ({
   disabled = false,
   placeholder,
   ...props
-}) => {
+}: FormSelectProps) => {
+  const errorId = `${name}-error`;
+
   return (
-    <div className="mb-4">
+    <div className="mb-5">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor={name} className="block text-sm font-semibold text-foreground mb-2">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-error ml-1" aria-hidden="true">*</span>}
         </label>
       )}
-      <select
-        name={name}
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
-          error
-            ? 'border-red-500 focus:ring-red-300 bg-red-50'
-            : 'border-gray-300 focus:ring-purple-300 focus:border-purple-500'
-        } ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
-        {...props}
-      >
-        {placeholder && <option value="">{placeholder}</option>}
-        {options?.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      <div className="relative">
+        <select
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
+          className={`w-full px-4 py-3 min-h-[48px] border rounded-lg focus:outline-none focus:ring-2 transition-all appearance-none ${
+            error
+              ? 'border-error focus:ring-error/30 bg-error/5 pr-10'
+              : 'border-muted/30 focus:ring-focus/30 focus:border-focus'
+          } ${disabled ? 'bg-muted/10 text-muted cursor-not-allowed opacity-70' : 'bg-surface text-foreground'}`}
+          {...props}
+        >
+          {placeholder && <option value="">{placeholder}</option>}
+          {options?.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {error && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <AlertCircle className="w-5 h-5 text-error" aria-hidden="true" />
+          </div>
+        )}
+      </div>
+      {error && (
+        <p id={errorId} className="text-error text-sm mt-1.5 flex items-center gap-1 font-medium">
+          {error}
+        </p>
+      )}
     </div>
   );
 };
 
+interface FormAlertProps {
+  type?: 'error' | 'success' | 'warning' | 'info';
+  message: string;
+  onClose?: () => void;
+}
+
 // Alert messages
-export const FormAlert = ({ type = 'error', message, onClose }) => {
-  const colors = {
-    error: 'bg-red-50 border-red-200 text-red-800',
-    success: 'bg-green-50 border-green-200 text-green-800',
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    info: 'bg-blue-50 border-blue-200 text-blue-800',
+export const FormAlert = ({ type = 'error', message, onClose }: FormAlertProps) => {
+  const styles: Record<string, string> = {
+    error: 'bg-error/10 border-error/20 text-error',
+    success: 'bg-success/10 border-success/20 text-success',
+    warning: 'bg-warning/10 border-warning/20 text-warning',
+    info: 'bg-primary/10 border-primary/20 text-primary',
   };
 
-  const icons = {
-    error: <AlertCircle className="w-5 h-5" />,
-    success: <CheckCircle className="w-5 h-5" />,
-    warning: <AlertCircle className="w-5 h-5" />,
-    info: <AlertCircle className="w-5 h-5" />,
+  const icons: Record<string, React.ReactNode> = {
+    error: <AlertCircle className="w-5 h-5 flex-shrink-0" />,
+    success: <CheckCircle className="w-5 h-5 flex-shrink-0" />,
+    warning: <AlertCircle className="w-5 h-5 flex-shrink-0" />,
+    info: <AlertCircle className="w-5 h-5 flex-shrink-0" />,
   };
 
   return (
-    <div className={`p-4 border rounded-lg flex items-center justify-between mb-4 ${colors[type]}`}>
-      <div className="flex items-center gap-3">
-        {icons[type]}
-        <span>{message}</span>
+    <div 
+      role="alert"
+      className={`p-4 border rounded-xl flex items-start gap-3 mb-4 shadow-sm ${styles[type]}`}
+    >
+      {icons[type]}
+      <div className="flex-1">
+        <p className="text-sm font-medium leading-relaxed">{message}</p>
       </div>
       {onClose && (
-        <button onClick={onClose} className="text-lg font-bold cursor-pointer">
+        <button 
+          onClick={onClose} 
+          className="text-xl leading-none opacity-60 hover:opacity-100 transition-opacity p-1 -m-1 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg focus:ring-2 focus:ring-current"
+          aria-label="Fechar alerta"
+        >
           ×
         </button>
       )}
@@ -179,21 +272,37 @@ export const FormAlert = ({ type = 'error', message, onClose }) => {
   );
 };
 
+interface LoadingSpinnerProps {
+  size?: 'sm' | 'md' | 'lg';
+  text?: string;
+}
+
 // Loading spinner
-export const LoadingSpinner = ({ size = 'md', text = 'Carregando...' }) => {
-  const sizes = {
-    sm: 'w-4 h-4',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12',
+export const LoadingSpinner = ({ size = 'md', text = 'Carregando...' }: LoadingSpinnerProps) => {
+  const sizes: Record<string, string> = {
+    sm: 'w-5 h-5 border-2',
+    md: 'w-10 h-10 border-4',
+    lg: 'w-16 h-16 border-4',
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className={`${sizes[size]} border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin`} />
-      {text && <p className="text-gray-600 text-sm mt-2">{text}</p>}
+    <div className="flex flex-col items-center justify-center p-4" role="status" aria-live="polite">
+      <div className={`${sizes[size]} border-primary/20 border-t-primary rounded-full animate-spin`} />
+      {text && <p className="text-muted text-sm mt-3 font-medium">{text}</p>}
+      <span className="sr-only">Carregando conteúdo</span>
     </div>
   );
 };
+
+interface FormFileUploadProps {
+  label?: string;
+  onFilesSelected?: (files: File[]) => void;
+  error?: string;
+  maxFiles?: number;
+  acceptedTypes?: string;
+  required?: boolean;
+  preview?: boolean;
+}
 
 // File upload with preview
 export const FormFileUpload = ({
@@ -204,12 +313,12 @@ export const FormFileUpload = ({
   acceptedTypes = 'image/*',
   required = false,
   preview = true,
-}) => {
-  const [files, setFiles] = React.useState([]);
-  const [previews, setPreviews] = React.useState([]);
-  const fileInputRef = React.useRef(null);
+}: FormFileUploadProps) => {
+  const [files, setFiles] = React.useState<File[]>([]);
+  const [previews, setPreviews] = React.useState<string[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement> | { target: { files: FileList | null } }) => {
     const selectedFiles = Array.from(e.target.files || []);
 
     if (selectedFiles.length + files.length > maxFiles) {
@@ -228,7 +337,7 @@ export const FormFileUpload = ({
     onFilesSelected?.(newFiles);
   };
 
-  const removeFile = (index) => {
+  const removeFile = (index: number) => {
     const newFiles = files.filter((_, i) => i !== index);
     const newPreviews = previews.filter((_, i) => i !== index);
     setFiles(newFiles);
@@ -240,16 +349,16 @@ export const FormFileUpload = ({
     }
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.currentTarget.classList.add('bg-purple-50', 'border-purple-500');
   };
 
-  const handleDragLeave = (e) => {
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
     e.currentTarget.classList.remove('bg-purple-50', 'border-purple-500');
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.currentTarget.classList.remove('bg-purple-50', 'border-purple-500');
     const droppedFiles = Array.from(e.dataTransfer.files || []);
@@ -275,10 +384,10 @@ export const FormFileUpload = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
+        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all min-h-[160px] flex flex-col items-center justify-center ${
           error
-            ? 'border-red-300 bg-red-50'
-            : 'border-gray-300 hover:border-purple-300 hover:bg-purple-50'
+            ? 'border-error/50 bg-error/5'
+            : 'border-muted/30 hover:border-focus hover:bg-focus/5'
         }`}
       >
         <input
@@ -288,19 +397,26 @@ export const FormFileUpload = ({
           accept={acceptedTypes}
           onChange={handleFileChange}
           className="hidden"
+          id="file-upload"
         />
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="text-sm text-gray-600 hover:text-purple-600"
+          className="w-full flex flex-col items-center gap-2 group"
+          aria-label={label || "Carregar arquivos"}
         >
-          <div className="text-4xl mb-2">📸</div>
-          <p className="font-medium">Clique para carregar ou arraste as imagens</p>
-          <p className="text-xs text-gray-500 mt-1">{files.length}/{maxFiles} imagens selecionadas</p>
+          <div className="text-4xl mb-1 group-hover:scale-110 transition-transform" aria-hidden="true">📸</div>
+          <p className="font-semibold text-foreground">Clique para carregar ou arraste as imagens</p>
+          <p className="text-xs text-muted font-medium">{files.length} / {maxFiles} imagens selecionadas</p>
         </button>
       </div>
 
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && (
+        <p className="text-error text-sm mt-2 flex items-center gap-1 font-medium">
+          <AlertCircle className="w-4 h-4" />
+          {error}
+        </p>
+      )}
 
       {preview && previews.length > 0 && (
         <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -314,9 +430,10 @@ export const FormFileUpload = ({
               <button
                 type="button"
                 onClick={() => removeFile(index)}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute -top-2 -right-2 bg-error text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                aria-label="Remover imagem"
               >
-                ×
+                <span className="text-xl" aria-hidden="true">×</span>
               </button>
             </div>
           ))}
