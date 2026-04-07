@@ -1,8 +1,8 @@
-import React from 'react'
 import { Search, ShoppingCart, ChevronDown } from 'lucide-react'
-import Link from 'next'
+import Link from 'next/link'
+import logo from '../../assets/marketu-logo.png'
 
- Header = () => {
+const Header = () => {
   return (
     <div>
       <div className="w-full h-[0.5cm] bg-[#4B187C]" />
@@ -10,7 +10,7 @@ import Link from 'next'
         <div className="max-w-6xl mx-auto px-6 py-4 flex flex-row items-center justify-between gap-4 text-gray-900">
           {/* logo + text */}
           <Link href="/home" className="flex items-center gap-2 min-w-fit">
-            
+            <img src={logo.src} alt="marketU" className="h-8" />
             <span className="font-bold text-2xl text-[#4B187C]">marketU</span>
           </Link>
 
@@ -34,11 +34,11 @@ import Link from 'next'
 
           {/* user actions */}
           <div className="flex items-center md:flex gap-5">
-            <Link to="/profile" className="text-sm hover:text-gray-900 text-gray-600">
+            <Link href="/profile" className="text-sm hover:text-gray-900 text-gray-600">
               Meu Perfil
             </Link>
             <Link
-              to="/sell"
+              href="/sell"
               className="bg-[#4B187C] text-white px-3 py-1 rounded-md text-sm font-semibold hover:bg-[#3E1367]"
             >
               Vender
