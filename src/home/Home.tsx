@@ -1,29 +1,30 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Header from '../components/layout/Header';
 import FilterBar from '../components/FilterBar';
 import ProductGrid from '../components/produtos/ProductGrid';
 import { useFilters } from '../hooks/useFilters';
 import { createSampleProducts } from '../services/api';
 import { useAuthStore } from '../store/authStore';
+import { createClient } from '@/lib/supabase/client';
+import ProductsFeed from '@/app/home/ProductsFeed';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 
 const Home = () => {
   const navigate = useRouter();
   const login = useAuthStore((state) => state.login);
+  const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
   const [creatingProducts, setCreatingProducts] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
+  const [userLoading, setUserLoading] = useState(true);
   
   const {
     filters,
     sorting,
     page,
-    products,
-    loading,
-    error,
-    totalProducts,
-    totalPages,
     favorites,
     handleFilterChange,
     handlePriceChange,
@@ -34,6 +35,59 @@ const Home = () => {
     hasActiveFilters,
     getActiveFilterCount,
   } = useFilters();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user: authUser }, error } = await supabase.auth.getUser();
+
+        if (error) {
+          console.error('Error fetching user:', error);
+          setUserLoading(false);
+          return;
+        }
+
+        if (authUser) {
+          // Fetch additional user data from users table
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select(`
+              id,
+              enrollment_code,
+              full_name,
+              email,
+              phone,
+              role,
+              status,
+              institution:institution(name)
+            `)
+            .eq('id', authUser.id)
+            .single();
+
+          if (userError) {
+            console.error('Error fetching user data:', userError);
+          } else if (userData) {
+            login({
+              id: userData.id,
+              email: userData.email,
+              enrollment_code: userData.enrollment_code,
+              full_name: userData.full_name,
+              phone: userData.phone,
+              role: userData.role,
+              status: userData.status,
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch user:', err);
+      } finally {
+        setUserLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [login]);
 
   useEffect(() => {
     console.log('Home component rendered with filters:', filters);
@@ -183,17 +237,46 @@ const Home = () => {
           </h2>
         </div>
 
-        <ProductGrid
-          products={products}
-          loading={loading}
-          error={error}
-          totalProducts={totalProducts}
-          page={page}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-          onToggleFavorite={handleToggleFavorite}
-          favorites={favorites}
-        />
+        <ErrorBoundary
+          fallback={
+            <ProductGrid
+              products={[]}
+              loading={false}
+              error="Erro ao carregar produtos. Tente novamente."
+              totalProducts={0}
+              page={page}
+              totalPages={1}
+              onPageChange={handlePageChange}
+              onToggleFavorite={handleToggleFavorite}
+              favorites={favorites}
+            />
+          }
+        >
+          <Suspense
+            fallback={
+              <ProductGrid
+                products={[]}
+                loading
+                error={null}
+                totalProducts={0}
+                page={page}
+                totalPages={1}
+                onPageChange={handlePageChange}
+                onToggleFavorite={handleToggleFavorite}
+                favorites={favorites}
+              />
+            }
+          >
+            <ProductsFeed
+              filters={filters}
+              sorting={sorting}
+              page={page}
+              favorites={favorites}
+              onPageChange={handlePageChange}
+              onToggleFavorite={handleToggleFavorite}
+            />
+          </Suspense>
+        </ErrorBoundary>
       </section>
     </div>
   );
