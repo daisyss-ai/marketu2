@@ -1,7 +1,7 @@
 import Login from '../../landing/Login';
 export default function Page() {
   return (
-    <main className="w-full max-w-md bg-surface rounded-xl p-6 shadow-lg">
+    <main className="flex min-h-screen flex-col items-center justify-between p-24 ">
 
       <Login />
         

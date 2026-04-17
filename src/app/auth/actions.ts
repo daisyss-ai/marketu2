@@ -41,6 +41,21 @@ export async function signup(formData: FormData) {
   const phone = formData.get("phone") as string
   const password = formData.get("password") as string
 
+  // Many Supabase projects have a DB trigger on `auth.users` that writes into `public.users`.
+  // That trigger usually reads from `raw_user_meta_data`, so we send redundant keys to match common conventions.
+  const userMetadata = {
+    name: fullName,
+    fullName: fullName,
+    full_name: fullName,
+    institution: institutionId,
+    institutionId: institutionId,
+    institution_id: institutionId,
+    studentId: studentId,
+    enrollment_code: studentId,
+    phone: phone,
+    role: 'student',
+  }
+
   // Verify institution exists
   const { data: institutionData, error: instError } = await supabase
     .from('institution')
@@ -57,14 +72,16 @@ export async function signup(formData: FormData) {
     email: email,
     password: password,
     options: {
-      data: {
-        name: fullName,
-        institution: institutionId,
-      }
+      data: userMetadata,
     }
   })
 
   if (authError) {
+    console.error("Signup auth error:", {
+      message: authError.message,
+      status: (authError as any).status,
+      code: (authError as any).code,
+    })
     redirect("/signup?error=" + authError.message)
   }
 
@@ -72,7 +89,7 @@ export async function signup(formData: FormData) {
     // Insert into users table
     const { error: userError } = await supabase
       .from('users')
-      .insert({
+      .upsert({
         id: authData.user.id,
         institution_id: institutionId,
         enrollment_code: studentId,
@@ -83,31 +100,31 @@ export async function signup(formData: FormData) {
         phone: phone,
         status: 'pending',
         is_verified: false,
-      })
+      }, { onConflict: 'id' })
 
     if (userError) {
       // If user insert fails, delete auth user
-      await supabase.auth.admin.deleteUser(authData.user.id)
-      redirect("/signup?error=Erro ao criar usuário")
+      console.error("Signup users upsert error:", userError)
+      redirect("/signup?error=" + encodeURIComponent(userError.message))
     }
 
     // Insert into students table
     const { error: studentError } = await supabase
       .from('students')
-      .insert({
+      .upsert({
         id: authData.user.id,
         class_id: null, // Will be set later
         enrollment_year: new Date().getFullYear(),
         is_seller: false,
         rating: 0.00,
         total_reviews: 0,
-      })
+      }, { onConflict: 'id' })
 
     if (studentError) {
       // Cleanup if student insert fails
       await supabase.from('users').delete().eq('id', authData.user.id)
-      await supabase.auth.admin.deleteUser(authData.user.id)
-      redirect("/signup?error=Erro ao criar estudante")
+      console.error("Signup students upsert error:", studentError)
+      redirect("/signup?error=" + encodeURIComponent(studentError.message))
     }
   }
 
