@@ -13,7 +13,7 @@ const signupSchema = z.object({
   studentId: z.string().min(1, 'Obrigatório'),
   fullName: z.string().min(1, 'Obrigatório'),
   email: z.string().email('Email inválido'),
-  institution: z.string().min(1, 'Escolhe a tua instituição'),
+  institution: z.string().min(1,'Instituição inválida'),
   phone: z.string().min(1, 'Obrigatório'),
   password: z.string().min(6, 'Mínimo 6 caracteres'),
   confirmPassword: z.string().min(1, 'Obrigatório'),
@@ -58,9 +58,11 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
     },
   });
 
+  const watchedStudentId = watch('studentId');
   const watchedFullName = watch('fullName');
   const watchedInstitution = watch('institution');
   const watchedPhone = watch('phone');
+  const watchedEmail = watch('email');
   // Placeholder for the OTP step (currently disabled).
   const smsCode = Array(6).fill('');
 
@@ -165,6 +167,8 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
                   <InstitutionSelect
                     value={field.value}
                     onChange={field.onChange}
+                    name={field.name}
+                    ref={field.ref}
                     error={errors.institution?.message as string}
                   />
                 )}
@@ -320,6 +324,12 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
 
   return (
     <form id="signup-form" action={signup} className="flex bg-surface rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl min-h-600px border border-muted/10">
+      {/* Keep values from previous steps in the native form payload */}
+      <input type="hidden" name="studentId" value={watchedStudentId ?? ''} readOnly />
+      <input type="hidden" name="fullName" value={watchedFullName ?? ''} readOnly />
+      <input type="hidden" name="email" value={watchedEmail ?? ''} readOnly />
+      <input type="hidden" name="institution" value={watchedInstitution ?? ''} readOnly />
+      <input type="hidden" name="phone" value={watchedPhone ?? ''} readOnly />
       <div className="hidden md:flex md:w-1/2 bg-primary items-center justify-center p-12 text-white relative">
         <div className="relative z-10 text-center">
           <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
