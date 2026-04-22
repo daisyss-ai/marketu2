@@ -1,4 +1,9 @@
 {
+
+  /*tools and rules for building
+  It tells TypeScript how to build your code
+  — like saying "I want my LEGO house to be modern, with strict safety checks, and using React pieces.*/
+
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -14,6 +19,11 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "forceConsistentCasingInFileNames": true, //Always use the same UPPERCASE and lowercase pattern in file names." Like if you name a file MyFile.tsx — don't later accidentally call it myfile.tsx. It keeps things organized and clear.
+    "noFallthroughCasesInSwitch": true, //Don't let your code accidentally 'slip through' switch statements." Imagine a instruction manual: "If the box is red: paint it. If it's blue: paint it." If you forget to STOP at red before moving to blue, you might paint everything! This rule says "Hey, you forgot a STOP sign!" (the break statement).
+    "noUnusedParameters": true,//If you ask for something, USE it!" Like saying "give me a toy" but then never playing with it. This rule warns: "You wrote a function that asks for information, but you never use it — why are you asking for it?
+    "noUnusedLocals": true,//Don't leave toys lying around." If you create a variable or something but never use it, this says "Hey, this is clutter — clean it up!
+    "useDefineForClassFields": true,//Use the modern way to set up class pieces." This tells TypeScript to follow a specific technical rule so your code works safely across all computers and browsers.
     "plugins": [
       {
         "name": "next"
@@ -24,13 +34,29 @@
       "@/*": ["./src/*"]
     }
   },
+
+  /*
+  Which boxes should TypeScript CHECK?"
+  Without this, TypeScript might ignore some of your code. 
+  It's saying "I want you to look at THESE files, not somewhere else."
+  */
+
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    "./src",//reasonable — explicitly including the src directory is good practice for a Next.js project, though it may already be implicitly matched by **/*.ts and **/*.tsx.
+    "./dist/types/**/*.ts"//intentional — this suggests you're including generated type definitions from a build output, which makes sense if you need those types available during compilation.
   ],
+
+  /*
+  Which boxes should TypeScript IGNORE?"
+  Speeds things up! You don't need TypeScript checking millions of files from the internet. 
+  You only care about your code.
+  */
+
   "exclude": ["node_modules"]
 }
