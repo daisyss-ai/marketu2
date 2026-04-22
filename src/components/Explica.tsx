@@ -1,5 +1,4 @@
 'use client';
-import React from 'react'
 import { Users, Zap, Smartphone } from 'lucide-react'; 
 const Explica = () => {
     const features = [

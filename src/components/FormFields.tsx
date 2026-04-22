@@ -1,5 +1,5 @@
 'use client';
-import React, { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes, ChangeEvent, DragEvent } from 'react';
+import { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes, ChangeEvent, DragEvent, useState, useRef, ReactNode } from 'react';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import { FormOption } from '../types';
 
@@ -243,7 +243,7 @@ export const FormAlert = ({ type = 'error', message, onClose }: FormAlertProps) 
     info: 'bg-primary/10 border-primary/20 text-primary',
   };
 
-  const icons: Record<string, React.ReactNode> = {
+  const icons: Record<string, ReactNode> = {
     error: <AlertCircle className="w-5 h-5 flex-shrink-0" />,
     success: <CheckCircle className="w-5 h-5 flex-shrink-0" />,
     warning: <AlertCircle className="w-5 h-5 flex-shrink-0" />,
@@ -314,9 +314,9 @@ export const FormFileUpload = ({
   required = false,
   preview = true,
 }: FormFileUploadProps) => {
-  const [files, setFiles] = React.useState<File[]>([]);
-  const [previews, setPreviews] = React.useState<string[]>([]);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement> | { target: { files: FileList | null } }) => {
     const selectedFiles = Array.from(e.target.files || []);

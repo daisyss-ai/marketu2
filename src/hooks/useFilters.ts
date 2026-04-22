@@ -47,7 +47,7 @@ export const useFilters = () => {
     if (newSort && newSort !== 'newest') params.set('sort', newSort);
     if (newPage && newPage > 1) params.set('page', String(newPage));
 
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    router.push(`${pathname}?${params.toString()}` as any, { scroll: false });
   }, [pathname, router]);
 
   // Fetch products

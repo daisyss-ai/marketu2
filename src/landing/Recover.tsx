@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface RecoverErrors {
   [key: string]: string | undefined;
@@ -18,18 +18,16 @@ const Recover = () => {
 
   // Step 3: SMS Code
   const [smsCode, setSmsCode] = useState(Array(6).fill(''));
-  const [codeRequested, setCodeRequested] = useState(false);
-  const [canResend, setCanResend] = useState(false);
-  const [countdown, setCountdown] = useState(0);
 
   // Step 4: New Password
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPassword] = useState(false);
+  const [showConfirmPassword] = useState(false);
 
   // Error states
   const [errors, setErrors] = useState<RecoverErrors>({});
+  const [success, setSuccess] = useState('');
 
   const validateStep = (stepNumber: number) => {
     const newErrors: RecoverErrors = {};
@@ -84,23 +82,63 @@ const Recover = () => {
     setErrors({});
 
     try {
-      if (step === 2) {
-        // Step 2 to 3: Send code
+      if (step === 2 && recoveryMethod === 'email') {
+        // Send password reset email via API
+        const response = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to send reset email');
+        }
+
+        // Show success and redirect to login
+        setSuccess('Email de recuperação enviado com sucesso! Verifique o seu email para continuar.');
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+        return;
+      } else if (step === 2) {
+        // Phone recovery - placeholder for SMS implementation
         await new Promise((resolve) => setTimeout(resolve, 800));
-        setCodeRequested(true);
-        setCanResend(false);
-        setCountdown(50);
       } else if (step === 3) {
+        // Code verification - placeholder
         await new Promise((resolve) => setTimeout(resolve, 800));
       } else if (step === 4) {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        router.push('/login');
+        // Password update
+        const response = await fetch('/api/auth/update-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            password: newPassword,
+            confirmPassword,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to update password');
+        }
+
+        setSuccess('Palavra-passe atualizada com sucesso!');
+        setTimeout(() => {
+          router.push('/login');
+        }, 1000);
         return;
       }
 
       setStep(step + 1);
     } catch (error) {
-      setErrors({ submit: 'Erro ao processar. Tente novamente.' });
+      setErrors({ submit: error instanceof Error ? error.message : 'Erro ao processar. Tente novamente.' });
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
 import { ChevronLeft, Upload } from 'lucide-react';
 import Header from '../components/layout/Header';
 import { useAuthStore } from '../store/authStore';
@@ -12,7 +12,6 @@ import {
   FormAlert,
   LoadingSpinner,
 } from '../components/FormFields';
-import { useProductUpload, useImageUpload } from '../hooks/useAPI';
 
 interface SellFormData {
   title: string;
@@ -31,8 +30,6 @@ interface ValidationErrors {
 const Sell = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);
-  const { uploadProduct, loading, error, success } = useProductUpload();
-  const { uploadImages } = useImageUpload();
 
   const [formData, setFormData] = useState<SellFormData>({
     title: '',
@@ -47,6 +44,8 @@ const Sell = () => {
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [, setUploadedFiles] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const categories = [
     { value: 'Material Escolar', label: 'Material Escolar' },
@@ -107,12 +106,38 @@ const Sell = () => {
 
   const handleFilesSelected = async (files: File[]) => {
     setUploadedFiles(files);
-    // For now, create URLs for preview
-    const urls = files.map((file) => URL.createObjectURL(file));
-    setFormData((prev) => ({
-      ...prev,
-      image_urls: urls,
-    }));
+    setUploadError(null);
+    
+    try {
+      // Upload files to Supabase Storage
+      const uploadedUrls = await Promise.all(
+        files.map(async (file) => {
+          const response = await fetch(`/api/products/${Date.now()}/images`, {
+            method: 'POST',
+            body: file,
+            headers: {
+              'Content-Type': file.type,
+            },
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Failed to upload image: ${file.name}`);
+          }
+          
+          const data = await response.json();
+          return data.url;
+        })
+      );
+
+      setFormData((prev) => ({
+        ...prev,
+        image_urls: uploadedUrls,
+      }));
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Erro ao fazer upload de imagens';
+      setUploadError(errorMsg);
+      setValidationErrors({ images: errorMsg });
+    }
   };
 
   const validateForm = () => {
@@ -167,23 +192,35 @@ const Sell = () => {
       return;
     }
 
+    setLoading(true);
+
     try {
       setValidationErrors({});
 
-      // Prepare product data
+      // Prepare product data for API
       const productData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         category: formData.category,
-        condition: formData.condition,
         price: parseFloat(formData.price),
-        location: formData.location,
         image_urls: formData.image_urls,
-        stock: 1, // Default stock quantity
       };
 
-      // Upload product
-      await uploadProduct(productData);
+      // Create product via API
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao publicar produto');
+      }
+
+      await response.json();
 
       // Show success message
       setSuccessMessage('✅ Produto publicado com sucesso! Redirecionando para a home...');
@@ -200,12 +237,16 @@ const Sell = () => {
       });
       setUploadedFiles([]);
 
-      // Redirect to home after 2 seconds to see the product
+      // Redirect to home after 2 seconds
       setTimeout(() => {
         router.push('/home');
       }, 2000);
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Erro ao publicar produto';
+      setValidationErrors({ submit: errorMsg });
       console.error('Error uploading product:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -230,7 +271,8 @@ const Sell = () => {
 
       {/* Form Section */}
       <div className="max-w-2xl mx-auto px-6 py-8">
-        {error && <FormAlert type="error" message={error} />}
+        {uploadError && <FormAlert type="error" message={uploadError} />}
+        {validationErrors.submit && <FormAlert type="error" message={validationErrors.submit} />}
         {successMessage && (
           <FormAlert
             type="success"

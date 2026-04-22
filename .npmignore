@@ -1,0 +1,22 @@
+# NPM ignore file (if publishing this package)
+.git/
+.gitignore
+node_modules/
+dist/
+build/
+.next/
+coverage/
+tests/
+specs/
+*.md
+.env*
+.eslintrc*
+.prettierrc*
+tsconfig.json
+jest.config.js
+next.config.ts
+postcss.config.mjs
+Dockerfile*
+.dockerignore
+.eslintignore
+.prettierignore

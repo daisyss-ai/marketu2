@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, X, LucideIcon } from 'lucide-react';
 import { FilterState, FilterOption } from '../types';
 
@@ -187,7 +187,6 @@ interface FilterBarProps {
   onClearAll: () => void;
   sorting: string;
   hasActiveFilters: boolean;
-  activeFilterCount: number;
 }
 
 const FilterBar = ({
@@ -198,7 +197,6 @@ const FilterBar = ({
   onClearAll,
   sorting,
   hasActiveFilters,
-  activeFilterCount,
 }: FilterBarProps) => {
   const conditionOptions = [
     { label: 'Novo', value: 'novo' },

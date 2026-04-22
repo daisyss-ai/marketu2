@@ -1,7 +1,8 @@
 'use client';
-import React, { useState } from 'react';
-import { Heart, Bookmark } from 'lucide-react';
+import { useState } from 'react';
+import { Heart, Bookmark, Star, ShoppingCart } from 'lucide-react';
 import { Product } from '../../types';
+import { useCartStore } from '../../store/cartStore';
 
 interface ProductCardProps {
   product: Product;
@@ -11,7 +12,12 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false }: ProductCardProps) => {
   const [showToast, setShowToast] = useState(false);
-  const isGreen = product.statusColor === 'bg-green-400';
+  const [toastMessage, setToastMessage] = useState('');
+  const { addItem } = useCartStore();
+
+  // Calculate average rating if not provided
+  const rating = (product as any).rating || 4.5;
+  const ratingCount = (product as any).review_count || 0;
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -19,9 +25,40 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
 
     onToggleFavorite(product.id);
     setShowToast(true);
+    setToastMessage(isFavorited ? 'Removido dos favoritos' : 'Adicionado aos favoritos!');
 
     // Hide toast after 2 seconds
     setTimeout(() => setShowToast(false), 2000);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    addItem(String(product.id), 1, Number(product.price), product as any);
+
+    setShowToast(true);
+    setToastMessage('Adicionado ao carrinho!');
+
+    // Hide toast after 2 seconds
+    setTimeout(() => setShowToast(false), 2000);
+  };
+
+  const renderStars = (ratingValue: number) => {
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`w-3 h-3 ${
+              star <= Math.round(ratingValue)
+                ? 'fill-warning text-warning'
+                : 'text-muted'
+            }`}
+          />
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -65,36 +102,36 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
         </div>
 
         <div className="mt-auto pt-4 flex items-center justify-between border-t border-muted/5">
-          <div className="flex items-center text-xs text-muted font-medium">
-            <span
-              className={`w-2.5 h-2.5 rounded-full mr-2 shadow-sm ${product.statusColor || 'bg-error'}`}
-            />
-            <span className="truncate max-w-[80px]">{product.seller || 'MarketU'}</span>
+          <div className="flex flex-col gap-1.5 flex-1">
+            <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
+              <span
+                className={`w-2.5 h-2.5 rounded-full shadow-sm ${product.statusColor || 'bg-error'}`}
+              />
+              <span className="truncate max-w-[80px]">{product.seller || 'MarketU'}</span>
+            </div>
+            {rating > 0 && (
+              <div className="flex items-center gap-1">
+                {renderStars(rating)}
+                <span className="text-[10px] text-muted font-medium ml-1">
+                  {rating.toFixed(1)} {ratingCount > 0 && `(${ratingCount})`}
+                </span>
+              </div>
+            )}
           </div>
-          <span
-            className={`text-[10px] font-bold px-3 py-1 rounded-full shadow-sm ${
-              isGreen ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
-            }`}
+          <button
+            onClick={handleAddToCart}
+            aria-label="Adicionar ao carrinho"
+            className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors text-primary ml-2"
           >
-            {isGreen ? 'Em stock' : 'Poucas unidades'}
-          </span>
+            <ShoppingCart className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
       {/* Toast notification */}
       {showToast && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-foreground text-surface px-6 py-3 rounded-full text-sm font-bold shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-4 flex items-center gap-3">
-          {isFavorited ? (
-            <>
-              <span className="text-error">❤️</span> 
-              Adicionado aos favoritos!
-            </>
-          ) : (
-            <>
-              <span>💔</span> 
-              Removido dos favoritos
-            </>
-          )}
+          {toastMessage}
         </div>
       )}
     </>

@@ -1,20 +1,12 @@
 'use client';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Header from '../components/layout/Header';
 import FilterBar from '../components/FilterBar';
 import ProductGrid from '../components/produtos/ProductGrid';
 import { useFilters } from '../hooks/useFilters';
-import { createSampleProducts } from '../services/api';
-import { useAuthStore } from '../store/authStore';
 
 
 const Home = () => {
-  const navigate = useRouter();
-  const login = useAuthStore((state) => state.login);
-  const [creatingProducts, setCreatingProducts] = useState(false);
-  const [loggingIn, setLoggingIn] = useState(false);
-  
   const {
     filters,
     sorting,
@@ -58,45 +50,6 @@ const Home = () => {
     }
   };
 
-  const handleCreateSampleProducts = async () => {
-    setCreatingProducts(true);
-    try {
-      const results = await createSampleProducts();
-      const successful = results.filter((r) => r.success).length;
-      console.log(`Created ${successful} sample products`);
-      // Refresh the products list by clearing filters
-      handleClearAllFilters();
-    } catch (err) {
-      console.error('Error creating sample products:', err);
-      alert('Erro ao criar produtos de exemplo. Verifique o console.');
-    } finally {
-      setCreatingProducts(false);
-    }
-  };
-
-  const handleDevLogin = async () => {
-    setLoggingIn(true);
-    try {
-      const response = await fetch('http://localhost:3000/api/auth/dev-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      const data = await response.json();
-      if (data.data) {
-        // Save to auth store
-        login({ ...data.data.user, token: data.data.token });
-        alert('✅ Login de teste realizado! Redirecionando para publicar produto...');
-        navigate.push('/sell');
-      }
-    } catch (err) {
-      alert('❌ Erro ao fazer login de teste');
-      console.error(err);
-    } finally {
-      setLoggingIn(false);
-    }
-  };
-
   return (
     <div className="bg-gray-50 min-h-screen">
       <Header />
@@ -121,29 +74,6 @@ const Home = () => {
                 >
                   Compra Já
                 </button>
-                <button
-                  onClick={handleDevLogin}
-                  disabled={loggingIn}
-                  className={`px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm no-underline transition-all duration-200 ${
-                    loggingIn
-                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
-                  }`}
-                  title="Quick login as test vendor for product creation"
-                >
-                  {loggingIn ? 'Entrando...' : '🚀 Vender (Teste)'}
-                </button>
-                <button
-                  onClick={handleCreateSampleProducts}
-                  disabled={creatingProducts}
-                  className={`px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm no-underline transition-all duration-200 ${
-                    creatingProducts
-                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                      : 'bg-white text-[#4B187C] border border-[#4B187C] hover:bg-purple-50'
-                  }`}
-                >
-                  {creatingProducts ? 'Criando...' : '+ Criar Produtos de Teste'}
-                </button>
               </div>
             </div>
 
@@ -167,7 +97,6 @@ const Home = () => {
         onClearAll={handleClearAllFilters}
         sorting={sorting}
         hasActiveFilters={hasActiveFilters()}
-        activeFilterCount={getActiveFilterCount()}
       />
 
       {/* Products section */}

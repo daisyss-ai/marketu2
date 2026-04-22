@@ -1,5 +1,10 @@
 import Sell from '../../home/Sell';
+import RequireAuth from '../../components/RequireAuth';
 
 export default function Page() {
-  return <Sell />;
+  return (
+    <RequireAuth requireVerified={true}>
+      <Sell />
+    </RequireAuth>
+  );
 }

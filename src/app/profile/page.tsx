@@ -1,5 +1,10 @@
 import Profile from '../../home/Profile';
+import RequireAuth from '../../components/RequireAuth';
 
 export default function Page() {
-  return <Profile />;
+  return (
+    <RequireAuth requireVerified={true}>
+      <Profile />
+    </RequireAuth>
+  );
 }

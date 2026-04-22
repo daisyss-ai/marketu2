@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import Header from '../components/layout/Header';
 import ProductGrid from '../components/produtos/ProductGrid';
 

@@ -11,8 +11,8 @@ interface LoginProps {
 const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
   const handleSwitch = onFlipToSignup || onSlideToSignup;
   const router = useRouter();
-  const loginStore = useAuthStore((state) => state.login);
-  const [studentId, setStudentId] = useState('');
+  const { login, setError } = useAuthStore();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -23,11 +23,11 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
   const validateForm = () => {
     const newErrors: any = {};
 
-    // Student ID or Phone validation
-    if (!studentId.trim()) {
-      newErrors.studentId = 'ID de Estudante ou Telemóvel é obrigatório';
-    } else if (studentId.trim().length < 5) {
-      newErrors.studentId = 'Por favor, introduza um ID ou telemóvel válido';
+    // Email validation
+    if (!email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Por favor, introduza um email válido';
     }
 
     // Password validation
@@ -54,15 +54,46 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
     setSuccess('');
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao fazer login');
+      }
+
+      const data = await response.json();
       setSuccess('Login realizado com sucesso!');
-      // store user info
-      loginStore({ id: studentId, fullName: 'Usuário Teste' });
-      // navigate after short delay
-      setTimeout(() => router.push('/home'), 500);
+      
+      // Extract user data from API response
+      const userData = {
+        id: data.data.user.id,
+        email: data.data.user.email,
+        studentId: data.data.user.student_id,
+        firstName: data.data.user.first_name,
+        lastName: data.data.user.last_name,
+        studentIdVerified: data.data.user.student_id_verified,
+        token: data.data.session.access_token,
+      };
+      
+      // Store user info in auth store
+      login(userData);
+      
+      // Redirect based on verification status
+      const redirectPath = userData.studentIdVerified ? '/home' : '/verify-email';
+      setTimeout(() => router.push(redirectPath), 500);
     } catch (error) {
-      setErrors({ submit: 'Erro ao fazer login. Tente novamente.' });
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login. Tente novamente.';
+      setErrors({ submit: errorMessage });
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -99,27 +130,27 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="studentId" className="block text-white text-sm font-semibold mb-2">
-                ID de Estudante ou Telemóvel
+              <label htmlFor="email" className="block text-white text-sm font-semibold mb-2">
+                Email
               </label>
               <input
-                id="studentId"
-                type="text"
-                value={studentId}
+                id="email"
+                type="email"
+                value={email}
                 onChange={(e) => {
-                  setStudentId(e.target.value);
-                  if (errors.studentId) setErrors({ ...errors, studentId: '' });
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors({ ...errors, email: '' });
                 }}
                 className={`w-full px-4 py-3 rounded-xl border-0 focus:outline-none focus:ring-4 transition-all text-sm ${
-                  errors.studentId
+                  errors.email
                     ? 'bg-error/5 text-error focus:ring-error/30'
                     : 'bg-surface text-foreground focus:ring-primary/40'
                 }`}
-                placeholder="2034xx-xxx ou 9xx..."
-                aria-invalid={!!errors.studentId}
+                placeholder="teu@email.com"
+                aria-invalid={!!errors.email}
               />
-              {errors.studentId && (
-                <p className="text-red-100 text-xs mt-1.5 font-medium">{errors.studentId}</p>
+              {errors.email && (
+                <p className="text-red-100 text-xs mt-1.5 font-medium">{errors.email}</p>
               )}
             </div>
 

@@ -1,10 +1,12 @@
 'use client';
 import Link from 'next/link';
-import React from 'react'
-import { Search, ShoppingCart, ChevronDown } from 'lucide-react'
+import { Search, ShoppingCart, ChevronDown, Package } from 'lucide-react'
+import { useCartStore } from '../../store/cartStore';
 
 
 const Header = () => {
+  const { items } = useCartStore();
+  const cartCount = items.length;
   return (
     <div>
       <div className="w-full h-1 bg-primary" />
@@ -40,15 +42,26 @@ const Header = () => {
               Perfil
             </Link>
             <Link
+              href="/orders"
+              className="text-sm font-semibold text-muted hover:text-primary transition-colors focus:ring-2 focus:ring-primary/20 rounded-lg px-2 py-1 flex items-center gap-1"
+            >
+              <Package className="w-4 h-4" />
+              Pedidos
+            </Link>
+            <Link
               href="/sell"
               className="bg-primary text-white px-5 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-all shadow-md active:scale-[0.98] focus:ring-4 focus:ring-primary/30"
             >
               Vender
             </Link>
-            <button className="relative group focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-full p-2" aria-label="Ver carrinho">
+            <Link href="/cart" className="relative group focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-full p-2" aria-label="Ver carrinho">
               <ShoppingCart className="w-6 h-6 text-muted group-hover:text-primary transition-colors" />
-              <span className="absolute -top-1 -right-1 bg-error text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">0</span>
-            </button>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-error text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
           </div>
         </div>
       </header>

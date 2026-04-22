@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   LogOut,
   Edit2,
@@ -157,7 +157,7 @@ const Profile = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | number | null>(null);
   const [alertMessage, setAlertMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
 
-  const { profile, stats, loading: profileLoading } = useUserProfile(authUser?.id);
+  const { stats, loading: profileLoading } = useUserProfile(authUser?.id);
   const { products, loading: productsLoading } = useUserProducts(authUser?.id, 1, 12);
   const { deleteProduct, loading: deleteLoading } = useDeleteProduct();
 
@@ -315,7 +315,7 @@ const Profile = () => {
                     key={product.id}
                     product={product}
                     onDelete={(id) => setDeleteConfirm(id)}
-                    onEdit={(id) => router.push(`/edit-product/${id}`)}
+                    onEdit={(id) => router.push(`/edit-product/${String(id)}` as any)}
                   />
                 ))}
               </div>
@@ -342,19 +342,19 @@ const Profile = () => {
               icon={<Heart className="w-8 h-8" />}
               title="Favoritos"
               description="Veja os produtos que você salvou"
-              onClick={() => router.push('/favorites')}
+              onClick={() => router.push('/favorites' as any)}
             />
             <ActionCard
               icon={<MessageCircle className="w-8 h-8" />}
               title="Mensagens"
               description="Converse com vendedores e compradores"
-              onClick={() => router.push('/messages')}
+              onClick={() => router.push('/messages' as any)}
             />
             <ActionCard
               icon={<Edit2 className="w-8 h-8" />}
               title="Editar Perfil"
               description="Atualize suas informações"
-              onClick={() => router.push('/edit-profile')}
+              onClick={() => router.push('/edit-profile' as any)}
             />
           </div>
         )}

@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import { useAuthStore } from '../store/authStore';
 
 interface SignupProps {
   onFlipToLogin?: () => void;
@@ -10,280 +11,298 @@ interface SignupProps {
 const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
   const handleSwitch = onFlipToLogin || onSlideToLogin;
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const { login, setError } = useAuthStore();
+  
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    student_id: '',
+    first_name: '',
+    last_name: '',
+  });
+
   const [loading, setLoading] = useState(false);
-
-  const [studentId, setStudentId] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [smsCode, setSmsCode] = useState(Array(6).fill(''));
-  const [codeRequested, setCodeRequested] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [email, setEmail] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<any>({});
+  const [success, setSuccess] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  const academicData = {
-    processNumber: '68722',
-    areaOfTraining: 'Informática',
-    course: 'Técnico de Informática',
-    class: '13ª classe',
-    shift: 'Tarde',
-    classroom: 'III3A',
-    number: '52'
-  };
-
-  const validateStep = (stepNumber: number) => {
+  const validateForm = () => {
     const newErrors: any = {};
-    if (stepNumber === 1) {
-      if (!studentId.trim()) newErrors.studentId = 'Obrigatório';
-      if (!fullName.trim()) newErrors.fullName = 'Obrigatório';
-    } else if (stepNumber === 3) {
-      if (!phone.trim()) newErrors.phone = 'Obrigatório';
-    } else if (stepNumber === 5) {
-      if (password.length < 6) newErrors.password = 'Mínimo 6 caracteres';
-      if (password !== confirmPassword) newErrors.confirmPassword = 'Senhas diferentes';
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
     }
+
+    if (!formData.student_id.trim()) {
+      newErrors.student_id = 'ID de Estudante é obrigatório';
+    } else if (!/^[0-9]{5}$/.test(formData.student_id)) {
+      newErrors.student_id = 'ID de Estudante deve conter exatamente 5 números';
+    }
+
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = 'Nome é obrigatório';
+    }
+
+    if (!formData.last_name.trim()) {
+      newErrors.last_name = 'Sobrenome é obrigatório';
+    }
+
+    if (!formData.password.trim()) {
+      newErrors.password = 'Palavra-passe é obrigatória';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Palavra-passe deve ter pelo menos 8 caracteres';
+    } else if (!/[A-Z]/.test(formData.password)) {
+      newErrors.password = 'Deve conter pelo menos uma letra maiúscula';
+    } else if (!/[0-9]/.test(formData.password)) {
+      newErrors.password = 'Deve conter pelo menos um número';
+    } else if (!/[!@#$%^&*]/.test(formData.password)) {
+      newErrors.password = 'Deve conter pelo menos um caractere especial (!@#$%^&*)';
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Palavras-passe não correspondem';
+    }
+
     return newErrors;
   };
 
-  const handleNextStep = async () => {
-    const newErrors = validateStep(step);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    // For student_id, only allow numbers
+    let finalValue = value;
+    if (name === 'student_id') {
+      finalValue = value.replace(/[^0-9]/g, '').slice(0, 5); // Only numbers, max 5
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: finalValue
+    }));
+    if (errors[name]) {
+      setErrors((prev: any) => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors = validateForm();
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
     setLoading(true);
+    setErrors({});
+    setSuccess('');
+
     try {
-      if (step === 3) {
-        setCodeRequested(true);
-        setCountdown(60);
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao criar conta');
       }
-      if (step === 6) {
-        router.push('/login');
-        return;
-      }
-      setStep(step + 1);
+
+      const data = await response.json();
+      setSuccess('Conta criada com sucesso! Verifique o seu email para continuar.');
+      
+      // Extract user data from API response
+      const userData = {
+        id: data.data.user.id,
+        email: data.data.user.email,
+        studentId: data.data.user.student_id,
+        firstName: data.data.user.first_name,
+        lastName: data.data.user.last_name,
+        studentIdVerified: data.data.user.student_id_verified,
+      };
+      
+      // Store user info
+      login(userData);
+      
+      // Navigate to verification page
+      setTimeout(() => router.push('/verify-email'), 1000);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao criar conta. Tente novamente.';
+      setErrors({ submit: errorMessage });
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const renderStep = () => {
-    const inputClass = "w-full px-4 py-3 rounded-xl border border-muted/20 focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all bg-surface text-foreground placeholder:text-muted/50";
-    const buttonClass = "w-full bg-primary text-white py-3.5 rounded-xl font-bold hover:opacity-90 transition-all shadow-md active:scale-[0.98] focus:ring-4 focus:ring-primary/30";
-    const secondaryButtonClass = "flex-1 border-2 border-primary text-primary py-3 rounded-xl font-bold hover:bg-primary/5 transition-all text-sm";
-
-    switch (step) {
-      case 1:
-        return (
-          <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div>
-              <h2 className="text-2xl font-extrabold text-foreground mb-1">Criar Conta</h2>
-              <p className="text-muted text-sm mb-6">Começa o teu registo como estudante</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="studentId" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">ID Estudante</label>
-                <input 
-                  id="studentId"
-                  placeholder="Ex: 2024..." 
-                  value={studentId} 
-                  onChange={e => setStudentId(e.target.value)}
-                  className={inputClass}
-                  aria-invalid={!!errors.studentId}
-                />
-                {errors.studentId && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.studentId}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="fullName" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Nome Completo</label>
-                <input 
-                  id="fullName"
-                  placeholder="Teu nome como no BI" 
-                  value={fullName} 
-                  onChange={e => setFullName(e.target.value)}
-                  className={inputClass}
-                  aria-invalid={!!errors.fullName}
-                />
-                {errors.fullName && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.fullName}</p>}
-              </div>
-            </div>
-
-            <button onClick={handleNextStep} className={buttonClass}>Continuar</button>
-          </div>
-        );
-      case 2:
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div>
-              <h2 className="text-2xl font-extrabold text-foreground mb-1">Confirmar Dados</h2>
-              <p className="text-muted text-sm">Verifica se as informações abaixo estão corretas</p>
-            </div>
-
-            <div className="bg-primary/5 border border-primary/10 p-5 rounded-2xl text-sm space-y-3">
-              <div className="flex justify-between border-b border-primary/10 pb-2">
-                <span className="text-muted font-medium">Nome:</span>
-                <span className="text-foreground font-bold">{fullName}</span>
-              </div>
-              <div className="flex justify-between border-b border-primary/10 pb-2">
-                <span className="text-muted font-medium">Curso:</span>
-                <span className="text-foreground font-bold">{academicData.course}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted font-medium">Turma:</span>
-                <span className="text-foreground font-bold">{academicData.classroom}</span>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className={secondaryButtonClass}>Voltar</button>
-              <button onClick={handleNextStep} className="flex-[2] bg-primary text-white py-3 rounded-xl font-bold hover:opacity-90 shadow-md">Sim, sou eu</button>
-            </div>
-          </div>
-        );
-      case 3:
-        return (
-          <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div>
-              <h2 className="text-2xl font-extrabold text-foreground mb-1">Telemóvel</h2>
-              <p className="text-muted text-sm mb-6">Precisamos validar o teu número via SMS</p>
-            </div>
-
-            <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Número de Telemóvel</label>
-              <input 
-                id="phone"
-                type="tel"
-                placeholder="9xx xxx xxx" 
-                value={phone} 
-                onChange={e => setPhone(e.target.value)}
-                className={inputClass}
-                aria-invalid={!!errors.phone}
-              />
-              {errors.phone && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.phone}</p>}
-            </div>
-
-            <button onClick={handleNextStep} className={buttonClass}>Receber Código</button>
-          </div>
-        );
-      case 4:
-        return (
-          <div className="space-y-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div>
-              <h2 className="text-2xl font-extrabold text-foreground mb-1">Código SMS</h2>
-              <p className="text-muted text-sm">Enviamos um código de 6 dígitos para {phone}</p>
-            </div>
-
-            <div className="flex justify-center gap-2">
-              {smsCode.map((d, i) => (
-                <input 
-                  key={i} 
-                  className="w-12 h-14 border-2 border-muted/20 rounded-xl text-center text-xl font-bold focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none" 
-                  maxLength={1} 
-                  aria-label={`Dígito ${i+1} do código SMS`}
-                />
-              ))}
-            </div>
-            
-            <div className="pt-2">
-              <button onClick={handleNextStep} className={buttonClass}>Verificar</button>
-              <button className="mt-4 text-sm text-primary font-bold hover:underline">Reenviar código</button>
-            </div>
-          </div>
-        );
-      case 5:
-        return (
-          <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div>
-              <h2 className="text-2xl font-extrabold text-foreground mb-1">Escolhe uma Senha</h2>
-              <p className="text-muted text-sm mb-6">Garante que a tua conta está protegida</p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Nova Senha</label>
-                <input 
-                  id="password"
-                  type="password" 
-                  placeholder="Min. 6 caracteres" 
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Confirmar Senha</label>
-                <input 
-                  id="confirmPassword"
-                  type="password" 
-                  placeholder="Repete a senha" 
-                  value={confirmPassword} 
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-            </div>
-
-            {errors.password && <p className="text-error text-sm font-medium">{errors.password}</p>}
-            {errors.confirmPassword && <p className="text-error text-sm font-medium">{errors.confirmPassword}</p>}
-
-            <button onClick={handleNextStep} className={buttonClass}>Criar Conta</button>
-          </div>
-        );
-      case 6:
-        return (
-          <div className="space-y-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <div>
-              <h2 className="text-2xl font-extrabold text-foreground mb-1">Tudo Pronto!</h2>
-              <p className="text-muted leading-relaxed">A tua conta Marketu foi criada com sucesso. Bem-vindo à comunidade!</p>
-            </div>
-            <button onClick={() => router.push('/home')} className={buttonClass}>Começar agora</button>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+  const inputClass = "w-full px-4 py-3 rounded-xl border border-muted/20 focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all bg-surface text-foreground placeholder:text-muted/50";
 
   return (
-    <div className="flex bg-surface rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl min-h-[600px] border border-muted/10">
-      <div className="hidden md:flex md:w-1/2 bg-primary items-center justify-center p-12 text-white relative">
-        <div className="relative z-10 text-center">
-          <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-             <span className="text-3xl font-black">mU</span>
-          </div>
-          <h1 className="text-4xl font-black mb-4 tracking-tight">MarketU</h1>
-          <p className="text-primary-foreground/80 leading-relaxed text-lg">O primeiro marketplace exclusivo para estudantes da tua instituição.</p>
-        </div>
-        {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
-          <div className="absolute -top-24 -left-24 w-64 h-64 bg-surface rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-primary-foreground rounded-full blur-3xl"></div>
-        </div>
-      </div>
-      <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
-        {step < 6 && (
-          <div className="flex justify-between mb-10 px-2">
-            {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className={`h-1.5 flex-1 mx-1 rounded-full transition-all duration-500 ${step >= i ? 'bg-primary' : 'bg-muted/10'}`} />
-            ))}
-          </div>
-        )}
-        {renderStep()}
-        {step < 6 && (
-          <p className="mt-8 text-center text-sm text-muted">
-            Já tens conta? <button onClick={handleSwitch} className="text-primary font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-primary/20 rounded px-1">Entrar aqui</button>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 p-4">
+      <div className="w-full max-w-md">
+        <div className="space-y-4 bg-surface rounded-2xl p-8 shadow-lg border border-muted/10">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-extrabold text-foreground mb-1">Criar Conta</h2>
+              <p className="text-muted text-sm mb-6">Regista-te como estudante em MarketU</p>
+            </div>
+
+            {success && (
+              <div className="p-3 bg-green-100 text-green-700 rounded text-sm">
+                {success}
+              </div>
+            )}
+
+            {errors.submit && (
+              <div className="p-3 bg-red-100 text-red-700 rounded text-sm">
+                {errors.submit}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="first_name" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">
+                  Nome
+                </label>
+                <input 
+                  id="first_name"
+                  name="first_name"
+                  type="text"
+                  placeholder="Teu nome"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  className={inputClass}
+                  aria-invalid={!!errors.first_name}
+                />
+                {errors.first_name && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.first_name}</p>}
+              </div>
+
+              <div>
+                <label htmlFor="last_name" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">
+                  Sobrenome
+                </label>
+                <input 
+                  id="last_name"
+                  name="last_name"
+                  type="text"
+                  placeholder="Teu sobrenome"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  className={inputClass}
+                  aria-invalid={!!errors.last_name}
+                />
+                {errors.last_name && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.last_name}</p>}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="student_id" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">
+                ID de Estudante (5 dígitos)
+              </label>
+              <input 
+                id="student_id"
+                name="student_id"
+                type="text"
+                inputMode="numeric"
+                placeholder="Ex: 20240"
+                maxLength={5}
+                value={formData.student_id}
+                onChange={handleChange}
+                className={inputClass}
+                aria-invalid={!!errors.student_id}
+              />
+              {errors.student_id && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.student_id}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">
+                Email
+              </label>
+              <input 
+                id="email"
+                name="email"
+                type="email"
+                placeholder="teu@email.com"
+                value={formData.email}
+                onChange={handleChange}
+                className={inputClass}
+                aria-invalid={!!errors.email}
+              />
+              {errors.email && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.email}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">
+                Palavra-passe
+              </label>
+              <div className="relative">
+                <input 
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Min. 8 caracteres, 1 maiúscula, 1 número, 1 símbolo"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={inputClass}
+                  aria-invalid={!!errors.password}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-primary hover:text-primary/80 transition-colors"
+                  aria-label={showPassword ? "Ocultar palavra-passe" : "Mostrar palavra-passe"}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+              {errors.password && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.password}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">
+                Confirmar Palavra-passe
+              </label>
+              <input 
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                placeholder="Repete a palavra-passe"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={inputClass}
+                aria-invalid={!!errors.confirmPassword}
+              />
+              {errors.confirmPassword && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.confirmPassword}</p>}
+            </div>
+
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary text-white py-3.5 rounded-xl font-bold hover:opacity-90 disabled:opacity-50 transition-all shadow-md active:scale-[0.98] focus:ring-4 focus:ring-primary/30"
+            >
+              {loading ? 'Criando conta...' : 'Criar Conta'}
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-muted">
+            Já tens conta?{' '}
+            <button
+              onClick={handleSwitch}
+              className="font-bold text-primary hover:text-primary/80 transition-colors"
+            >
+              Entra aqui
+            </button>
           </p>
-        )}
+        </div>
       </div>
     </div>
   );
