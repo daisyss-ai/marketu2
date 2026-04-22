@@ -56,28 +56,36 @@ const Home = () => {
               id,
               enrollment_code,
               full_name,
-              email,
-              phone,
               role,
               status,
               institution:institution(name)
             `)
             .eq('id', authUser.id)
-            .single();
+            .maybeSingle();
 
           if (userError) {
             console.error('Error fetching user data:', userError);
-          } else if (userData) {
-            login({
-              id: userData.id,
-              email: userData.email,
-              enrollment_code: userData.enrollment_code,
-              full_name: userData.full_name,
-              phone: userData.phone,
-              role: userData.role,
-              status: userData.status,
-            });
           }
+
+          const enrollmentCode =
+            userData?.enrollment_code ??
+            (authUser.user_metadata as any)?.enrollment_code ??
+            (authUser.user_metadata as any)?.studentId;
+
+          const fullName =
+            userData?.full_name ??
+            (authUser.user_metadata as any)?.full_name ??
+            (authUser.user_metadata as any)?.fullName;
+
+          login({
+            id: authUser.id,
+            email: authUser.email ?? undefined,
+            enrollment_code: enrollmentCode,
+            full_name: fullName,
+            role: userData?.role ?? (authUser.user_metadata as any)?.role,
+            status: userData?.status ?? undefined,
+            institution: (userData as any)?.institution ?? undefined,
+          });
         }
       } catch (err) {
         console.error('Failed to fetch user:', err);

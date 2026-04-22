@@ -13,7 +13,7 @@ interface LoginProps {
 const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
   const handleSwitch = onFlipToSignup || onSlideToSignup;
   const router = useRouter();
-  const [studentId, setStudentId] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -28,11 +28,11 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
   const validateForm = () => {
     const newErrors: any = {};
 
-    // Student ID or Phone validation
-    if (!studentId.trim()) {
-      newErrors.studentId = 'ID de Estudante ou Telemóvel é obrigatório';
-    } else if (studentId.trim().length < 5) {
-      newErrors.studentId = 'Por favor, introduza um ID ou telemóvel válido';
+    // Email validation (Supabase Auth uses email/password)
+    if (!email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      newErrors.email = 'Por favor, introduza um email válido';
     }
 
     // Password validation
@@ -83,27 +83,27 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
           <form className="space-y-5" action={login} onSubmit={handleSubmit}>
             <div>
               <label htmlFor="studentId" className="block text-white text-sm font-semibold mb-2">
-                ID de Estudante ou Telemóvel
+                Email
               </label>
               <input
                 id="studentId"
                 name="email"
-                type="text"
-                value={studentId}
+                type="email"
+                value={email}
                 onChange={(e) => {
-                  setStudentId(e.target.value);
-                  if (errors.studentId) setErrors({ ...errors, studentId: '' });
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors({ ...errors, email: '' });
                 }}
                 className={`w-full px-4 py-3 rounded-xl border-0 focus:outline-none focus:ring-4 transition-all text-sm ${
-                  errors.studentId
+                  errors.email
                     ? 'bg-error/5 text-error focus:ring-error/30'
                     : 'bg-surface text-foreground focus:ring-primary/40'
                 }`}
-                placeholder="2034xx-xxx ou 9xx..."
-                aria-invalid={!!errors.studentId}
+                placeholder="nome@instituicao.edu"
+                aria-invalid={!!errors.email}
               />
-              {errors.studentId && (
-                <p className="text-red-100 text-xs mt-1.5 font-medium">{errors.studentId}</p>
+              {errors.email && (
+                <p className="text-red-100 text-xs mt-1.5 font-medium">{errors.email}</p>
               )}
             </div>
 

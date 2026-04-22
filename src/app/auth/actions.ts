@@ -2,28 +2,21 @@
 
 import { redirect } from "next/navigation";
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
 
-  // In the Login UI this value is sent under the `email` name.
-  const enrollmentCode = (formData.get("email") as string | null)?.trim() ?? "";
+  const email = ((formData.get("email") as string | null)?.trim() ?? "").toLowerCase();
   const password = (formData.get("password") as string | null) ?? "";
 
-  const { data: userData, error: userError } = await supabase
-    .from("users")
-    .select("id, enrollment_code, password_hash")
-    .eq("enrollment_code", enrollmentCode)
-    .single();
-
-  if (userError || !userData) {
-    redirect("/login?error=" + encodeURIComponent("Credenciais inválidas"));
+  if (!email.includes("@")) {
+    redirect("/login?error=" + encodeURIComponent("Use o email para entrar."));
   }
 
-  // NOTE: This assumes your Supabase Auth "email" is actually the enrollment code.
   const { error } = await supabase.auth.signInWithPassword({
-    email: enrollmentCode,
+    email,
     password,
   });
 
@@ -181,49 +174,62 @@ export async function signup(formData: FormData) {
   }
 
   if (authData.user) {
-    const { error: userError } = await supabase
-      .from("users")
-      .upsert(
-        {
-          id: authData.user.id,
-          institution_id: institutionId,
-          enrollment_code: studentId,
-          password_hash: password, // TODO: hash in production
-          role: "student",
-          full_name: fullName,
-          status: "pending",
-          is_verified: false,
-        },
-        { onConflict: "id" },
-      );
+    let admin: ReturnType<typeof createAdminClient> | null = null;
+    try {
+      admin = createAdminClient();
+    } catch {
+      // Optional: if you don't provide SUPABASE_SERVICE_ROLE_KEY, we fall back to the session client.
+      // This may fail when RLS is enabled.
+    }
+
+    const db = admin ?? supabase;
+
+    const { error: userError } = await db.from("users").upsert(
+      {
+        id: authData.user.id,
+        institution_id: institutionId,
+        enrollment_code: studentId,
+        password_hash: password, // TODO: hash in production
+        role: "student",
+        full_name: fullName,
+        status: "pending",
+        is_verified: false,
+      },
+      { onConflict: "id" },
+    );
 
     if (userError) {
       console.error("Signup users upsert error:", userError);
       redirect("/signup?error=" + encodeURIComponent(userError.message));
     }
 
-    const { error: studentError } = await supabase
-      .from("students")
-      .upsert(
-        {
-          id: authData.user.id,
-          class_id: null,
-          enrollment_year: new Date().getFullYear(),
-          is_seller: false,
-          rating: 0.0,
-          total_reviews: 0,
-        },
-        { onConflict: "id" },
-      );
+    const { error: studentError } = await db.from("students").upsert(
+      {
+        id: authData.user.id,
+        class_id: null,
+        enrollment_year: new Date().getFullYear(),
+        is_seller: false,
+        rating: 0.0,
+        total_reviews: 0,
+      },
+      { onConflict: "id" },
+    );
 
     if (studentError) {
-      await supabase.from("users").delete().eq("id", authData.user.id);
+      await db.from("users").delete().eq("id", authData.user.id);
       console.error("Signup students upsert error:", studentError);
       redirect("/signup?error=" + encodeURIComponent(studentError.message));
     }
   }
 
-  redirect("/login?message=" + encodeURIComponent("Conta criada com sucesso. Faça login."));
+  if (authData.session) {
+    redirect("/home?message=" + encodeURIComponent("Conta criada com sucesso."));
+  }
+
+  redirect(
+    "/login?message=" +
+      encodeURIComponent("Conta criada com sucesso. Verifique o email para confirmar e depois faça login."),
+  );
 }
 
 export async function logout() {
