@@ -1,7 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { productsAPI } from '../services/api';
 import { FilterState } from '../types';
 
 export const useFilters = () => {
@@ -9,23 +8,17 @@ export const useFilters = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // State
-  const [filters, setFilters] = useState<FilterState>({
+  const filters = useMemo<FilterState>(() => ({
     condition: searchParams.get('condition') || null,
-    priceMin: searchParams.get('priceMin') ? parseInt(searchParams.get('priceMin')!) : 0,
-    priceMax: searchParams.get('priceMax') ? parseInt(searchParams.get('priceMax')!) : Infinity,
+    priceMin: searchParams.get('priceMin') ? parseInt(searchParams.get('priceMin')!, 10) : 0,
+    priceMax: searchParams.get('priceMax') ? parseInt(searchParams.get('priceMax')!, 10) : Infinity,
     category: searchParams.get('category') || null,
-    rating: searchParams.get('rating') ? parseInt(searchParams.get('rating')!) : null,
+    rating: searchParams.get('rating') ? parseInt(searchParams.get('rating')!, 10) : null,
     search: searchParams.get('search') || '',
-  });
+  }), [searchParams]);
 
-  const [sorting, setSorting] = useState(searchParams.get('sort') || 'newest');
-  const [page, setPage] = useState(searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1);
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
+  const sorting = useMemo(() => searchParams.get('sort') || 'newest', [searchParams]);
+  const page = useMemo(() => (searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1), [searchParams]);
   const [favorites, setFavorites] = useState<any[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('marketu_favorites');
@@ -47,104 +40,54 @@ export const useFilters = () => {
     if (newSort && newSort !== 'newest') params.set('sort', newSort);
     if (newPage && newPage > 1) params.set('page', String(newPage));
 
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }, [pathname, router]);
-
-  // Fetch products
-  const fetchProducts = useCallback(async (filterParams: FilterState, sortParam: string, pageParam: number) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const apiOptions: any = {
-        page: pageParam,
-        limit: 12,
-        sort: sortParam,
-      };
-
-      if (filterParams.condition) apiOptions.condition = filterParams.condition;
-      if (filterParams.category) apiOptions.category = filterParams.category;
-      if (filterParams.priceMin && filterParams.priceMin > 0) apiOptions.minPrice = filterParams.priceMin;
-      if (filterParams.priceMax && filterParams.priceMax !== Infinity) apiOptions.maxPrice = filterParams.priceMax;
-      if (filterParams.search) apiOptions.search = filterParams.search;
-
-      const response = await productsAPI.listProducts(apiOptions);
-
-      setProducts(response.products || []);
-      setTotalProducts(response.total || 0);
-      setTotalPages(Math.ceil((response.total || 0) / 12));
-    } catch (err) {
-      console.error('Error fetching products:', err);
-      setError('Erro ao carregar produtos. Tente novamente.');
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Fetch on filter/sort/page change
-  useEffect(() => {
-    fetchProducts(filters, sorting, page);
-    updateURL(filters, sorting, page);
-  }, [filters, sorting, page, fetchProducts, updateURL]);
 
   // Handle filter change
   const handleFilterChange = useCallback((filterType: keyof FilterState, value: any) => {
-    setFilters((prev) => {
-      const updated = { ...prev, [filterType]: value };
-      return updated;
-    });
-    setPage(1); // Reset to page 1 when filter changes
-  }, []);
+    updateURL({ ...filters, [filterType]: value }, sorting, 1);
+  }, [filters, sorting, updateURL]);
 
   // Handle price range change
   const handlePriceChange = useCallback((min: number, max: number) => {
-    setFilters((prev) => ({
-      ...prev,
-      priceMin: min,
-      priceMax: max,
-    }));
-    setPage(1);
-  }, []);
+    updateURL({ ...filters, priceMin: min, priceMax: max }, sorting, 1);
+  }, [filters, sorting, updateURL]);
 
   // Handle sort change
   const handleSortChange = useCallback((newSort: string) => {
-    setSorting(newSort);
-    setPage(1);
-  }, []);
+    updateURL(filters, newSort, 1);
+  }, [filters, updateURL]);
 
   // Handle page change
   const handlePageChange = useCallback((newPage: number) => {
-    setPage(newPage);
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, []);
+    updateURL(filters, sorting, newPage);
+  }, [filters, sorting, updateURL]);
 
   // Clear all filters
   const handleClearAllFilters = useCallback(() => {
-    setFilters({
+    updateURL({
       condition: null,
       priceMin: 0,
       priceMax: Infinity,
       category: null,
       rating: null,
       search: '',
-    });
-    setSorting('newest');
-    setPage(1);
-  }, []);
+    }, 'newest', 1);
+  }, [updateURL]);
 
   // Clear specific filter
   const handleClearFilter = useCallback((filterType: keyof FilterState) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterType]: filterType === 'priceMin' || filterType === 'priceMax' 
-        ? (filterType === 'priceMin' ? 0 : Infinity) 
+    updateURL({
+      ...filters,
+      [filterType]: filterType === 'priceMin' || filterType === 'priceMax'
+        ? (filterType === 'priceMin' ? 0 : Infinity)
         : (filterType === 'search' ? '' : null),
-    }));
-    setPage(1);
-  }, []);
+    }, sorting, 1);
+  }, [filters, sorting, updateURL]);
 
   // Toggle favorite
   const handleToggleFavorite = useCallback((productId: string | number) => {
@@ -187,11 +130,6 @@ export const useFilters = () => {
     filters,
     sorting,
     page,
-    products,
-    loading,
-    error,
-    totalProducts,
-    totalPages,
     favorites,
 
     // Handlers
