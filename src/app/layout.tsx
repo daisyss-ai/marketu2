@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import 'react-toastify/dist/ReactToastify.css';
 import ToastProvider from "@/components/ToastProvider";
 import { Suspense } from "react";
+import { cn } from "@/lib/utils";
+
+const jetbrainsMono = JetBrains_Mono({subsets:['latin'],variable:'--font-mono'});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt">
+    <html lang="pt" className={cn("font-mono", jetbrainsMono.variable)}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charSet="UTF-8" />
