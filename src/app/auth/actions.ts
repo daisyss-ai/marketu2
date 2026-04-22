@@ -56,6 +56,23 @@ export async function signup(formData: FormData) {
   };
 
   const checkDuplicates = async () => {
+    // Preferred path (if migration `check_signup_conflicts` is deployed)
+    const { data: conflictData, error: conflictError } = await supabase.rpc("check_signup_conflicts", {
+      p_email: email,
+      p_student_id: studentId,
+    });
+
+    if (!conflictError && Array.isArray(conflictData) && conflictData[0]) {
+      const { email_exists, student_id_exists } = conflictData[0] as {
+        email_exists: boolean;
+        student_id_exists: boolean;
+      };
+
+      if (email_exists) return { kind: "email" as const };
+      if (student_id_exists) return { kind: "studentId" as const };
+      return { kind: "none" as const };
+    }
+
     // 1) enrollment_code (unique)
     const { data: existingUser, error: existingUserError } = await safeMaybeSingle(
       "users",
