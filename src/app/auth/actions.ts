@@ -1,138 +1,216 @@
-"use server"
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use server";
+
+import { redirect } from "next/navigation";
+
+import { createClient } from "@/lib/supabase/server";
 
 export async function login(formData: FormData) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
-  // Get enrollment code from form (assuming it's passed as email for now)
-  const enrollmentCode = formData.get("email") as string
-  const password = formData.get("password") as string
+  // In the Login UI this value is sent under the `email` name.
+  const enrollmentCode = (formData.get("email") as string | null)?.trim() ?? "";
+  const password = (formData.get("password") as string | null) ?? "";
 
-  // First, find user by enrollment_code
   const { data: userData, error: userError } = await supabase
-    .from('users')
-    .select('id, enrollment_code, password_hash')
-    .eq('enrollment_code', enrollmentCode)
-    .single()
+    .from("users")
+    .select("id, enrollment_code, password_hash")
+    .eq("enrollment_code", enrollmentCode)
+    .single();
 
   if (userError || !userData) {
-    redirect("/login?error=Credenciais inválidas")
+    redirect("/login?error=" + encodeURIComponent("Credenciais inválidas"));
   }
 
-  // For now, we'll use Supabase auth with email. In production, you'd verify password_hash
-  // But since we're using Supabase auth, let's assume enrollment_code is used as email for auth
+  // NOTE: This assumes your Supabase Auth "email" is actually the enrollment code.
   const { error } = await supabase.auth.signInWithPassword({
-    email: enrollmentCode, // Assuming enrollment_code is used as email in auth
-    password: password,
-  })
+    email: enrollmentCode,
+    password,
+  });
 
-  if (error) redirect("/login?error=" + error.message)
-  redirect("/home?message=Login efectuado com sucesso")
+  if (error) redirect("/login?error=" + encodeURIComponent(error.message));
+  redirect("/home?message=" + encodeURIComponent("Login efectuado com sucesso"));
 }
 
 export async function signup(formData: FormData) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
-  const studentId = formData.get("studentId") as string
-  const fullName = formData.get("fullName") as string
-  const email = formData.get("email") as string
-  const institutionId = formData.get("institution") as string
-  const phone = formData.get("phone") as string
-  const password = formData.get("password") as string
+  const studentId = (formData.get("studentId") as string | null)?.trim() ?? "";
+  const fullName = (formData.get("fullName") as string | null)?.trim() ?? "";
+  const email = ((formData.get("email") as string | null)?.trim() ?? "").toLowerCase();
+  const institutionId = (formData.get("institution") as string | null)?.trim() ?? "";
+  const phone = (formData.get("phone") as string | null)?.trim() ?? "";
+  const password = (formData.get("password") as string | null) ?? "";
 
-  // Many Supabase projects have a DB trigger on `auth.users` that writes into `public.users`.
-  // That trigger usually reads from `raw_user_meta_data`, so we send redundant keys to match common conventions.
-  const userMetadata = {
-    name: fullName,
-    fullName: fullName,
-    full_name: fullName,
-    institution: institutionId,
-    institutionId: institutionId,
-    institution_id: institutionId,
-    studentId: studentId,
-    enrollment_code: studentId,
-    phone: phone,
-    role: 'student',
+  if (!studentId || !fullName || !email || !institutionId || !password) {
+    redirect("/signup?error=" + encodeURIComponent("Preencha todos os campos obrigatórios."));
+  }
+
+  const safeMaybeSingle = async (table: string, column: string, value: string) => {
+    const { data, error } = await supabase
+      .from(table)
+      .select("*")
+      .eq(column, value)
+      .limit(1)
+      .maybeSingle();
+    return { data, error };
+  };
+
+  const checkDuplicates = async () => {
+    // 1) enrollment_code (unique)
+    const { data: existingUser, error: existingUserError } = await safeMaybeSingle(
+      "users",
+      "enrollment_code",
+      studentId,
+    );
+
+    if (!existingUserError && existingUser) return { kind: "studentId" as const };
+
+    // 2) Optional: `profiles` table duplicates (common in many Supabase setups)
+    //    Handle both `student_id` and `studentId` column naming.
+    const profileEmailColumns = ["email", "user_email"] as const;
+    for (const column of profileEmailColumns) {
+      const { data, error } = await safeMaybeSingle("profiles", column, email);
+      if (!error && data) return { kind: "email" as const };
+      if (error?.message?.includes("column") && error.message.includes("does not exist")) continue;
+      if (error?.message?.includes("relation") && error.message.includes("does not exist")) break;
+    }
+
+    const profileStudentColumns = ["student_id", "studentId"] as const;
+    for (const column of profileStudentColumns) {
+      const { data, error } = await safeMaybeSingle("profiles", column, studentId);
+      if (!error && data) return { kind: "studentId" as const };
+      if (error?.message?.includes("column") && error.message.includes("does not exist")) continue;
+      if (error?.message?.includes("relation") && error.message.includes("does not exist")) break;
+    }
+
+    if (existingUserError) return { kind: "lookup_error" as const, message: existingUserError.message };
+    return { kind: "none" as const };
+  };
+
+  // Pre-check duplicates so we can show a friendly message (instead of a generic 500).
+  const preDup = await checkDuplicates();
+  if (preDup.kind === "email") {
+    redirect("/signup?error=" + encodeURIComponent("Este email já está registado."));
+  }
+  if (preDup.kind === "studentId") {
+    redirect("/signup?error=" + encodeURIComponent("Este ID de estudante já está registado."));
+  }
+  if (preDup.kind === "lookup_error") {
+    console.error("Signup lookup error:", preDup.message);
+    redirect("/signup?error=" + encodeURIComponent(preDup.message));
   }
 
   // Verify institution exists
   const { data: institutionData, error: instError } = await supabase
-    .from('institution')
-    .select('id')
-    .eq('id', institutionId)
-    .single()
+    .from("institution")
+    .select("id")
+    .eq("id", institutionId)
+    .single();
 
   if (instError || !institutionData) {
-    redirect("/signup?error=Instituição não encontrada")
+    redirect("/signup?error=" + encodeURIComponent("Instituição não encontrada"));
   }
 
-  // Create user in auth (using email as auth identifier)
+  const userMetadata = {
+    name: fullName,
+    fullName,
+    full_name: fullName,
+    institution: institutionId,
+    institutionId,
+    institution_id: institutionId,
+    studentId,
+    enrollment_code: studentId,
+    phone,
+    role: "student",
+  };
+
   const { data: authData, error: authError } = await supabase.auth.signUp({
-    email: email,
-    password: password,
-    options: {
-      data: userMetadata,
-    }
-  })
+    email,
+    password,
+    options: { data: userMetadata },
+  });
 
   if (authError) {
     console.error("Signup auth error:", {
       message: authError.message,
       status: (authError as any).status,
       code: (authError as any).code,
-    })
-    redirect("/signup?error=" + authError.message)
+    });
+
+    const status = (authError as any).status as number | undefined;
+    const code = (authError as any).code as string | undefined;
+    const msg = (authError.message ?? "").toLowerCase();
+
+    if (msg.includes("user already registered")) {
+      redirect("/signup?error=" + encodeURIComponent("Este email já está registado."));
+    }
+
+    // This is the case you reported ("Database error saving new user"),
+    // often caused by DB triggers hitting unique constraints (e.g. profiles_student_id_key).
+    if (status === 500 && code === "unexpected_failure") {
+      const postDup = await checkDuplicates();
+      if (postDup.kind === "email") {
+        redirect("/signup?error=" + encodeURIComponent("Este email já está registado."));
+      }
+      if (postDup.kind === "studentId") {
+        redirect("/signup?error=" + encodeURIComponent("Este ID de estudante já está registado."));
+      }
+    }
+
+    redirect(
+      "/signup?error=" +
+        encodeURIComponent("Não foi possível criar a conta. Verifique se o email/ID já existem e tente novamente."),
+    );
   }
 
   if (authData.user) {
-    // Insert into users table
     const { error: userError } = await supabase
-      .from('users')
-      .upsert({
-        id: authData.user.id,
-        institution_id: institutionId,
-        enrollment_code: studentId,
-        password_hash: password, // In production, hash this
-        role: 'student',
-        full_name: fullName,
-        email: email,
-        phone: phone,
-        status: 'pending',
-        is_verified: false,
-      }, { onConflict: 'id' })
+      .from("users")
+      .upsert(
+        {
+          id: authData.user.id,
+          institution_id: institutionId,
+          enrollment_code: studentId,
+          password_hash: password, // TODO: hash in production
+          role: "student",
+          full_name: fullName,
+          status: "pending",
+          is_verified: false,
+        },
+        { onConflict: "id" },
+      );
 
     if (userError) {
-      // If user insert fails, delete auth user
-      console.error("Signup users upsert error:", userError)
-      redirect("/signup?error=" + encodeURIComponent(userError.message))
+      console.error("Signup users upsert error:", userError);
+      redirect("/signup?error=" + encodeURIComponent(userError.message));
     }
 
-    // Insert into students table
     const { error: studentError } = await supabase
-      .from('students')
-      .upsert({
-        id: authData.user.id,
-        class_id: null, // Will be set later
-        enrollment_year: new Date().getFullYear(),
-        is_seller: false,
-        rating: 0.00,
-        total_reviews: 0,
-      }, { onConflict: 'id' })
+      .from("students")
+      .upsert(
+        {
+          id: authData.user.id,
+          class_id: null,
+          enrollment_year: new Date().getFullYear(),
+          is_seller: false,
+          rating: 0.0,
+          total_reviews: 0,
+        },
+        { onConflict: "id" },
+      );
 
     if (studentError) {
-      // Cleanup if student insert fails
-      await supabase.from('users').delete().eq('id', authData.user.id)
-      console.error("Signup students upsert error:", studentError)
-      redirect("/signup?error=" + encodeURIComponent(studentError.message))
+      await supabase.from("users").delete().eq("id", authData.user.id);
+      console.error("Signup students upsert error:", studentError);
+      redirect("/signup?error=" + encodeURIComponent(studentError.message));
     }
   }
 
-  redirect("/login?message=Conta criada com sucesso. Faça login.")
+  redirect("/login?message=" + encodeURIComponent("Conta criada com sucesso. Faça login."));
 }
 
 export async function logout() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-  redirect("/login")
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
 }
