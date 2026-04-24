@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import 'react-toastify/dist/ReactToastify.css';
 import ToastProvider from "@/components/ToastProvider";
 import { Suspense } from "react";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/sonner";
 
 const jetbrainsMono = JetBrains_Mono({subsets:['latin'],variable:'--font-mono'});
 
@@ -40,6 +40,7 @@ export default function RootLayout({
       >
         <Suspense fallback={null}>
           <ToastProvider />
+          <Toaster />
         </Suspense>
         {children}
 

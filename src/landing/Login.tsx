@@ -3,7 +3,7 @@ import { login } from '@/app/auth/actions';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 interface LoginProps {
   onFlipToSignup?: () => void;
