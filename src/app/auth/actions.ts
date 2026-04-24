@@ -129,6 +129,9 @@ export async function signup(formData: FormData) {
     institutionId,
     institution_id: institutionId,
     studentId,
+    // IMPORTANT: your DB trigger `handle_new_user()` reads `raw_user_meta_data->>'student_id'`
+    // and inserts into `public.profiles.student_id` (unique). If we don't send it, it becomes '' and collides.
+    student_id: studentId,
     enrollment_code: studentId,
     phone,
     role: "student",
