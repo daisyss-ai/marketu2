@@ -55,15 +55,18 @@ export async function signup(formData: FormData) {
       p_student_id: studentId,
     });
 
-    if (!conflictError && Array.isArray(conflictData) && conflictData[0]) {
-      const { email_exists, student_id_exists } = conflictData[0] as {
-        email_exists: boolean;
-        student_id_exists: boolean;
-      };
+    if (!conflictError && conflictData) {
+      const row = Array.isArray(conflictData) ? conflictData[0] : conflictData;
+      if (row && typeof row === "object" && ("email_exists" in row || "student_id_exists" in row)) {
+        const { email_exists, student_id_exists } = row as {
+          email_exists?: boolean;
+          student_id_exists?: boolean;
+        };
 
-      if (email_exists) return { kind: "email" as const };
-      if (student_id_exists) return { kind: "studentId" as const };
-      return { kind: "none" as const };
+        if (email_exists) return { kind: "email" as const };
+        if (student_id_exists) return { kind: "studentId" as const };
+        return { kind: "none" as const };
+      }
     }
 
     // 1) enrollment_code (unique)
