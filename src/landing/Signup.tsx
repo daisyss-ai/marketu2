@@ -1,6 +1,33 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import InstitutionSelect from '@/components/InstitutionSelect';
+import { signup } from '@/app/auth/actions';
+
+const OTP_ENABLED = false;
+
+const signupSchema = z.object({
+  studentId: z.string().min(1, 'Obrigatório'),
+  fullName: z.string().min(1, 'Obrigatório'),
+  email: z.string().email('Email inválido'),
+  institution: z.string().min(1,'Instituição inválida'),
+  phone: z.string().min(1, 'Obrigatório'),
+  password: z.string().min(6, 'Mínimo 6 caracteres'),
+  confirmPassword: z.string().min(1, 'Obrigatório'),
+}).superRefine(({ password, confirmPassword }, ctx) => {
+  if (password !== confirmPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['confirmPassword'],
+      message: 'Senhas diferentes',
+    });
+  }
+});
+
+type SignupFormData = z.infer<typeof signupSchema>;
 
 interface SignupProps {
   onFlipToLogin?: () => void;
@@ -13,54 +40,63 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const [studentId, setStudentId] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [smsCode, setSmsCode] = useState(Array(6).fill(''));
-  const [codeRequested, setCodeRequested] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [email, setEmail] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<any>({});
-
-  const academicData = {
-    processNumber: '68722',
-    areaOfTraining: 'Informática',
-    course: 'Técnico de Informática',
-    class: '13ª classe',
-    shift: 'Tarde',
-    classroom: 'III3A',
-    number: '52'
+  const goToLogin = () => {
+    if (handleSwitch) return handleSwitch();
+    router.push('/login');
   };
 
-  const validateStep = (stepNumber: number) => {
-    const newErrors: any = {};
-    if (stepNumber === 1) {
-      if (!studentId.trim()) newErrors.studentId = 'Obrigatório';
-      if (!fullName.trim()) newErrors.fullName = 'Obrigatório';
-    } else if (stepNumber === 3) {
-      if (!phone.trim()) newErrors.phone = 'Obrigatório';
-    } else if (stepNumber === 5) {
-      if (password.length < 6) newErrors.password = 'Mínimo 6 caracteres';
-      if (password !== confirmPassword) newErrors.confirmPassword = 'Senhas diferentes';
-    }
-    return newErrors;
+  const { register, control, watch, trigger, getValues, formState: { errors } } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      studentId: '',
+      fullName: '',
+      email: '',
+      institution: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
+
+  const watchedStudentId = watch('studentId');
+  const watchedFullName = watch('fullName');
+  const watchedInstitution = watch('institution');
+  const watchedPhone = watch('phone');
+  const watchedEmail = watch('email');
+  // Placeholder for the OTP step (currently disabled).
+  const smsCode = Array(6).fill('');
+
+  const academicData = {
+    course: 'A definir nas Definicoes',
+    classroom: 'A definir nas Definicoes',
   };
 
   const handleNextStep = async () => {
-    const newErrors = validateStep(step);
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    const stepFields =
+      step === 1 ? ['studentId', 'fullName', 'email', 'institution'] as const :
+      step === 3 ? ['phone'] as const :
+      step === 5 ? ['password', 'confirmPassword'] as const :
+      [] as const;
+
+    const valid = stepFields.length ? await trigger(stepFields) : true;
+    if (!valid) return;
+
+    if (step === 5) {
+      // Submit form
+      setLoading(true);
+      const form = document.getElementById('signup-form') as HTMLFormElement;
+      form.requestSubmit();
       return;
     }
 
     setLoading(true);
     try {
       if (step === 3) {
-        setCodeRequested(true);
-        setCountdown(60);
+        // OTP step temporarily disabled (skip SMS code step)
+        if (!OTP_ENABLED) {
+          setStep(5);
+          return;
+        }
       }
       if (step === 6) {
         router.push('/login');
@@ -92,12 +128,11 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
                 <input 
                   id="studentId"
                   placeholder="Ex: 2024..." 
-                  value={studentId} 
-                  onChange={e => setStudentId(e.target.value)}
+                  {...register('studentId')}
                   className={inputClass}
                   aria-invalid={!!errors.studentId}
                 />
-                {errors.studentId && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.studentId}</p>}
+                {errors.studentId && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.studentId.message}</p>}
               </div>
 
               <div>
@@ -105,16 +140,42 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
                 <input 
                   id="fullName"
                   placeholder="Teu nome como no BI" 
-                  value={fullName} 
-                  onChange={e => setFullName(e.target.value)}
+                  {...register('fullName')}
                   className={inputClass}
                   aria-invalid={!!errors.fullName}
                 />
-                {errors.fullName && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.fullName}</p>}
+                {errors.fullName && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.fullName.message}</p>}
               </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Email Institucional</label>
+                <input 
+                  id="email"
+                  type="email"
+                  placeholder="nome@instituicao.edu" 
+                  {...register('email')}
+                  className={inputClass}
+                  aria-invalid={!!errors.email}
+                />
+                {errors.email && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.email.message}</p>}
+              </div>
+
+              <Controller
+                control={control}
+                name="institution"
+                render={({ field }) => (
+                  <InstitutionSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    name={field.name}
+                    ref={field.ref}
+                    error={errors.institution?.message as string}
+                  />
+                )}
+              />
             </div>
 
-            <button onClick={handleNextStep} className={buttonClass}>Continuar</button>
+            <button type="button" onClick={handleNextStep} className={buttonClass}>Continuar</button>
           </div>
         );
       case 2:
@@ -128,11 +189,15 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
             <div className="bg-primary/5 border border-primary/10 p-5 rounded-2xl text-sm space-y-3">
               <div className="flex justify-between border-b border-primary/10 pb-2">
                 <span className="text-muted font-medium">Nome:</span>
-                <span className="text-foreground font-bold">{fullName}</span>
+                <span className="text-foreground font-bold">{watchedFullName}</span>
               </div>
               <div className="flex justify-between border-b border-primary/10 pb-2">
                 <span className="text-muted font-medium">Curso:</span>
                 <span className="text-foreground font-bold">{academicData.course}</span>
+              </div>
+              <div className="flex justify-between border-b border-primary/10 pb-2">
+                <span className="text-muted font-medium">Instituição:</span>
+                <span className="text-foreground font-bold">{watchedInstitution ? watchedInstitution.replace(/-/g, ' ') : 'Não informada'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted font-medium">Turma:</span>
@@ -141,8 +206,8 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
             </div>
 
             <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className={secondaryButtonClass}>Voltar</button>
-              <button onClick={handleNextStep} className="flex-[2] bg-primary text-white py-3 rounded-xl font-bold hover:opacity-90 shadow-md">Sim, sou eu</button>
+              <button type="button" onClick={() => setStep(1)} className={secondaryButtonClass}>Voltar</button>
+              <button type="button" onClick={handleNextStep} className="flex-2 bg-primary text-white py-3 rounded-xl font-bold hover:opacity-90 shadow-md">Sim, sou eu</button>
             </div>
           </div>
         );
@@ -160,15 +225,16 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
                 id="phone"
                 type="tel"
                 placeholder="9xx xxx xxx" 
-                value={phone} 
-                onChange={e => setPhone(e.target.value)}
+                {...register('phone')}
                 className={inputClass}
                 aria-invalid={!!errors.phone}
               />
-              {errors.phone && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.phone}</p>}
+              {errors.phone && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.phone.message}</p>}
             </div>
 
-            <button onClick={handleNextStep} className={buttonClass}>Receber Código</button>
+            <button type="button" onClick={handleNextStep} className={buttonClass}>
+              {OTP_ENABLED ? 'Receber Código' : 'Continuar'}
+            </button>
           </div>
         );
       case 4:
@@ -176,7 +242,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
           <div className="space-y-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
               <h2 className="text-2xl font-extrabold text-foreground mb-1">Código SMS</h2>
-              <p className="text-muted text-sm">Enviamos um código de 6 dígitos para {phone}</p>
+              <p className="text-muted text-sm">Enviamos um código de 6 dígitos para {watchedPhone}</p>
             </div>
 
             <div className="flex justify-center gap-2">
@@ -191,8 +257,8 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
             </div>
             
             <div className="pt-2">
-              <button onClick={handleNextStep} className={buttonClass}>Verificar</button>
-              <button className="mt-4 text-sm text-primary font-bold hover:underline">Reenviar código</button>
+              <button type="button" onClick={handleNextStep} className={buttonClass}>Verificar</button>
+              <button type="button" className="mt-4 text-sm text-primary font-bold hover:underline">Reenviar código</button>
             </div>
           </div>
         );
@@ -211,9 +277,9 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
                   id="password"
                   type="password" 
                   placeholder="Min. 6 caracteres" 
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)}
+                  {...register('password')}
                   className={inputClass}
+                  aria-invalid={!!errors.password}
                 />
               </div>
 
@@ -223,17 +289,17 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
                   id="confirmPassword"
                   type="password" 
                   placeholder="Repete a senha" 
-                  value={confirmPassword} 
-                  onChange={e => setConfirmPassword(e.target.value)}
+                  {...register('confirmPassword')}
                   className={inputClass}
+                  aria-invalid={!!errors.confirmPassword}
                 />
               </div>
             </div>
 
-            {errors.password && <p className="text-error text-sm font-medium">{errors.password}</p>}
-            {errors.confirmPassword && <p className="text-error text-sm font-medium">{errors.confirmPassword}</p>}
+            {errors.password && <p className="text-error text-sm font-medium">{errors.password.message}</p>}
+            {errors.confirmPassword && <p className="text-error text-sm font-medium">{errors.confirmPassword.message}</p>}
 
-            <button onClick={handleNextStep} className={buttonClass}>Criar Conta</button>
+            <button type="button" onClick={handleNextStep} className={buttonClass}>Criar Conta</button>
           </div>
         );
       case 6:
@@ -246,7 +312,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
               <h2 className="text-2xl font-extrabold text-foreground mb-1">Tudo Pronto!</h2>
               <p className="text-muted leading-relaxed">A tua conta Marketu foi criada com sucesso. Bem-vindo à comunidade!</p>
             </div>
-            <button onClick={() => router.push('/home')} className={buttonClass}>Começar agora</button>
+            <button type="button" onClick={() => router.push('/home')} className={buttonClass}>Começar agora</button>
           </div>
         );
       default:
@@ -254,8 +320,16 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
     }
   };
 
+  const progressSteps = OTP_ENABLED ? [1, 2, 3, 4, 5] : [1, 2, 3, 5];
+
   return (
-    <div className="flex bg-surface rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl min-h-[600px] border border-muted/10">
+    <form id="signup-form" action={signup} className="flex bg-surface rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl min-h-600px border border-muted/10">
+      {/* Keep values from previous steps in the native form payload */}
+      <input type="hidden" name="studentId" value={watchedStudentId ?? ''} readOnly />
+      <input type="hidden" name="fullName" value={watchedFullName ?? ''} readOnly />
+      <input type="hidden" name="email" value={watchedEmail ?? ''} readOnly />
+      <input type="hidden" name="institution" value={watchedInstitution ?? ''} readOnly />
+      <input type="hidden" name="phone" value={watchedPhone ?? ''} readOnly />
       <div className="hidden md:flex md:w-1/2 bg-primary items-center justify-center p-12 text-white relative">
         <div className="relative z-10 text-center">
           <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
@@ -273,7 +347,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
       <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
         {step < 6 && (
           <div className="flex justify-between mb-10 px-2">
-            {[1, 2, 3, 4, 5].map(i => (
+            {progressSteps.map(i => (
               <div key={i} className={`h-1.5 flex-1 mx-1 rounded-full transition-all duration-500 ${step >= i ? 'bg-primary' : 'bg-muted/10'}`} />
             ))}
           </div>
@@ -281,11 +355,18 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
         {renderStep()}
         {step < 6 && (
           <p className="mt-8 text-center text-sm text-muted">
-            Já tens conta? <button onClick={handleSwitch} className="text-primary font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-primary/20 rounded px-1">Entrar aqui</button>
+            Já tens conta?{' '}
+            <button
+              type="button"
+              onClick={goToLogin}
+              className="text-primary font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-primary/20 rounded px-1"
+            >
+              Entrar aqui
+            </button>
           </p>
         )}
       </div>
-    </div>
+    </form>
   );
 };
 

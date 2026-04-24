@@ -57,6 +57,10 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
           {product.title}
         </h3>
 
+        {product.description && (
+          <p className="text-xs text-muted line-clamp-2 leading-relaxed mb-3">{product.description}</p>
+        )}
+
         <div className="flex items-baseline gap-1 mb-3">
           <span className="text-xl font-black text-foreground tracking-tight">
             {typeof product.price === 'number' ? product.price.toLocaleString('pt-AO') : product.price}

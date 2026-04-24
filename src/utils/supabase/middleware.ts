@@ -31,7 +31,8 @@ export async function updateSession(request: NextRequest) {
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
-  /*
+  // This refreshes the session cookies when needed.
+  // Keep this call close to `createServerClient` to avoid hard-to-debug logout issues.
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -57,5 +58,4 @@ export async function updateSession(request: NextRequest) {
   }
 
   return supabaseResponse;
-  */
 }

@@ -27,13 +27,30 @@ async function apiRequest(endpoint: string, options: any = {}) {
       headers,
     });
 
-    const data = await response.json();
-
+    // Check if response is ok and contains JSON
     if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = { error: `Erro HTTP ${response.status}` };
+      }
       throw {
         status: response.status,
-        message: data.error || 'Erro ao comunicar com servidor',
-        data,
+        message: errorData.error || 'Erro ao comunicar com servidor',
+        data: errorData,
+      };
+    }
+
+    // Try to parse JSON, handle non-JSON responses
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw {
+        status: response.status,
+        message: 'Resposta inválida do servidor (não é JSON)',
+        data: null,
       };
     }
 
