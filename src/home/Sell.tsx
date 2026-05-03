@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import { ChevronLeft, Upload } from 'lucide-react';
 import Header from '../components/layout/Header';
 import { useAuthStore } from '../store/authStore';
@@ -12,7 +13,7 @@ import {
   FormAlert,
   LoadingSpinner,
 } from '../components/FormFields';
-import { useProductUpload, useImageUpload } from '../hooks/useAPI';
+import { useProductUpload } from '../hooks/useAPI';
 
 interface SellFormData {
   title: string;
@@ -31,8 +32,13 @@ interface ValidationErrors {
 const Sell = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);
-  const { uploadProduct, loading, error, success } = useProductUpload();
-  const { uploadImages } = useImageUpload();
+  const { uploadProduct, loading, error } = useProductUpload();
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [formData, setFormData] = useState<SellFormData>({
     title: '',
@@ -45,18 +51,16 @@ const Sell = () => {
   });
 
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-  const [, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
 
   const categories = [
-    { value: 'Material Escolar', label: 'Material Escolar' },
-    { value: 'Tecnologia', label: 'Tecnologia' },
-    { value: 'Livros', label: 'Livros' },
-    { value: 'Roupas e Acessórios', label: 'Roupas e Acessórios' },
-    { value: 'Eletrônicos', label: 'Eletrônicos' },
-    { value: 'Móveis', label: 'Móveis' },
-    { value: 'Esportes', label: 'Esportes' },
-    { value: 'Outros', label: 'Outros' },
+    { value: 'material_escolar', label: 'Material Escolar' },
+    { value: 'tecnologia', label: 'Tecnologia e Eletrônicos' },
+    { value: 'livros', label: 'Livros' },
+    { value: 'roupas', label: 'Roupas e Acessórios' },
+    { value: 'servicos', label: 'Serviços' },
+    { value: 'outros', label: 'Outros (Móveis, Esportes, etc)' },
   ];
 
   const conditions = [
@@ -72,6 +76,17 @@ const Sell = () => {
     { value: 'Cabinda', label: 'Cabinda' },
     { value: 'Online', label: 'Online' },
   ];
+
+  if (!mounted) {
+    return (
+      <div>
+        <Header />
+        <div className="max-w-md mx-auto mt-12 p-6 bg-white rounded shadow text-center">
+          <p className="text-gray-600 mb-4">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!authUser) {
     return (
@@ -107,11 +122,11 @@ const Sell = () => {
 
   const handleFilesSelected = async (files: File[]) => {
     setUploadedFiles(files);
-    // For now, create URLs for preview
+    // Create URLs for preview only
     const urls = files.map((file) => URL.createObjectURL(file));
     setFormData((prev) => ({
       ...prev,
-      image_urls: urls,
+      image_urls: urls, // Keep URLs only for preview
     }));
   };
 
@@ -170,7 +185,7 @@ const Sell = () => {
     try {
       setValidationErrors({});
 
-      // Prepare product data
+      // Prepare product data with Files
       const productData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
@@ -178,7 +193,7 @@ const Sell = () => {
         condition: formData.condition,
         price: parseFloat(formData.price),
         location: formData.location,
-        image_urls: formData.image_urls,
+        files: uploadedFiles, // Pass actual File objects
         stock: 1, // Default stock quantity
       };
 
@@ -206,6 +221,8 @@ const Sell = () => {
       }, 2000);
     } catch (err) {
       console.error('Error uploading product:', err);
+      const errorMsg = err instanceof Error ? err.message : (err as any)?.error || 'Erro desconhecido ao publicar produto';
+      setValidationErrors({ submit: errorMsg });
     }
   };
 

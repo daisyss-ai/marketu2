@@ -29,11 +29,21 @@ export const useUserProfile = (userId?: string) => {
           const statsData = await usersAPI.getVendorStats(userId);
           setStats(statsData);
         } catch (err) {
-          // Not a vendor, that's fine
+          // Not a vendor or error fetching stats, that's fine - set default stats
+          setStats({
+            stats: {
+              avgRating: profileData?.rating || 0,
+              reviewCount: profileData?.total_reviews || 0,
+              totalProducts: 0,
+              totalOrders: 0,
+              totalRevenue: 0,
+            },
+          });
         }
       } catch (err: any) {
-        setError(err.message || 'Erro ao carregar perfil');
-        console.error('Error fetching profile:', err);
+        const errorMessage = err?.message || err?.error || 'Erro ao carregar perfil';
+        setError(errorMessage);
+        console.error('Error fetching profile:', errorMessage);
       } finally {
         setLoading(false);
       }
@@ -66,8 +76,9 @@ export const useUserProducts = (userId?: string, page = 1, limit = 20) => {
         setProducts(data.products || []);
         setPagination(data.pagination);
       } catch (err: any) {
-        setError(err.message || 'Erro ao carregar produtos');
-        console.error('Error fetching products:', err);
+        const errorMessage = err?.message || err?.error || 'Erro ao carregar produtos';
+        setError(errorMessage);
+        console.error('Error fetching products:', errorMessage);
       } finally {
         setLoading(false);
       }
@@ -91,11 +102,27 @@ export const useProductUpload = () => {
       setError(null);
       setSuccess(false);
 
-      const result = await productsAPI.createProduct(productData);
+      // Create FormData for multipart upload
+      const formData = new FormData();
+      
+      // Add product fields
+      formData.append('title', productData.title);
+      formData.append('description', productData.description || '');
+      formData.append('category', productData.category);
+      formData.append('price', String(productData.price));
+      
+      // Add image files
+      if (productData.files && Array.isArray(productData.files)) {
+        productData.files.forEach((file: File) => {
+          formData.append('images', file);
+        });
+      }
+
+      const result = await productsAPI.createProduct(formData);
       setSuccess(true);
       return result;
     } catch (err: any) {
-      const errorMessage = err.message || 'Erro ao publicar produto';
+      const errorMessage = err.message || err?.error || 'Erro ao publicar produto';
       setError(errorMessage);
       throw err;
     } finally {

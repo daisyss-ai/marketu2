@@ -156,8 +156,14 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('products');
   const [deleteConfirm, setDeleteConfirm] = useState<string | number | null>(null);
   const [alertMessage, setAlertMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  const { profile, stats, loading: profileLoading } = useUserProfile(authUser?.id);
+  // Prevent hydration mismatch by only rendering after client hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const { stats, loading: profileLoading } = useUserProfile(authUser?.id);
   const { products, loading: productsLoading } = useUserProducts(authUser?.id, 1, 12);
   const { deleteProduct, loading: deleteLoading } = useDeleteProduct();
 
@@ -180,6 +186,18 @@ const Profile = () => {
       });
     }
   };
+
+  // Show loading/placeholder until hydrated
+  if (!isHydrated) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Header />
+        <div className="max-w-6xl mx-auto px-6 py-8 text-center text-gray-600">
+          Carregando...
+        </div>
+      </div>
+    );
+  }
 
   if (!authUser) {
     return (

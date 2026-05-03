@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useDeferredValue, useEffect, useState, useTransition } from 'react';
+import { useDeferredValue, useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 const CATEGORY_OPTIONS: { label: string; value: string }[] = [
@@ -32,7 +32,7 @@ function buildUrl(params: {
 }
 
 export default function DashboardControls({
-  page,
+  page: _page,
   limit,
   view,
   sort,
@@ -97,6 +97,13 @@ export default function DashboardControls({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard/new')}
+            className="px-4 py-2 rounded-full text-sm font-semibold border border-[#4B187C] text-[#4B187C] bg-white hover:bg-[#4B187C]/5 transition-colors"
+          >
+            + Novo produto
+          </button>
           <button
             type="button"
             onClick={() => update({ view: 'grid' })}
