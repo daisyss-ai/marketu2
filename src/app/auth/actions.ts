@@ -5,14 +5,28 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+function sanitizeRedirectTo(value: FormDataEntryValue | null): string | null {
+  if (typeof value !== "string") return null;
+  const redirectTo = value.trim();
+  if (!redirectTo.startsWith("/")) return null;
+  if (redirectTo.startsWith("//")) return null;
+  if (redirectTo.includes("://")) return null;
+  return redirectTo;
+}
+
 export async function login(formData: FormData) {
   const supabase = await createClient();
 
   const email = ((formData.get("email") as string | null)?.trim() ?? "").toLowerCase();
   const password = (formData.get("password") as string | null) ?? "";
+  const redirectTo = sanitizeRedirectTo(formData.get("redirectTo"));
 
   if (!email.includes("@")) {
-    redirect("/login?error=" + encodeURIComponent("Use o email para entrar."));
+    redirect(
+      "/login?error=" +
+        encodeURIComponent("Use o email para entrar.") +
+        (redirectTo ? "&redirectTo=" + encodeURIComponent(redirectTo) : ""),
+    );
   }
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -20,7 +34,18 @@ export async function login(formData: FormData) {
     password,
   });
 
-  if (error) redirect("/login?error=" + encodeURIComponent(error.message));
+  if (error) {
+    redirect(
+      "/login?error=" +
+        encodeURIComponent(error.message) +
+        (redirectTo ? "&redirectTo=" + encodeURIComponent(redirectTo) : ""),
+    );
+  }
+
+  if (redirectTo && redirectTo !== "/login" && redirectTo !== "/signup") {
+    redirect(redirectTo);
+  }
+
   redirect("/home?message=" + encodeURIComponent("Login efectuado com sucesso"));
 }
 
@@ -33,6 +58,7 @@ export async function signup(formData: FormData) {
   const institutionId = (formData.get("institution") as string | null)?.trim() ?? "";
   const phone = (formData.get("phone") as string | null)?.trim() ?? "";
   const password = (formData.get("password") as string | null) ?? "";
+  const redirectTo = sanitizeRedirectTo(formData.get("redirectTo"));
 
   if (!studentId || !fullName || !email || !institutionId || !password) {
     redirect("/signup?error=" + encodeURIComponent("Preencha todos os campos obrigatórios."));
@@ -229,6 +255,9 @@ export async function signup(formData: FormData) {
   }
 
   if (authData.session) {
+    if (redirectTo && redirectTo !== "/login" && redirectTo !== "/signup") {
+      redirect(redirectTo);
+    }
     redirect("/home?message=" + encodeURIComponent("Conta criada com sucesso."));
   }
 

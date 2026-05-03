@@ -1,5 +1,3 @@
-import { LucideIcon } from 'lucide-react';
-
 export interface Product {
   id: string | number;
   title: string;

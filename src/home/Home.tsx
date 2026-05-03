@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import React, { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Header from '../components/layout/Header';
 import FilterBar from '../components/FilterBar';
 import ProductGrid from '../components/produtos/ProductGrid';
@@ -15,11 +15,8 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 const Home = () => {
   const navigate = useRouter();
   const login = useAuthStore((state) => state.login);
-  const logout = useAuthStore((state) => state.logout);
-  const user = useAuthStore((state) => state.user);
   const [creatingProducts, setCreatingProducts] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
-  const [userLoading, setUserLoading] = useState(true);
   
   const {
     filters,
@@ -44,7 +41,6 @@ const Home = () => {
 
         if (error) {
           console.error('Error fetching user:', error);
-          setUserLoading(false);
           return;
         }
 
@@ -89,8 +85,6 @@ const Home = () => {
         }
       } catch (err) {
         console.error('Failed to fetch user:', err);
-      } finally {
-        setUserLoading(false);
       }
     };
 

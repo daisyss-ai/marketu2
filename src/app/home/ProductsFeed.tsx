@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ProductGrid from '@/components/produtos/ProductGrid';
 import { FilterState, Product } from '@/types';
 
@@ -58,6 +58,7 @@ export default function ProductsFeed({
     const url = `/api/products?${qs}`;
     const controller = new AbortController();
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
     setData((prev) => ({ ...prev, products: [] }));

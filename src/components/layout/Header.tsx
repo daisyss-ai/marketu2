@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import React from 'react'
+
 import { Search, ShoppingCart, ChevronDown } from 'lucide-react'
 import { logout } from '@/app/auth/actions';
 

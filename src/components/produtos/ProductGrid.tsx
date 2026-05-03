@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import type { CSSProperties } from 'react';
 import ProductCard from './ProductCard';
 import { Product } from '../../types';
 
@@ -95,7 +95,7 @@ const ProductGrid = ({
             className="animate-fade-in"
             style={{
               animation: 'fadeIn 0.3s ease-in-out',
-            } as React.CSSProperties}
+            } as CSSProperties}
           >
             <ProductCard
               product={product}

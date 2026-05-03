@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import type { Product } from '../../types';
 
 interface ProductListProps {

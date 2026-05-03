@@ -13,9 +13,13 @@ const getToken = () => {
 async function apiRequest(endpoint: string, options: any = {}) {
   const token = getToken();
   const headers: any = {
-    'Content-Type': 'application/json',
     ...options.headers,
   };
+
+  // Only set Content-Type if not explicitly skipped (for FormData uploads)
+  if (!options.skipContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -27,7 +31,16 @@ async function apiRequest(endpoint: string, options: any = {}) {
       headers,
     });
 
-    const data = await response.json();
+    // Handle non-JSON responses (e.g., HTML error pages)
+    const contentType = response.headers.get('content-type');
+    let data;
+    
+    if (contentType?.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { error: text || 'Non-JSON response from server' };
+    }
 
     if (!response.ok) {
       throw {
@@ -38,8 +51,9 @@ async function apiRequest(endpoint: string, options: any = {}) {
     }
 
     return data.data || data;
-  } catch (error) {
-    console.error('API Error:', error);
+  } catch (error: any) {
+    const errorMessage = error?.message || error?.error || 'Erro desconhecido';
+    console.error('API Error:', errorMessage, error);
     throw error;
   }
 }
@@ -128,11 +142,22 @@ export const productsAPI = {
       method: 'GET',
     }),
 
-  createProduct: (productData: any) =>
-    apiRequest('/products', {
+  createProduct: (productData: any) => {
+    // Check if productData is FormData (for multipart uploads with files)
+    if (productData instanceof FormData) {
+      return apiRequest('/products', {
+        method: 'POST',
+        body: productData,
+        skipContentType: true, // Let browser set Content-Type with boundary
+      });
+    }
+    
+    // Otherwise, send as JSON
+    return apiRequest('/products', {
       method: 'POST',
       body: JSON.stringify(productData),
-    }),
+    });
+  },
 
   updateProduct: (productId: string, data: any) =>
     apiRequest(`/products/${productId}`, {
