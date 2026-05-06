@@ -86,7 +86,6 @@ export async function getProducts(params: GetProductsParams) {
         description,
         price,
         rating,
-        is_approved,
         created_at,
         categories(name,slug),
         product_media(url,position,media_type,is_preview)
@@ -94,9 +93,6 @@ export async function getProducts(params: GetProductsParams) {
       { count: 'exact' }
     )
     .eq('is_active', true);
-
-  // Public feed should only show approved items.
-  q = q.eq('is_approved', true);
 
   if (search) q = q.ilike('title', `%${search}%`);
   if (categoryId) q = q.eq('category_id', categoryId);
