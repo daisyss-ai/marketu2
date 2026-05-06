@@ -2,10 +2,10 @@
 import { useState } from 'react';
 import type { MouseEvent } from 'react';
 import { Heart, Bookmark } from 'lucide-react';
-import { Product } from '../../types';
+import type { ProductCardItem } from '../../types';
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductCardItem;
   onToggleFavorite?: (id: string | number) => void;
   isFavorited?: boolean;
 }

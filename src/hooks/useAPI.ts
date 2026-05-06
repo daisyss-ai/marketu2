@@ -96,31 +96,98 @@ export const useProductUpload = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const uploadProduct = useCallback(async (productData: any) => {
+  const uploadProduct = useCallback(async (productData: {
+    title: string;
+    description: string;
+    category_id: string;
+    condition: 'new' | 'used' | 'digital';
+    price: number;
+    is_free: boolean;
+    quantity: number;
+    files: File[];
+  }) => {
     try {
       setLoading(true);
       setError(null);
       setSuccess(false);
 
-      // Create FormData for multipart upload
-      const formData = new FormData();
-      
-      // Add product fields
-      formData.append('title', productData.title);
-      formData.append('description', productData.description || '');
-      formData.append('category', productData.category);
-      formData.append('price', String(productData.price));
-      
-      // Add image files
-      if (productData.files && Array.isArray(productData.files)) {
-        productData.files.forEach((file: File) => {
-          formData.append('images', file);
+      const createRes = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: productData.title,
+          description: productData.description,
+          category_id: productData.category_id,
+          condition: productData.condition,
+          price: productData.price,
+          is_free: productData.is_free,
+          quantity: productData.quantity,
+        }),
+      });
+
+      const createJson = await createRes.json().catch(() => ({}));
+      if (!createRes.ok) {
+        throw new Error((createJson && (createJson.error || createJson.message)) || 'Erro ao criar produto');
+      }
+
+      const productId = String(createJson?.data?.id || '');
+      const sellerId = String(createJson?.data?.seller_id || '');
+      if (!productId || !sellerId) throw new Error('Resposta invÃ¡lida do servidor');
+
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const bucket = 'product-media';
+
+      const mediaToAdd: Array<{
+        url: string;
+        filename: string;
+        size_bytes: number;
+        position: number;
+        is_preview: boolean;
+      }> = [];
+
+      const files = Array.isArray(productData.files) ? productData.files.slice(0, 5) : [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const path = `${sellerId}/${productId}/${file.name}`;
+        const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
+          contentType: file.type || 'application/octet-stream',
+          upsert: false,
+          cacheControl: '3600',
+        });
+        if (uploadError) {
+          const msg = uploadError.message || 'Erro desconhecido';
+          if (msg.toLowerCase().includes('row-level security')) {
+            throw new Error(
+              "Falha ao enviar imagem: permissÃ£o negada (RLS) no Storage. Crie/ajuste a policy do bucket `product-media` para permitir INSERT a utilizadores autenticados no caminho `{auth.uid()}/{product_id}/*`."
+            );
+          }
+          throw new Error(`Falha ao enviar imagem: ${msg}`);
+        }
+
+        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+        const publicUrl = pub.publicUrl;
+        if (!publicUrl) throw new Error('Falha ao obter URL pÃºblica da imagem');
+
+        mediaToAdd.push({
+          url: publicUrl,
+          filename: file.name,
+          size_bytes: file.size,
+          position: i,
+          is_preview: i === 0,
         });
       }
 
-      const result = await productsAPI.createProduct(formData);
+      const patchRes = await fetch(`/api/products/${productId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ media_add: mediaToAdd }),
+      });
+      const patchJson = await patchRes.json().catch(() => ({}));
+      if (!patchRes.ok) throw new Error((patchJson && (patchJson.error || patchJson.message)) || 'Erro ao salvar imagens');
+
       setSuccess(true);
-      return result;
+      return { id: productId };
     } catch (err: any) {
       const errorMessage = err.message || err?.error || 'Erro ao publicar produto';
       setError(errorMessage);

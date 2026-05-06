@@ -1,10 +1,10 @@
 'use client';
 import type { CSSProperties } from 'react';
 import ProductCard from './ProductCard';
-import { Product } from '../../types';
+import type { ProductCardItem } from '../../types';
 
 interface ProductGridProps {
-  products: Product[];
+  products: ProductCardItem[];
   loading?: boolean;
   error?: string | null;
   totalProducts?: number;

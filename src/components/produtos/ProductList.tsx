@@ -1,9 +1,9 @@
 'use client';
 
-import type { Product } from '../../types';
+import type { ProductCardItem } from '../../types';
 
 interface ProductListProps {
-  products: Product[];
+  products: ProductCardItem[];
   loading?: boolean;
   error?: string | null;
   totalProducts?: number;

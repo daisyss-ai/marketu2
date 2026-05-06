@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import ProductGrid from '@/components/produtos/ProductGrid';
-import { FilterState, Product } from '@/types';
+import type { FilterState, ProductCardItem } from '@/types';
 
 type ProductsApiResponse = {
-  products: Product[];
+  products: ProductCardItem[];
   total: number;
   page: number;
   limit: number;
