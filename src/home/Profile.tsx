@@ -18,7 +18,7 @@ import Header from '../components/layout/Header';
 import { useAuthStore } from '../store/authStore';
 import { useUserProfile, useUserProducts, useDeleteProduct } from '../hooks/useAPI';
 import { LoadingSpinner, FormAlert } from '../components/FormFields';
-import { Product } from '../types';
+import type { ProductWithDetails } from '../types';
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -40,7 +40,7 @@ const StatCard = ({ icon, label, value, isRating = false }: StatCardProps) => (
 );
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductWithDetails;
   onDelete: (id: string | number) => void;
   onEdit: (id: string | number) => void;
 }
@@ -48,9 +48,9 @@ interface ProductCardProps {
 const ProductCard = ({ product, onDelete, onEdit }: ProductCardProps) => (
   <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-gray-100">
     <div className="relative h-48 bg-gray-100 overflow-hidden">
-      {product.img ? (
+      {product.preview_url ? (
         <img
-          src={product.img}
+          src={product.preview_url}
           alt={product.title}
           className="w-full h-full object-cover hover:scale-105 transition-transform"
         />
@@ -60,15 +60,15 @@ const ProductCard = ({ product, onDelete, onEdit }: ProductCardProps) => (
         </div>
       )}
       <span className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-1 rounded text-xs font-semibold">
-        {product.condition}
+        {product.type === 'digital' ? 'Digital' : 'FÃ­sico'}
       </span>
     </div>
 
     <div className="p-4">
       <h3 className="font-semibold text-gray-900 mb-1 truncate">{product.title}</h3>
-      <p className="text-sm text-gray-600 mb-2">{product.category}</p>
+      <p className="text-sm text-gray-600 mb-2">{product.category_name || 'Geral'}</p>
       <p className="text-lg font-bold text-[#4B187C] mb-4">
-        {typeof product.price === 'number' ? product.price.toLocaleString() : product.price} Kz
+        {product.is_free ? 'Gratuito' : `${(product.price ?? 0).toLocaleString('pt-AO')} Kz`}
       </p>
 
       <div className="flex gap-2">
@@ -328,7 +328,7 @@ const Profile = () => {
               </div>
             ) : products?.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product: Product) => (
+                {products.map((product: ProductWithDetails) => (
                   <ProductCard
                     key={product.id}
                     product={product}

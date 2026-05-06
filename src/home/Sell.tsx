@@ -1,27 +1,19 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { ChevronLeft, Upload } from 'lucide-react';
 import Header from '../components/layout/Header';
 import { useAuthStore } from '../store/authStore';
-import {
-  FormInput,
-  FormTextarea,
-  FormSelect,
-  FormFileUpload,
-  FormAlert,
-  LoadingSpinner,
-} from '../components/FormFields';
+import { FormInput, FormTextarea, FormSelect, FormFileUpload, FormAlert, LoadingSpinner } from '../components/FormFields';
 import { useProductUpload } from '../hooks/useAPI';
 
 interface SellFormData {
   title: string;
   description: string;
-  category: string;
-  condition: string;
+  category_id: string;
+  condition: 'new' | 'used' | 'digital' | '';
   price: string;
-  location: string;
   image_urls: string[];
 }
 
@@ -35,18 +27,51 @@ const Sell = () => {
   const { uploadProduct, loading, error } = useProductUpload();
 
   const [mounted, setMounted] = useState(false);
+  const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    setCategoriesLoading(true);
+    setCategoriesError(null);
+    fetch('/api/categories', { method: 'GET' })
+      .then(async (res) => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error((json && (json.error || json.message)) || 'Erro ao carregar categorias');
+        return json?.data?.categories as Array<{ id: string; name: string | null }> | undefined;
+      })
+      .then((rows) => {
+        if (!active) return;
+        const next = (Array.isArray(rows) ? rows : []).map((c) => ({ value: c.id, label: c.name || 'Sem nome' }));
+        setCategories(next);
+        if (next[0]?.value) {
+          setFormData((prev) => ({ ...prev, category_id: prev.category_id || next[0].value }));
+        }
+      })
+      .catch((e: unknown) => {
+        if (!active) return;
+        const msg = e instanceof Error ? e.message : 'Erro ao carregar categorias';
+        setCategoriesError(msg);
+      })
+      .finally(() => {
+        if (active) setCategoriesLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const [formData, setFormData] = useState<SellFormData>({
     title: '',
     description: '',
-    category: '',
+    category_id: '',
     condition: '',
     price: '',
-    location: '',
     image_urls: [],
   });
 
@@ -54,28 +79,14 @@ const Sell = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const categories = [
-    { value: 'material_escolar', label: 'Material Escolar' },
-    { value: 'tecnologia', label: 'Tecnologia e Eletrônicos' },
-    { value: 'livros', label: 'Livros' },
-    { value: 'roupas', label: 'Roupas e Acessórios' },
-    { value: 'servicos', label: 'Serviços' },
-    { value: 'outros', label: 'Outros (Móveis, Esportes, etc)' },
-  ];
-
-  const conditions = [
-    { value: 'novo', label: 'Novo' },
-    { value: 'como_novo', label: 'Como Novo' },
-    { value: 'usado', label: 'Usado' },
-  ];
-
-  const locations = [
-    { value: 'Luanda', label: 'Luanda' },
-    { value: 'Huambo', label: 'Huambo' },
-    { value: 'Benguela', label: 'Benguela' },
-    { value: 'Cabinda', label: 'Cabinda' },
-    { value: 'Online', label: 'Online' },
-  ];
+  const conditions = useMemo(
+    () => [
+      { value: 'new', label: 'Novo' },
+      { value: 'used', label: 'Usado' },
+      { value: 'digital', label: 'Digital' },
+    ],
+    []
+  );
 
   if (!mounted) {
     return (
@@ -93,7 +104,7 @@ const Sell = () => {
       <div>
         <Header />
         <div className="max-w-md mx-auto mt-12 p-6 bg-white rounded shadow text-center">
-          <p className="text-gray-600 mb-4">Você precisa estar autenticado para publicar um produto.</p>
+          <p className="text-gray-600 mb-4">VocÃª precisa estar autenticado para publicar um produto.</p>
           <button
             onClick={() => router.push('/login')}
             className="bg-[#4B187C] text-white px-4 py-2 rounded hover:bg-[#3E1367]"
@@ -111,7 +122,6 @@ const Sell = () => {
       ...prev,
       [name]: value,
     }));
-    // Clear error for this field when user starts typing
     if (validationErrors[name]) {
       setValidationErrors((prev) => ({
         ...prev,
@@ -121,12 +131,12 @@ const Sell = () => {
   };
 
   const handleFilesSelected = async (files: File[]) => {
-    setUploadedFiles(files);
-    // Create URLs for preview only
-    const urls = files.map((file) => URL.createObjectURL(file));
+    const limited = files.slice(0, 5);
+    setUploadedFiles(limited);
+    const urls = limited.map((file) => URL.createObjectURL(file));
     setFormData((prev) => ({
       ...prev,
-      image_urls: urls, // Keep URLs only for preview
+      image_urls: urls,
     }));
   };
 
@@ -134,39 +144,35 @@ const Sell = () => {
     const errors: ValidationErrors = {};
 
     if (!formData.title.trim()) {
-      errors.title = 'Título é obrigatório';
+      errors.title = 'TÃ­tulo Ã© obrigatÃ³rio';
     } else if (formData.title.length > 100) {
-      errors.title = 'Título não pode exceder 100 caracteres';
+      errors.title = 'TÃ­tulo nÃ£o pode exceder 100 caracteres';
     }
 
     if (!formData.description.trim()) {
-      errors.description = 'Descrição é obrigatória';
+      errors.description = 'DescriÃ§Ã£o Ã© obrigatÃ³ria';
     } else if (formData.description.length < 20) {
-      errors.description = 'Descrição deve ter pelo menos 20 caracteres';
+      errors.description = 'DescriÃ§Ã£o deve ter pelo menos 20 caracteres';
     } else if (formData.description.length > 500) {
-      errors.description = 'Descrição não pode exceder 500 caracteres';
+      errors.description = 'DescriÃ§Ã£o nÃ£o pode exceder 500 caracteres';
     }
 
-    if (!formData.category) {
-      errors.category = 'Categoria é obrigatória';
+    if (!formData.category_id) {
+      errors.category_id = 'Categoria Ã© obrigatÃ³ria';
     }
 
     if (!formData.condition) {
-      errors.condition = 'Condição é obrigatória';
+      errors.condition = 'CondiÃ§Ã£o Ã© obrigatÃ³ria';
     }
 
     if (!formData.price) {
-      errors.price = 'Preço é obrigatório';
-    } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) <= 0) {
-      errors.price = 'Preço deve ser um número positivo';
-    }
-
-    if (!formData.location) {
-      errors.location = 'Localização é obrigatória';
+      errors.price = 'PreÃ§o Ã© obrigatÃ³rio';
+    } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
+      errors.price = 'PreÃ§o deve ser um nÃºmero vÃ¡lido';
     }
 
     if (formData.image_urls.length === 0) {
-      errors.images = 'Pelo menos uma imagem é obrigatória';
+      errors.images = 'Pelo menos uma imagem Ã© obrigatÃ³ria';
     }
 
     return errors;
@@ -175,7 +181,19 @@ const Sell = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Validate form
+    if (categoriesLoading) {
+      setValidationErrors({ submit: 'Aguarde o carregamento das categorias.' });
+      return;
+    }
+    if (categories.length === 0) {
+      setValidationErrors({
+        submit:
+          categoriesError ||
+          'Sem categorias disponÃ­veis. Ative/crie categorias no Supabase (tabela categories com is_active=true) e garanta permissÃ£o de leitura (RLS).',
+      });
+      return;
+    }
+
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
@@ -185,43 +203,36 @@ const Sell = () => {
     try {
       setValidationErrors({});
 
-      // Prepare product data with Files
-      const productData = {
+      await uploadProduct({
         title: formData.title.trim(),
         description: formData.description.trim(),
-        category: formData.category,
-        condition: formData.condition,
+        category_id: formData.category_id,
+        condition: (formData.condition || 'used') as 'new' | 'used' | 'digital',
         price: parseFloat(formData.price),
-        location: formData.location,
-        files: uploadedFiles, // Pass actual File objects
-        stock: 1, // Default stock quantity
-      };
+        is_free: false,
+        quantity: 1,
+        files: uploadedFiles,
+      });
 
-      // Upload product
-      await uploadProduct(productData);
+      setSuccessMessage('âœ… Produto publicado com sucesso! Redirecionando para a home...');
 
-      // Show success message
-      setSuccessMessage('✅ Produto publicado com sucesso! Redirecionando para a home...');
-
-      // Reset form
       setFormData({
         title: '',
         description: '',
-        category: '',
+        category_id: '',
         condition: '',
         price: '',
-        location: '',
         image_urls: [],
       });
       setUploadedFiles([]);
 
-      // Redirect to home after 2 seconds to see the product
       setTimeout(() => {
         router.push('/home');
       }, 2000);
     } catch (err) {
       console.error('Error uploading product:', err);
-      const errorMsg = err instanceof Error ? err.message : (err as any)?.error || 'Erro desconhecido ao publicar produto';
+      const errorMsg =
+        err instanceof Error ? err.message : (err as { error?: string } | null)?.error || 'Erro desconhecido ao publicar produto';
       setValidationErrors({ submit: errorMsg });
     }
   };
@@ -230,7 +241,6 @@ const Sell = () => {
     <div className="bg-gray-50 min-h-screen">
       <Header />
 
-      {/* Page Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-2xl mx-auto px-6 py-6">
           <button
@@ -241,45 +251,36 @@ const Sell = () => {
             Voltar ao Perfil
           </button>
           <h1 className="text-3xl font-bold text-gray-900">Publicar Produto</h1>
-          <p className="text-gray-600 mt-2">Preencha os detalhes do seu product e publique para venda</p>
+          <p className="text-gray-600 mt-2">Preencha os detalhes do seu produto e publique para venda</p>
         </div>
       </div>
 
-      {/* Form Section */}
       <div className="max-w-2xl mx-auto px-6 py-8">
         {error && <FormAlert type="error" message={error} />}
-        {successMessage && (
-          <FormAlert
-            type="success"
-            message={successMessage}
-            onClose={() => setSuccessMessage('')}
-          />
-        )}
+        {successMessage && <FormAlert type="success" message={successMessage} />}
+        {validationErrors.submit && <FormAlert type="error" message={validationErrors.submit} />}
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          {/* Images Section */}
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Imagens do Produto</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Fotos do Produto</h2>
             <FormFileUpload
-              label="Fotos do Produto"
+              label="Imagens"
               onFilesSelected={handleFilesSelected}
-              error={validationErrors.images || undefined}
               maxFiles={5}
               acceptedTypes="image/*"
+              error={validationErrors.images || undefined}
               required
             />
-            <p className="text-xs text-gray-500 mt-2">
-              Máximo 5 imagens. Use alta qualidade para melhor visualização.
-            </p>
+            <p className="text-xs text-gray-500 mt-2">MÃ¡ximo 5 imagens. Use alta qualidade para melhor visualizaÃ§Ã£o.</p>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Informações do Produto</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">InformaÃ§Ãµes do Produto</h2>
 
             <FormInput
-              label="Título do Produto"
+              label="TÃ­tulo do Produto"
               name="title"
-              placeholder="Ex: Livro de Cálculo - 1ª Edição"
+              placeholder="Ex: Livro de CÃ¡lculo - 1Âª EdiÃ§Ã£o"
               value={formData.title}
               onChange={handleInputChange}
               error={validationErrors.title || undefined}
@@ -288,45 +289,46 @@ const Sell = () => {
             />
 
             <FormTextarea
-              label="Descrição Detalhada"
+              label="DescriÃ§Ã£o Detalhada"
               name="description"
-              placeholder="Descreva seu produto em detalhes: estado, características, motivo da venda, defeitos (se houver), etc."
+              placeholder="Descreva seu produto em detalhes: estado, caracterÃ­sticas, motivo da venda, defeitos (se houver), etc."
               value={formData.description}
               onChange={handleInputChange}
               error={validationErrors.description || undefined}
               required
               maxLength={500}
               rows={5}
-              hint="Mínimo 20 caracteres, máximo 500"
+              hint="MÃ­nimo 20 caracteres, mÃ¡ximo 500"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormSelect
                 label="Categoria"
-                name="category"
-                value={formData.category}
+                name="category_id"
+                value={formData.category_id}
                 onChange={handleInputChange}
                 options={categories}
-                error={validationErrors.category || undefined}
+                error={validationErrors.category_id || undefined}
                 required
                 placeholder="Selecione uma categoria"
+                disabled={categoriesLoading || categories.length === 0}
               />
 
               <FormSelect
-                label="Condição"
+                label="CondiÃ§Ã£o"
                 name="condition"
                 value={formData.condition}
                 onChange={handleInputChange}
                 options={conditions}
                 error={validationErrors.condition || undefined}
                 required
-                placeholder="Selecione a condição"
+                placeholder="Selecione a condiÃ§Ã£o"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormInput
-                label="Preço (em Kz)"
+                label="PreÃ§o (em Kz)"
                 name="price"
                 type="number"
                 placeholder="Ex: 5000"
@@ -336,17 +338,6 @@ const Sell = () => {
                 required
                 min="0"
                 step="100"
-              />
-
-              <FormSelect
-                label="Localização"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                options={locations}
-                error={validationErrors.location || undefined}
-                required
-                placeholder="Selecione a localização"
               />
             </div>
           </div>
@@ -382,18 +373,13 @@ const Sell = () => {
               )}
             </button>
           </div>
-
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-3">💡 Dicas para vender mais rápido:</h3>
-            <ul className="text-sm text-gray-600 space-y-2">
-              <li>✓ Use um título claro e descritivo</li>
-              <li>✓ Adicione fotos de alta qualidade do produto</li>
-              <li>✓ Descreva o estado real do produto</li>
-              <li>✓ Defina um preço competitivo</li>
-              <li>✓ Responda rapidamente às mensagens</li>
-            </ul>
-          </div>
         </form>
+
+        {categoriesError && (
+          <div className="mt-4">
+            <FormAlert type="error" message={`Categorias: ${categoriesError}`} />
+          </div>
+        )}
       </div>
     </div>
   );

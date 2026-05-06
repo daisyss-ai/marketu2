@@ -43,11 +43,11 @@ async function apiRequest(endpoint: string, options: any = {}) {
     }
 
     if (!response.ok) {
-      throw {
-        status: response.status,
-        message: data.error || 'Erro ao comunicar com servidor',
-        data,
-      };
+      const message = data?.error || 'Erro ao comunicar com servidor';
+      const err = new Error(message) as Error & { status?: number; data?: unknown };
+      err.status = response.status;
+      err.data = data;
+      throw err;
     }
 
     return data.data || data;
