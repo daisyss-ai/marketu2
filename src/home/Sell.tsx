@@ -104,7 +104,7 @@ const Sell = () => {
       <div>
         <Header />
         <div className="max-w-md mx-auto mt-12 p-6 bg-white rounded shadow text-center">
-          <p className="text-gray-600 mb-4">VocÃª precisa estar autenticado para publicar um produto.</p>
+          <p className="text-gray-600 mb-4">Você precisa estar autenticado para publicar um produto.</p>
           <button
             onClick={() => router.push('/login')}
             className="bg-[#4B187C] text-white px-4 py-2 rounded hover:bg-[#3E1367]"
@@ -144,35 +144,35 @@ const Sell = () => {
     const errors: ValidationErrors = {};
 
     if (!formData.title.trim()) {
-      errors.title = 'TÃ­tulo Ã© obrigatÃ³rio';
+      errors.title = 'Título é obrigatório';
     } else if (formData.title.length > 100) {
-      errors.title = 'TÃ­tulo nÃ£o pode exceder 100 caracteres';
+      errors.title = 'Título não pode exceder 100 caracteres';
     }
 
     if (!formData.description.trim()) {
-      errors.description = 'DescriÃ§Ã£o Ã© obrigatÃ³ria';
+      errors.description = 'Descrição é obrigatória';
     } else if (formData.description.length < 20) {
-      errors.description = 'DescriÃ§Ã£o deve ter pelo menos 20 caracteres';
+      errors.description = 'Descrição deve ter pelo menos 20 caracteres';
     } else if (formData.description.length > 500) {
-      errors.description = 'DescriÃ§Ã£o nÃ£o pode exceder 500 caracteres';
+      errors.description = 'Descrição não pode exceder 500 caracteres';
     }
 
     if (!formData.category_id) {
-      errors.category_id = 'Categoria Ã© obrigatÃ³ria';
+      errors.category_id = 'Categoria é obrigatória';
     }
 
     if (!formData.condition) {
-      errors.condition = 'CondiÃ§Ã£o Ã© obrigatÃ³ria';
+      errors.condition = 'Condição é obrigatória';
     }
 
     if (!formData.price) {
-      errors.price = 'PreÃ§o Ã© obrigatÃ³rio';
+      errors.price = 'Preço é obrigatório';
     } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
-      errors.price = 'PreÃ§o deve ser um nÃºmero vÃ¡lido';
+      errors.price = 'Preço deve ser um número válido';
     }
 
     if (formData.image_urls.length === 0) {
-      errors.images = 'Pelo menos uma imagem Ã© obrigatÃ³ria';
+      errors.images = 'Pelo menos uma imagem é obrigatória';
     }
 
     return errors;
@@ -189,7 +189,7 @@ const Sell = () => {
       setValidationErrors({
         submit:
           categoriesError ||
-          'Sem categorias disponÃ­veis. Ative/crie categorias no Supabase (tabela categories com is_active=true) e garanta permissÃ£o de leitura (RLS).',
+          'Sem categorias disponíveis. Ative/crie categorias no Supabase (tabela categories com is_active=true) e garanta permissão de leitura (RLS).',
       });
       return;
     }
@@ -271,16 +271,16 @@ const Sell = () => {
               error={validationErrors.images || undefined}
               required
             />
-            <p className="text-xs text-gray-500 mt-2">MÃ¡ximo 5 imagens. Use alta qualidade para melhor visualizaÃ§Ã£o.</p>
+            <p className="text-xs text-gray-500 mt-2">Máximo 5 imagens. Use alta qualidade para melhor visualização.</p>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">InformaÃ§Ãµes do Produto</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Informações do Produto</h2>
 
             <FormInput
-              label="TÃ­tulo do Produto"
+              label="Título do Produto"
               name="title"
-              placeholder="Ex: Livro de CÃ¡lculo - 1Âª EdiÃ§Ã£o"
+              placeholder="Ex: Livro de Cálculo - 1ª Edição"
               value={formData.title}
               onChange={handleInputChange}
               error={validationErrors.title || undefined}
@@ -289,16 +289,16 @@ const Sell = () => {
             />
 
             <FormTextarea
-              label="DescriÃ§Ã£o Detalhada"
+              label="Descrição Detalhada"
               name="description"
-              placeholder="Descreva seu produto em detalhes: estado, caracterÃ­sticas, motivo da venda, defeitos (se houver), etc."
+              placeholder="Descreva seu produto em detalhes: estado, características, motivo da venda, defeitos (se houver), etc."
               value={formData.description}
               onChange={handleInputChange}
               error={validationErrors.description || undefined}
               required
               maxLength={500}
               rows={5}
-              hint="MÃ­nimo 20 caracteres, mÃ¡ximo 500"
+              hint="Mínimo 20 caracteres, máximo 500"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -315,20 +315,20 @@ const Sell = () => {
               />
 
               <FormSelect
-                label="CondiÃ§Ã£o"
+                label="Condição"
                 name="condition"
                 value={formData.condition}
                 onChange={handleInputChange}
                 options={conditions}
                 error={validationErrors.condition || undefined}
                 required
-                placeholder="Selecione a condiÃ§Ã£o"
+                placeholder="Selecione a condição"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormInput
-                label="PreÃ§o (em Kz)"
+                label="Preço (em Kz)"
                 name="price"
                 type="number"
                 placeholder="Ex: 5000"
