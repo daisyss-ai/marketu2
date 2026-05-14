@@ -1,6 +1,27 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+function normalizeAvatarUrl(value: unknown): { url: string | null; error?: string } {
+  if (typeof value !== 'string') {
+    return { url: null };
+  }
+
+  const avatarUrl = value.trim();
+  if (!avatarUrl) {
+    return { url: null };
+  }
+
+  try {
+    const parsed = new URL(avatarUrl);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return { url: null, error: 'avatar_url deve usar http ou https' };
+    }
+    return { url: parsed.href };
+  } catch {
+    return { url: null, error: 'avatar_url inválida' };
+  }
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -87,27 +108,15 @@ export async function PUT(
     );
     const updates = rawUpdates as Record<string, unknown>;
 
-    if (typeof updates.avatar_url === 'string') {
-      const avatarUrl = updates.avatar_url.trim();
-      if (avatarUrl) {
-        try {
-          const parsed = new URL(avatarUrl);
-          if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-            return NextResponse.json(
-              { error: 'avatar_url deve usar http ou https' },
-              { status: 400 }
-            );
-          }
-          updates.avatar_url = parsed.toString();
-        } catch {
-          return NextResponse.json(
-            { error: 'avatar_url inválida' },
-            { status: 400 }
-          );
-        }
-      } else {
-        updates.avatar_url = null;
+    if ('avatar_url' in updates) {
+      const normalized = normalizeAvatarUrl(updates.avatar_url);
+      if (normalized.error) {
+        return NextResponse.json(
+          { error: normalized.error },
+          { status: 400 }
+        );
       }
+      updates.avatar_url = normalized.url;
     }
 
     if (Object.keys(updates).length === 0) {
