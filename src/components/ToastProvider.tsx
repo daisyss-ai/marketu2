@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 
 function ToastFromSearchParams() {
   const searchParams = useSearchParams();
@@ -39,17 +39,6 @@ export default function ToastProvider() {
   return (
     <>
       <ToastFromSearchParams />
-      <ToastContainer
-        position="top-right"
-        autoClose={3500}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
     </>
   );
 }
