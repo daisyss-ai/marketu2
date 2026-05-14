@@ -1,7 +1,7 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, X, LucideIcon } from 'lucide-react';
-import { FilterState, FilterOption } from '../types';
+import { ChevronDown, LucideIcon, SlidersHorizontal, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { FilterOption, FilterState } from '../types';
 
 interface FilterDropdownProps {
   label: string;
@@ -35,6 +35,44 @@ const FilterDropdown = ({ label, options, value, onChange, icon: Icon }: FilterD
   const displayValue = value
     ? options.find((opt) => opt.value === value)?.label || 'Selecionar'
     : 'Selecionar';
+
+  /* const gradeOptions = [
+    { label: '10Âª Classe', value: 10 },
+    { label: '11Âª Classe', value: 11 },
+    { label: '12Âª Classe', value: 12 },
+    { label: '13Âª Classe', value: 13 },
+  ];
+
+  const typeOptions = [
+    { label: 'Material', value: 'material' },
+    { label: 'ServiÃ§o', value: 'servico' },
+  ];
+
+  const subjectOptions = [
+    { label: 'MatemÃ¡tica', value: 'MatemÃ¡tica' },
+    { label: 'FÃ­sica', value: 'FÃ­sica' },
+    { label: 'QuÃ­mica', value: 'QuÃ­mica' },
+    { label: 'Biologia', value: 'Biologia' },
+    { label: 'PortuguÃªs', value: 'PortuguÃªs' },
+    { label: 'InglÃªs', value: 'InglÃªs' },
+    { label: 'HistÃ³ria', value: 'HistÃ³ria' },
+    { label: 'Geografia', value: 'Geografia' },
+    { label: 'InformÃ¡tica', value: 'InformÃ¡tica' },
+  ];
+
+  const locationOptions = [
+    { label: 'Talatona', value: 'Talatona' },
+    { label: 'Viana', value: 'Viana' },
+    { label: 'Kilamba', value: 'Kilamba' },
+    { label: 'Maianga', value: 'Maianga' },
+    { label: 'Cazenga', value: 'Cazenga' },
+    { label: 'Rangel', value: 'Rangel' },
+    { label: 'Camama', value: 'Camama' },
+    { label: 'Benfica', value: 'Benfica' },
+    { label: 'Luanda (Centro)', value: 'Centro' },
+  ];
+
+  */
 
   return (
     <div ref={dropdownRef} className="relative">
@@ -200,6 +238,44 @@ const FilterBar = ({
   hasActiveFilters,
   activeFilterCount,
 }: FilterBarProps) => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const gradeOptions: FilterOption[] = [
+    { label: '10Âª Classe', value: 10 },
+    { label: '11Âª Classe', value: 11 },
+    { label: '12Âª Classe', value: 12 },
+    { label: '13Âª Classe', value: 13 },
+  ];
+
+  const typeOptions: FilterOption[] = [
+    { label: 'Material', value: 'material' },
+    { label: 'ServiÃ§o', value: 'servico' },
+  ];
+
+  const subjectOptions: FilterOption[] = [
+    { label: 'MatemÃ¡tica', value: 'MatemÃ¡tica' },
+    { label: 'FÃ­sica', value: 'FÃ­sica' },
+    { label: 'QuÃ­mica', value: 'QuÃ­mica' },
+    { label: 'Biologia', value: 'Biologia' },
+    { label: 'PortuguÃªs', value: 'PortuguÃªs' },
+    { label: 'InglÃªs', value: 'InglÃªs' },
+    { label: 'HistÃ³ria', value: 'HistÃ³ria' },
+    { label: 'Geografia', value: 'Geografia' },
+    { label: 'InformÃ¡tica', value: 'InformÃ¡tica' },
+  ];
+
+  const locationOptions: FilterOption[] = [
+    { label: 'Talatona', value: 'Talatona' },
+    { label: 'Viana', value: 'Viana' },
+    { label: 'Kilamba', value: 'Kilamba' },
+    { label: 'Maianga', value: 'Maianga' },
+    { label: 'Cazenga', value: 'Cazenga' },
+    { label: 'Rangel', value: 'Rangel' },
+    { label: 'Camama', value: 'Camama' },
+    { label: 'Benfica', value: 'Benfica' },
+    { label: 'Luanda (Centro)', value: 'Centro' },
+  ];
+
   const conditionOptions = [
     { label: 'Novo', value: 'novo' },
     { label: 'Como Novo', value: 'como_novo' },
@@ -222,6 +298,7 @@ const FilterBar = ({
   ];
 
   const sortOptions = [
+    { label: 'RelevÃ¢ncia', value: 'relevance' },
     { label: 'Mais Recentes', value: 'newest' },
     { label: 'Menor Preço', value: 'price_asc' },
     { label: 'Maior Preço', value: 'price_desc' },
@@ -233,7 +310,28 @@ const FilterBar = ({
       <div className="max-w-6xl mx-auto px-6 py-4">
         {/* Filter buttons and sort dropdown */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <div className="flex flex-wrap gap-2">
+          {/* Mobile filters button */}
+          <div className="md:hidden w-full flex items-center justify-between gap-3">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="bg-surface border-2 border-muted/10 hover:border-primary/30 rounded-full px-5 py-2.5 text-xs text-foreground font-semibold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all flex items-center gap-2"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              Filtros {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
+            </button>
+
+            {hasActiveFilters && (
+              <button
+                onClick={onClearAll}
+                className="bg-error/10 hover:bg-error/20 border border-error/20 text-error px-4 py-2.5 rounded-full text-xs flex items-center gap-2 transition-all font-bold focus:ring-4 focus:ring-error/20"
+              >
+                <X className="w-3.5 h-3.5" />
+                Limpar
+              </button>
+            )}
+          </div>
+
+          <div className="hidden md:flex flex-wrap gap-2">
             <FilterDropdown
               label="Condição"
               options={conditionOptions}
@@ -258,6 +356,27 @@ const FilterBar = ({
               options={ratingOptions}
               value={filters.rating}
               onChange={(value) => onFilterChange('rating', value)}
+            />
+
+            <FilterDropdown
+              label="Classe"
+              options={gradeOptions}
+              value={filters.gradeLevel}
+              onChange={(value) => onFilterChange('gradeLevel', value)}
+            />
+
+            <FilterDropdown
+              label="Disciplina"
+              options={subjectOptions}
+              value={filters.subject}
+              onChange={(value) => onFilterChange('subject', value)}
+            />
+
+            <FilterDropdown
+              label="Tipo"
+              options={typeOptions}
+              value={filters.productType}
+              onChange={(value) => onFilterChange('productType', value)}
             />
 
             {hasActiveFilters && (
@@ -340,9 +459,166 @@ const FilterBar = ({
                 </button>
               </span>
             )}
+            {filters.gradeLevel && (
+              <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
+                Classe: {filters.gradeLevel}Âª
+                <button
+                  onClick={() => onFilterChange('gradeLevel', null)}
+                  className="hover:scale-110 transition-transform p-0.5"
+                  aria-label="Remover filtro de classe"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {filters.subject && (
+              <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
+                Disciplina: {filters.subject}
+                <button
+                  onClick={() => onFilterChange('subject', null)}
+                  className="hover:scale-110 transition-transform p-0.5"
+                  aria-label="Remover filtro de disciplina"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {filters.productType && (
+              <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
+                Tipo: {filters.productType === 'servico' ? 'ServiÃ§o' : 'Material'}
+                <button
+                  onClick={() => onFilterChange('productType', null)}
+                  className="hover:scale-110 transition-transform p-0.5"
+                  aria-label="Remover filtro de tipo"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
           </div>
         )}
       </div>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm md:hidden" role="dialog" aria-modal="true">
+          <div className="absolute inset-x-0 bottom-0 bg-surface rounded-t-3xl border-t border-muted/10 p-5 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="font-black text-foreground">Filtros</div>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="p-2 rounded-full hover:bg-muted/5 focus:ring-4 focus:ring-primary/10"
+                aria-label="Fechar filtros"
+              >
+                <X className="w-5 h-5 text-muted" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <select
+                value={filters.condition || ''}
+                onChange={(e) => onFilterChange('condition', e.target.value || null)}
+                className="bg-surface border border-muted/10 rounded-2xl px-4 py-3 text-sm"
+              >
+                <option value="">CondiÃ§Ã£o</option>
+                {conditionOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={filters.category || ''}
+                onChange={(e) => onFilterChange('category', e.target.value || null)}
+                className="bg-surface border border-muted/10 rounded-2xl px-4 py-3 text-sm"
+              >
+                <option value="">Categoria</option>
+                {categoryOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={filters.gradeLevel ?? ''}
+                onChange={(e) => onFilterChange('gradeLevel', e.target.value ? Number(e.target.value) : null)}
+                className="bg-surface border border-muted/10 rounded-2xl px-4 py-3 text-sm"
+              >
+                <option value="">Classe</option>
+                {gradeOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={filters.subject || ''}
+                onChange={(e) => onFilterChange('subject', e.target.value || null)}
+                className="bg-surface border border-muted/10 rounded-2xl px-4 py-3 text-sm"
+              >
+                <option value="">Disciplina</option>
+                {subjectOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={filters.productType || ''}
+                onChange={(e) => onFilterChange('productType', e.target.value || null)}
+                className="bg-surface border border-muted/10 rounded-2xl px-4 py-3 text-sm"
+              >
+                <option value="">Tipo</option>
+                {typeOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <input
+                type="number"
+                inputMode="numeric"
+                value={filters.priceMin || 0}
+                onChange={(e) => onPriceChange(Number(e.target.value || 0), filters.priceMax)}
+                className="bg-surface border border-muted/10 rounded-2xl px-4 py-3 text-sm"
+                placeholder="PreÃ§o mÃ­n."
+              />
+              <input
+                type="number"
+                inputMode="numeric"
+                value={filters.priceMax === Infinity ? '' : filters.priceMax}
+                onChange={(e) => onPriceChange(filters.priceMin, e.target.value ? Number(e.target.value) : Infinity)}
+                className="bg-surface border border-muted/10 rounded-2xl px-4 py-3 text-sm"
+                placeholder="PreÃ§o mÃ¡x."
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-3 mt-5">
+              <button
+                onClick={() => {
+                  onClearAll();
+                  setMobileOpen(false);
+                }}
+                className="flex-1 bg-error/10 hover:bg-error/20 border border-error/20 text-error px-4 py-3 rounded-2xl text-sm font-bold transition-all"
+              >
+                Limpar
+              </button>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="flex-1 bg-primary text-white px-4 py-3 rounded-2xl text-sm font-bold hover:opacity-90 transition-all"
+              >
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

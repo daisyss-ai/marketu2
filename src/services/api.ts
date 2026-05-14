@@ -1,11 +1,29 @@
+import type {
+  ProductSearchOptions,
+  ProductSearchResponse,
+  ProductSuggestion,
+  ProductSuggestionOptions,
+} from '../types';
+
 // API service for making requests to the backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+// Prefer relative URL in the browser to avoid hardcoding localhost in production.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 // Get token from localStorage
 const getToken = () => {
   if (typeof window === 'undefined') return null;
   const user = JSON.parse(window.localStorage.getItem('marketu_user') || 'null');
   return user?.token || null;
+};
+
+// Helper function to extract error message
+const getErrorMessage = (data: any, rawText: string): string => {
+  if (data?.error) return String(data.error);
+  if (data?.message) return String(data.message);
+  if (rawText && typeof rawText === 'string' && rawText.trim()) {
+    return rawText.trim();
+  }
+  return 'Erro ao comunicar com servidor';
 };
 
 // Make API requests with common error handling
@@ -27,17 +45,40 @@ async function apiRequest(endpoint: string, options: any = {}) {
       headers,
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw {
-        status: response.status,
-        message: data.error || 'Erro ao comunicar com servidor',
-        data,
-      };
+    const contentType = response.headers.get('content-type') || '';
+    const rawText = await response.text();
+    let data: any = null;
+    
+    try {
+      data = contentType.includes('application/json') && rawText
+        ? JSON.parse(rawText)
+        : rawText
+          ? { data: rawText }
+          : null;
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError, rawText);
+      data = { data: rawText };
     }
 
-    return data.data || data;
+    if (!response.ok) {
+      const error = new Error(getErrorMessage(data, rawText)) as any;
+      error.status = response.status;
+      error.data = data;
+      throw error;
+    }
+
+    // Se não há resposta, retornar o objeto vazio ou a estrutura esperada
+    if (data === null || data === undefined) {
+      return {};
+    }
+    
+    // Se a resposta tem propriedade 'data', retornar ela
+    if (data && typeof data === 'object' && 'data' in data) {
+      return data.data || data;
+    }
+    
+    // Caso contrário retornar os dados diretamente
+    return data;
   } catch (error) {
     console.error('API Error:', error);
     throw error;
@@ -106,21 +147,39 @@ export const usersAPI = {
 
 // Products API
 export const productsAPI = {
-  listProducts: (options: any = {}) => {
+  listProducts: (options: ProductSearchOptions = {}) => {
     const params = new URLSearchParams();
-    if (options.page) params.append('page', options.page);
-    if (options.limit) params.append('limit', options.limit);
+    if (options.page) params.append('page', String(options.page));
+    if (options.limit) params.append('limit', String(options.limit));
     if (options.category) params.append('category', options.category);
     if (options.condition) params.append('condition', options.condition);
-    if (options.minPrice) params.append('minPrice', options.minPrice);
-    if (options.maxPrice) params.append('maxPrice', options.maxPrice);
+    if (typeof options.minPrice === 'number') params.append('minPrice', String(options.minPrice));
+    if (typeof options.maxPrice === 'number' && Number.isFinite(options.maxPrice)) {
+      params.append('maxPrice', String(options.maxPrice));
+    }
+    if (typeof options.rating === 'number') params.append('rating', String(options.rating));
     if (options.search) params.append('search', options.search);
+    if (options.gradeLevel) params.append('gradeLevel', String(options.gradeLevel));
+    if (options.subject) params.append('subject', options.subject);
+    if (options.productType) params.append('productType', options.productType);
+    if (options.location) params.append('location', options.location);
     if (options.sort) params.append('sort', options.sort);
 
     const queryString = params.toString();
     return apiRequest(`/products${queryString ? '?' + queryString : ''}`, {
       method: 'GET',
-    });
+    }) as Promise<ProductSearchResponse>;
+  },
+
+  suggest: (query: string, options: ProductSuggestionOptions & { signal?: AbortSignal } = {}) => {
+    const params = new URLSearchParams();
+    if (query) params.append('q', query);
+    if (options.limit) params.append('limit', String(options.limit));
+    const queryString = params.toString();
+    return apiRequest(`/products/suggest${queryString ? '?' + queryString : ''}`, {
+      method: 'GET',
+      signal: options.signal,
+    }) as Promise<{ suggestions: ProductSuggestion[] }>;
   },
 
   getProduct: (productId: string) =>

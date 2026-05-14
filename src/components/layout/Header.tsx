@@ -1,10 +1,48 @@
 'use client';
+import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react'
-import { Search, ShoppingCart, ChevronDown } from 'lucide-react'
+import { useEffect, useEffectEvent, useState } from 'react'
+import { ShoppingCart, ChevronDown } from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import type { Route } from 'next'
+import ProductSearchBar from '../search/ProductSearchBar'
+import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 
 
 const Header = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const currentSearch = searchParams.get('search') || '';
+  const [searchValue, setSearchValue] = useState(currentSearch);
+  const debouncedSearch = useDebouncedValue(searchValue, 320);
+
+  useEffect(() => {
+    setSearchValue(currentSearch);
+  }, [currentSearch]);
+
+  const navigateToSearch = (nextValue: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextValue.trim()) params.set('search', nextValue.trim());
+    else params.delete('search');
+    params.delete('page'); // reset pagination when searching
+
+    const targetPath = (pathname === '/' ? '/home' : pathname) as Route;
+    const qs = params.toString();
+    router.push((qs ? `${targetPath}?${qs}` : targetPath) as Route, { scroll: false });
+  };
+
+  const pushSearchEffect = useEffectEvent((nextValue: string) => {
+    navigateToSearch(nextValue);
+  });
+
+  useEffect(() => {
+    if (debouncedSearch.trim() === currentSearch.trim()) return;
+    pushSearchEffect(debouncedSearch);
+  }, [currentSearch, debouncedSearch]);
+
+
   return (
     <div>
       <div className="w-full h-1 bg-primary" />
@@ -12,7 +50,13 @@ const Header = () => {
         <div className="max-w-6xl mx-auto px-6 py-4 flex flex-row items-center justify-between gap-4 text-foreground">
           {/* logo + text */}
           <Link href="/home" className="flex items-center gap-2 min-w-fit group focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-lg p-1">
-            <img src="/assets/marketu-logo.png" alt="marketU" className="h-8 transition-transform group-hover:scale-105" />
+            <Image
+              src="/assets/marketu-logo.png"
+              alt="marketU"
+              width={32}
+              height={32}
+              className="h-8 w-auto transition-transform group-hover:scale-105"
+            />
             <span className="font-black text-2xl text-primary tracking-tight">marketU</span>
           </Link>
 
@@ -24,13 +68,12 @@ const Header = () => {
           </nav>
 
           {/* search input */}
-          <div className="w-full max-w-xl focus-within:max-w-3xl mx-auto bg-muted/5 rounded-full py-2.5 px-6 border border-muted/10 transition-all duration-300 flex items-center gap-3 focus-within:ring-4 focus-within:ring-primary/10 focus-within:border-primary/30 group">
-            <Search className="text-muted group-focus-within:text-primary transition-colors w-5 h-5" aria-hidden="true" />
-            <input
-              type="text"
-              placeholder="Buscar produtos..."
-              className="w-full bg-transparent outline-none text-sm text-foreground placeholder:text-muted/60"
-              aria-label="Buscar produtos no marketplace"
+          <div className="w-full max-w-xl">
+            <ProductSearchBar
+              value={searchValue}
+              onChange={setSearchValue}
+              enableAutocomplete
+              onSubmit={() => navigateToSearch(searchValue)}
             />
           </div>
 
