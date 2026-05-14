@@ -22,6 +22,10 @@ function normalizeAvatarUrl(value: unknown): { url: string | null; error?: strin
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
 function getErrorMeta(error: unknown): { name?: string; code?: string } {
   if (!error || typeof error !== 'object') return {};
   const maybeName = 'name' in error && typeof error.name === 'string' ? error.name : undefined;
@@ -105,7 +109,7 @@ export async function PUT(
     if (auth.user.id !== userId) return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
 
     const body: unknown = await req.json();
-    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    if (!isRecord(body)) {
       return NextResponse.json(
         { error: 'Dados inválidos para atualização de perfil' },
         { status: 400 }
@@ -114,7 +118,7 @@ export async function PUT(
 
     const allowedFields = new Set(['full_name', 'avatar_url']);
     const updates = Object.fromEntries(
-      Object.entries(body as Record<string, unknown>).filter(([key]) => allowedFields.has(key))
+      Object.entries(body).filter(([key]) => allowedFields.has(key))
     ) as Record<string, unknown>;
 
     if ('avatar_url' in updates) {
