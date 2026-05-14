@@ -13,6 +13,9 @@ import {
   Package,
   TrendingUp,
   Award,
+  GraduationCap,
+  Check,
+  UserPen,
 } from 'lucide-react';
 import Header from '../components/layout/Header';
 import { useAuthStore } from '../store/authStore';
@@ -25,16 +28,22 @@ interface StatCardProps {
   label: string;
   value: string | number;
   isRating?: boolean;
+  reviewCount?: number;
 }
 
-const StatCard = ({ icon, label, value, isRating = false }: StatCardProps) => (
-  <div className="bg-linear-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
-    <div className="flex items-center justify-between mb-2">
-      <span className="text-gray-600 text-sm font-medium">{label}</span>
-      <div className="text-purple-600">{icon}</div>
+const StatCard = ({ icon, label, value, isRating = false, reviewCount }: StatCardProps) => (
+  <div className="bg-white p-4 rounded-2xl border border-[#EDE7FF] shadow-sm">
+    <div className="flex items-center justify-between mb-3">
+      <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">{label}</span>
+      <div className="text-[#4B187C]">{icon}</div>
     </div>
-    <div className="text-2xl font-bold text-gray-900">
-      {isRating && typeof value === 'number' ? value.toFixed(1) : value}
+    <div>
+      <div className="text-2xl font-bold text-gray-800">
+        {isRating && typeof value === 'number' ? value.toFixed(1) : value}
+      </div>
+      {isRating && reviewCount !== undefined && (
+        <div className="text-sm text-gray-400 font-normal">({reviewCount})</div>
+      )}
     </div>
   </div>
 );
@@ -46,69 +55,54 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, onDelete, onEdit }: ProductCardProps) => (
-  <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-gray-100">
-    <div className="relative h-48 bg-gray-100 overflow-hidden">
+  <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 group">
+    <div className="relative h-44 bg-gray-200">
       {product.preview_url ? (
         <img
           src={product.preview_url}
           alt={product.title}
-          className="w-full h-full object-cover hover:scale-105 transition-transform"
+          className="w-full h-full object-cover"
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-gray-200 to-gray-300">
+        <div className="w-full h-full flex items-center justify-center bg-gray-200">
           <Package className="w-12 h-12 text-gray-400" />
         </div>
       )}
-      <span className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-1 rounded text-xs font-semibold">
-        {product.type === 'digital' ? 'Digital' : 'FÃ­sico'}
+      <span className={`absolute top-2 left-2 text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${
+        product.is_active 
+          ? 'bg-white/90 text-green-600' 
+          : 'bg-gray-800 text-white'
+      }`}>
+        {product.is_active ? 'Ativo' : 'Inativo'}
       </span>
-    </div>
-
-    <div className="p-4">
-      <h3 className="font-semibold text-gray-900 mb-1 truncate">{product.title}</h3>
-      <p className="text-sm text-gray-600 mb-2">{product.category_name || 'Geral'}</p>
-      <p className="text-lg font-bold text-[#4B187C] mb-4">
-        {product.is_free ? 'Gratuito' : `${(product.price ?? 0).toLocaleString('pt-AO')} Kz`}
-      </p>
-
-      <div className="flex gap-2">
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
         <button
           onClick={() => onEdit(product.id)}
-          className="flex-1 flex items-center justify-center gap-1 px-3 py-2 border border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors text-sm font-medium"
+          className="bg-white p-2 rounded-full text-[#4B187C] hover:bg-gray-100"
         >
-          <Edit2 className="w-4 h-4" />
-          Editar
+          <Edit2 className="w-5 h-5" />
         </button>
         <button
           onClick={() => onDelete(product.id)}
-          className="flex-1 flex items-center justify-center gap-1 px-3 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+          className="bg-white p-2 rounded-full text-red-500 hover:bg-gray-100"
         >
-          <Trash2 className="w-4 h-4" />
-          Deletar
+          <Trash2 className="w-5 h-5" />
         </button>
       </div>
     </div>
-  </div>
-);
 
-interface EmptyStateProps {
-  title: string;
-  description: string;
-  onAction: () => void;
-  actionText: string;
-}
-
-const EmptyState = ({ title, description, onAction, actionText }: EmptyStateProps) => (
-  <div className="py-12 text-center">
-    <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-    <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
-    <p className="text-gray-600 mb-6">{description}</p>
-    <button
-      onClick={onAction}
-      className="bg-[#4B187C] text-white px-6 py-2 rounded-lg hover:bg-[#3E1367] transition-colors"
-    >
-      {actionText}
-    </button>
+    <div className="p-4">
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <h3 className="font-bold text-gray-800 line-clamp-1">{product.title}</h3>
+        <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-500 whitespace-nowrap">
+          {product.stock || 0} disp.
+        </span>
+      </div>
+      <p className="text-xs text-gray-400 mb-3">{product.category_name || 'Geral'}</p>
+      <p className="text-lg font-bold text-[#4B187C]">
+        {product.is_free ? 'Gratuito' : `${(product.price ?? 0).toLocaleString('pt-AO')} Kz`}
+      </p>
+    </div>
   </div>
 );
 
@@ -121,10 +115,10 @@ interface TabButtonProps {
 const TabButton = ({ active, onClick, children }: TabButtonProps) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors ${
+    className={`px-6 py-3 text-sm font-${active ? 'semibold' : 'medium'} border-b-2 transition-colors ${
       active
-        ? 'text-[#4B187C] border-b-2 border-[#4B187C]'
-        : 'text-gray-600 hover:text-gray-900'
+        ? 'border-[#4B187C] text-[#4B187C]'
+        : 'border-transparent text-gray-500 hover:text-gray-700'
     }`}
   >
     {children}
@@ -141,11 +135,15 @@ interface ActionCardProps {
 const ActionCard = ({ icon, title, description, onClick }: ActionCardProps) => (
   <button
     onClick={onClick}
-    className="bg-white rounded-lg p-6 border border-gray-200 hover:shadow-lg transition-shadow text-left group"
+    className="p-4 bg-white rounded-2xl border border-gray-100 flex items-center gap-4 hover:border-[#4B187C] cursor-pointer transition-colors text-left"
   >
-    <div className="text-purple-600 mb-3 group-hover:text-[#4B187C] transition-colors">{icon}</div>
-    <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
-    <p className="text-sm text-gray-600">{description}</p>
+    <div className="w-12 h-12 bg-[#EDE7FF] text-[#4B187C] rounded-xl flex items-center justify-center flex-shrink-0">
+      {icon}
+    </div>
+    <div className="flex-1">
+      <h3 className="font-bold text-gray-800">{title}</h3>
+      <p className="text-xs text-gray-500">{description}</p>
+    </div>
   </button>
 );
 
@@ -190,7 +188,7 @@ const Profile = () => {
   // Show loading/placeholder until hydrated
   if (!isHydrated) {
     return (
-      <div className="bg-gray-50 min-h-screen">
+      <div className="bg-[#f8f7ff] min-h-screen">
         <Header />
         <div className="max-w-6xl mx-auto px-6 py-8 text-center text-gray-600">
           Carregando...
@@ -219,82 +217,74 @@ const Profile = () => {
   const displayName = authUser?.full_name || 'Usuário';
   const studentInfo = `${authUser?.student_id || 'N/A'} • ${authUser?.course || 'Curso'} • ${authUser?.classroom || 'Sala'}`;
   const avgRating = stats?.stats?.avgRating || 0;
+  const reviewCount = stats?.stats?.reviewCount || 0;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-[#f8f7ff] min-h-screen">
       <Header />
 
-      {/* Profile Header Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="flex items-start gap-6 flex-1">
-              <div className="w-24 h-24 bg-linear-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+      {/* Profile Header with Purple Banner */}
+      <div className="h-36 w-full bg-gradient-to-r from-[#4B187C] to-[#6d28b0]" />
+
+      <div className="max-w-5xl mx-auto px-4 -mt-16 relative z-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          {/* Left side: Avatar and Info */}
+          <div className="flex flex-col gap-6 flex-1">
+            {/* Avatar with verified badge */}
+            <div className="relative flex-shrink-0 w-fit">
+              <div className="w-32 h-32 bg-[#EDE7FF] text-[#4B187C] text-4xl font-bold rounded-full border-4 border-white flex items-center justify-center shadow-lg">
                 {displayName?.charAt(0).toUpperCase()}
               </div>
-
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{displayName}</h1>
-                <p className="text-sm text-gray-600 mb-2">{studentInfo}</p>
-                <div className="flex items-center gap-2 text-sm">
-                  <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                  <span className="font-semibold">{avgRating}</span>
-                  <span className="text-gray-600">
-                    ({stats?.stats?.reviewCount || 0} avaliações)
-                  </span>
-                </div>
+              <div className="absolute bottom-1 right-2 w-6 h-6 bg-green-500 border-2 border-white rounded-full flex items-center justify-center">
+                <Check className="w-3 h-3 text-white" />
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => router.push('/sell')}
-                className="flex items-center gap-2 bg-[#4B187C] text-white px-4 py-2 rounded-lg hover:bg-[#3E1367] transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Publicar Produto
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                Sair
-              </button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{displayName}</h1>
+              <div className="flex items-center gap-1 text-gray-600 text-sm">
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>{studentInfo}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard
-              icon={<Package className="w-6 h-6" />}
-              label="Produtos à Venda"
-              value={stats?.stats?.productCount || 0}
-            />
-            <StatCard
-              icon={<TrendingUp className="w-6 h-6" />}
-              label="Vendas Concluídas"
-              value={stats?.stats?.completedSales || 0}
-            />
-            <StatCard
-              icon={<Star className="w-6 h-6" />}
-              label="Avaliação"
-              value={avgRating}
-              isRating
-            />
-            <StatCard
-              icon={<Award className="w-6 h-6" />}
-              label="Taxa Positiva"
-              value={stats?.stats?.positiveRating || '0%'}
-            />
+          {/* Right side buttons */}
+          <div className="flex gap-3 w-full md:w-auto">
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      {/* Stats Row */}
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard
+            icon={<Package className="w-5 h-5" />}
+            label="Produtos à Venda"
+            value={stats?.stats?.productCount || 0}
+          />
+          <StatCard
+            icon={<TrendingUp className="w-5 h-5" />}
+            label="Vendas Concluídas"
+            value={stats?.stats?.completedSales || 0}
+          />
+          <StatCard
+            icon={<Star className="w-5 h-5" />}
+            label="Avaliação"
+            value={avgRating}
+            isRating
+            reviewCount={reviewCount}
+          />
+          <StatCard
+            icon={<Award className="w-5 h-5" />}
+            label="Taxa Positiva"
+            value={stats?.stats?.positiveRating || '0%'}
+          />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-4 pb-8">
         {alertMessage && (
           <FormAlert
             type={alertMessage.type}
@@ -303,73 +293,96 @@ const Profile = () => {
           />
         )}
 
-        <div className="flex gap-4 mb-6 border-b border-gray-200">
+        {/* Tabs */}
+        <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
           <TabButton
             active={activeTab === 'products'}
             onClick={() => setActiveTab('products')}
           >
-            <Package className="w-4 h-4" />
             Meus Produtos
           </TabButton>
           <TabButton
             active={activeTab === 'actions'}
             onClick={() => setActiveTab('actions')}
           >
-            <ShoppingCart className="w-4 h-4" />
-            Minhas Ações
+            Minhas Ações & Configurações
           </TabButton>
         </div>
 
+        {/* Products Tab */}
         {activeTab === 'products' && (
           <div>
             {profileLoading || productsLoading ? (
               <div className="flex justify-center py-12">
                 <LoadingSpinner text="Carregando produtos..." />
               </div>
-            ) : products?.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product: ProductWithDetails) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onDelete={(id) => setDeleteConfirm(id)}
-                    onEdit={(id) => router.push(`/profile/${id}/edit`)}
-                  />
-                ))}
-              </div>
             ) : (
-              <EmptyState
-                title="Nenhum produto publicado"
-                description="Você ainda não tem nenhum produto. Clique no botão abaixo para publicar o seu primeiro!"
-                onAction={() => router.push('/sell')}
-                actionText="Publicar Primeiro Produto"
-              />
+              <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  {/* Add Product Card */}
+                  <div
+                    onClick={() => router.push('/sell')}
+                    className="border-2 border-dashed border-[#EDE7FF] rounded-2xl flex flex-col items-center justify-center p-6 bg-white hover:bg-purple-50 cursor-pointer transition-colors"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#EDE7FF] text-[#4B187C] flex items-center justify-center mb-3">
+                      <Plus className="w-6 h-6" />
+                    </div>
+                    <p className="font-semibold text-[#4B187C]">Anunciar Algo</p>
+                    <p className="text-xs text-gray-400">Rápido e fácil</p>
+                  </div>
+
+                  {/* Product Cards */}
+                  {products && products.length > 0 ? (
+                    products.map((product: ProductWithDetails) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        onDelete={(id) => setDeleteConfirm(id)}
+                        onEdit={(id) => router.push(`/profile/${id}/edit`)}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-12">
+                      <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum produto publicado</h3>
+                      <p className="text-gray-600 mb-6">Você ainda não tem nenhum produto. Clique no botão abaixo para publicar o seu primeiro!</p>
+                      <button
+                        onClick={() => router.push('/sell')}
+                        className="bg-[#4B187C] text-white px-6 py-2 rounded-lg hover:bg-[#3E1367] transition-colors"
+                      >
+                        Publicar Primeiro Produto
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         )}
 
+        {/* Actions Tab */}
         {activeTab === 'actions' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ActionCard
-              icon={<ShoppingCart className="w-8 h-8" />}
+              icon={<ShoppingCart className="w-5 h-5" />}
               title="Minhas Compras"
               description="Acompanhe suas compras e transações"
               onClick={() => setActiveTab('purchases')}
             />
             <ActionCard
-              icon={<Heart className="w-8 h-8" />}
+              icon={<Heart className="w-5 h-5" />}
               title="Favoritos"
               description="Veja os produtos que você salvou"
               onClick={() => router.push('/favorites')}
             />
             <ActionCard
-              icon={<MessageCircle className="w-8 h-8" />}
+              icon={<MessageCircle className="w-5 h-5" />}
               title="Mensagens"
               description="Converse com vendedores e compradores"
               onClick={() => router.push('/messages')}
             />
             <ActionCard
-              icon={<Edit2 className="w-8 h-8" />}
+              icon={<UserPen className="w-5 h-5" />}
               title="Editar Perfil"
               description="Atualize suas informações"
               onClick={() => router.push('/edit-profile')}
@@ -378,6 +391,7 @@ const Profile = () => {
         )}
       </div>
 
+      {/* Delete Confirmation Modal - Keep as is */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-sm">
