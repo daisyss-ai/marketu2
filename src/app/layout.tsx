@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import 'react-toastify/dist/ReactToastify.css';
+import ToastProvider from "@/components/ToastProvider";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MarketU",
-  description: "An exclusive marketplace for high-school students",
+  title: "MARKETU",
+  description: "MARKETPLACE PARA ESTUDANTES",
+
 };
 
 export default function RootLayout({
@@ -24,10 +28,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta charSet="UTF-8" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        
+        <Suspense fallback={null}>
+          <ToastProvider />
+        </Suspense>
         {children}
 
       </body>
