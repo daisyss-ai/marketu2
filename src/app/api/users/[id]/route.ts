@@ -22,13 +22,6 @@ function normalizeAvatarUrl(value: unknown): { url: string | null; error?: strin
   }
 }
 
-function safeErrorMessage(error: unknown): string {
-  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
-    return error.message;
-  }
-  return 'Unknown error';
-}
-
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -97,7 +90,7 @@ export async function PUT(
     const { id: userId } = await params;
     const supabase = await createClient();
     const { data: auth, error: authError } = await supabase.auth.getUser();
-    if (authError) return NextResponse.json({ error: 'Falha na autenticação' }, { status: 401 });
+    if (authError) return NextResponse.json({ error: 'Erro ao processar requisição' }, { status: 401 });
     if (!auth?.user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     if (auth.user.id !== userId) return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
 
@@ -140,7 +133,7 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating user profile:', safeErrorMessage(error));
+      console.error('Error updating user profile');
       return NextResponse.json(
         { error: 'Erro ao atualizar perfil no banco de dados' },
         { status: 500 }
@@ -148,8 +141,8 @@ export async function PUT(
     }
 
     return NextResponse.json(user);
-  } catch (error) {
-    console.error('Unexpected error updating user profile:', safeErrorMessage(error));
+  } catch {
+    console.error('Unexpected error updating user profile');
     return NextResponse.json(
       { error: 'Erro ao atualizar perfil' },
       { status: 500 }
