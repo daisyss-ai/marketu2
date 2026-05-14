@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import React from 'react'
 import { Search, ShoppingCart, ChevronDown } from 'lucide-react'
+import { logout } from '@/app/auth/actions';
 
 
 const Header = () => {
@@ -39,6 +40,14 @@ const Header = () => {
             <Link href="/profile" className="text-sm font-semibold text-muted hover:text-primary transition-colors focus:ring-2 focus:ring-primary/20 rounded-lg px-2 py-1">
               Perfil
             </Link>
+            <form action={logout}>
+              <button
+                type="submit"
+                className="text-sm font-semibold text-muted hover:text-primary transition-colors focus:ring-2 focus:ring-primary/20 rounded-lg px-2 py-1"
+              >
+                Sair
+              </button>
+            </form>
             <Link
               href="/sell"
               className="bg-primary text-white px-5 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-all shadow-md active:scale-[0.98] focus:ring-4 focus:ring-primary/30"
