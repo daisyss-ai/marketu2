@@ -60,3 +60,35 @@ export async function GET(
     );
   }
 }
+
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: userId } = await params;
+    const supabase = await createClient();
+    const body = await req.json();
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .update(body)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json(
+        { error: 'Erro ao atualizar perfil' },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(user);
+  } catch {
+    return NextResponse.json(
+      { error: 'Erro ao atualizar perfil' },
+      { status: 500 }
+    );
+  }
+}
