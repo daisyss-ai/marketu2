@@ -97,7 +97,7 @@ export async function PUT(
     const { id: userId } = await params;
     const supabase = await createClient();
     const { data: auth, error: authError } = await supabase.auth.getUser();
-    if (authError) return NextResponse.json({ error: authError.message }, { status: 401 });
+    if (authError) return NextResponse.json({ error: 'Falha na autenticação' }, { status: 401 });
     if (!auth?.user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     if (auth.user.id !== userId) return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
 
