@@ -14,11 +14,11 @@ function normalizeAvatarUrl(value: unknown): { url: string | null; error?: strin
   try {
     const parsed = new URL(avatarUrl);
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      return { url: null, error: 'avatar_url deve usar http ou https' };
+      return { url: null, error: 'URL do avatar deve usar http ou https' };
     }
     return { url: parsed.href };
   } catch {
-    return { url: null, error: 'avatar_url inválida' };
+    return { url: null, error: 'URL do avatar inválida' };
   }
 }
 
@@ -29,10 +29,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function getErrorMeta(error: unknown): { name?: string; code?: string } {
   if (!error || typeof error !== 'object') return {};
   const maybeName = 'name' in error && typeof error.name === 'string' ? error.name : undefined;
-  const maybeCode =
-    'code' in error && typeof error.code === 'string'
-      ? error.code
-      : undefined;
+  const maybeCode = 'code' in error && typeof error.code === 'string' ? error.code : undefined;
   return { name: maybeName, code: maybeCode };
 }
 
