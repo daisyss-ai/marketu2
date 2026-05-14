@@ -68,6 +68,11 @@ export async function PUT(
   try {
     const { id: userId } = await params;
     const supabase = await createClient();
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError) return NextResponse.json({ error: authError.message }, { status: 401 });
+    if (!auth?.user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    if (auth.user.id !== userId) return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
+
     const body: unknown = await req.json();
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return NextResponse.json(
@@ -77,9 +82,33 @@ export async function PUT(
     }
 
     const allowedFields = new Set(['full_name', 'avatar_url']);
-    const updates = Object.fromEntries(
+    const rawUpdates = Object.fromEntries(
       Object.entries(body as Record<string, unknown>).filter(([key]) => allowedFields.has(key))
     );
+    const updates = rawUpdates as Record<string, unknown>;
+
+    if (typeof updates.avatar_url === 'string') {
+      const avatarUrl = updates.avatar_url.trim();
+      if (avatarUrl) {
+        try {
+          const parsed = new URL(avatarUrl);
+          if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return NextResponse.json(
+              { error: 'avatar_url deve usar http ou https' },
+              { status: 400 }
+            );
+          }
+          updates.avatar_url = parsed.toString();
+        } catch {
+          return NextResponse.json(
+            { error: 'avatar_url inválida' },
+            { status: 400 }
+          );
+        }
+      } else {
+        updates.avatar_url = null;
+      }
+    }
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(
