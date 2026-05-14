@@ -249,7 +249,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
       if (!res.ok) throw new Error((json && (json.error || json.message)) || 'Erro ao atualizar produto');
 
       toast.success('Produto atualizado!');
-      router.push('/dashboard');
+      router.push('/profile');
       router.refresh();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Erro ao atualizar produto';
@@ -269,7 +269,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
         </div>
         <button
           type="button"
-          onClick={() => router.push('/dashboard')}
+          onClick={() => router.push('/profile')}
           className="px-4 py-2 rounded-xl text-sm font-semibold bg-white border border-gray-200 hover:bg-gray-50"
           disabled={loading}
         >
