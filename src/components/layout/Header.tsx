@@ -1,11 +1,13 @@
 'use client';
 import Link from 'next/link';
-
+import { usePathname } from 'next/navigation';
 import { Search, ShoppingCart, ChevronDown } from 'lucide-react'
 import { logout } from '@/app/auth/actions';
 
 
 const Header = () => {
+  const pathname = usePathname();
+
   return (
     <div>
       <div className="w-full h-1 bg-primary" />
@@ -48,12 +50,14 @@ const Header = () => {
                 Sair
               </button>
             </form>
-            <Link
-              href="/sell"
-              className="bg-primary text-white px-5 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-all shadow-md active:scale-[0.98] focus:ring-4 focus:ring-primary/30"
-            >
-              Vender
-            </Link>
+            {pathname !== '/profile' && (
+              <Link
+                href="/sell"
+                className="bg-primary text-white px-5 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-all shadow-md active:scale-[0.98] focus:ring-4 focus:ring-primary/30"
+              >
+                Vender
+              </Link>
+            )}
             <button className="relative group focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-full p-2" aria-label="Ver carrinho">
               <ShoppingCart className="w-6 h-6 text-muted group-hover:text-primary transition-colors" />
               <span className="absolute -top-1 -right-1 bg-error text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">0</span>

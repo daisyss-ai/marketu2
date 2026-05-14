@@ -333,7 +333,7 @@ const Profile = () => {
                     key={product.id}
                     product={product}
                     onDelete={(id) => setDeleteConfirm(id)}
-                    onEdit={(id) => router.push(`/dashboard/${id}/edit`)}
+                    onEdit={(id) => router.push(`/profile/${id}/edit`)}
                   />
                 ))}
               </div>
