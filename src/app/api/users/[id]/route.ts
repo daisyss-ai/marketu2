@@ -22,6 +22,16 @@ function normalizeAvatarUrl(value: unknown): { url: string | null; error?: strin
   }
 }
 
+function getErrorMeta(error: unknown): { name?: string; code?: string } {
+  if (!error || typeof error !== 'object') return {};
+  const maybeName = 'name' in error && typeof error.name === 'string' ? error.name : undefined;
+  const maybeCode =
+    'code' in error && typeof error.code === 'string'
+      ? error.code
+      : undefined;
+  return { name: maybeName, code: maybeCode };
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -133,7 +143,7 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating user profile');
+      console.error('Error updating user profile', getErrorMeta(error));
       return NextResponse.json(
         { error: 'Erro ao atualizar perfil no banco de dados' },
         { status: 500 }
@@ -141,8 +151,8 @@ export async function PUT(
     }
 
     return NextResponse.json(user);
-  } catch {
-    console.error('Unexpected error updating user profile');
+  } catch (error) {
+    console.error('Unexpected error updating user profile', getErrorMeta(error));
     return NextResponse.json(
       { error: 'Erro ao atualizar perfil' },
       { status: 500 }
