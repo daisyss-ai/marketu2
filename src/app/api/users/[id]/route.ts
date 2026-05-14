@@ -68,24 +68,44 @@ export async function PUT(
   try {
     const { id: userId } = await params;
     const supabase = await createClient();
-    const body = await req.json();
+    const body: unknown = await req.json();
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json(
+        { error: 'Dados inválidos para atualização de perfil' },
+        { status: 400 }
+      );
+    }
+
+    const allowedFields = new Set(['full_name', 'avatar_url']);
+    const updates = Object.fromEntries(
+      Object.entries(body as Record<string, unknown>).filter(([key]) => allowedFields.has(key))
+    );
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json(
+        { error: 'Nenhum campo permitido para atualização' },
+        { status: 400 }
+      );
+    }
 
     const { data: user, error } = await supabase
       .from('users')
-      .update(body)
+      .update(updates)
       .eq('id', userId)
       .select()
       .single();
 
     if (error) {
+      console.error('Error updating user profile:', error);
       return NextResponse.json(
-        { error: 'Erro ao atualizar perfil' },
-        { status: 400 }
+        { error: 'Erro ao atualizar perfil no banco de dados' },
+        { status: 500 }
       );
     }
 
     return NextResponse.json(user);
-  } catch {
+  } catch (error) {
+    console.error('Unexpected error updating user profile:', error);
     return NextResponse.json(
       { error: 'Erro ao atualizar perfil' },
       { status: 500 }
