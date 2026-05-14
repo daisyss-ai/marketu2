@@ -22,6 +22,13 @@ function normalizeAvatarUrl(value: unknown): { url: string | null; error?: strin
   }
 }
 
+function safeErrorMessage(error: unknown): string {
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return 'Unknown error';
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -103,10 +110,9 @@ export async function PUT(
     }
 
     const allowedFields = new Set(['full_name', 'avatar_url']);
-    const rawUpdates = Object.fromEntries(
+    const updates = Object.fromEntries(
       Object.entries(body as Record<string, unknown>).filter(([key]) => allowedFields.has(key))
-    );
-    const updates = rawUpdates as Record<string, unknown>;
+    ) as Record<string, unknown>;
 
     if ('avatar_url' in updates) {
       const normalized = normalizeAvatarUrl(updates.avatar_url);
@@ -134,7 +140,7 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating user profile:', error);
+      console.error('Error updating user profile:', safeErrorMessage(error));
       return NextResponse.json(
         { error: 'Erro ao atualizar perfil no banco de dados' },
         { status: 500 }
@@ -143,7 +149,7 @@ export async function PUT(
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error('Unexpected error updating user profile:', error);
+    console.error('Unexpected error updating user profile:', safeErrorMessage(error));
     return NextResponse.json(
       { error: 'Erro ao atualizar perfil' },
       { status: 500 }
