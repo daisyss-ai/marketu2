@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import ToastProvider from "@/components/ToastProvider";
+import { Suspense } from "react";
+import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "MarketU",
-  description: "An exclusive marketplace for high-school students",
+  title: "MARKETU",
+  description: "MARKETPLACE PARA ESTUDANTES",
+
 };
 
 export default function RootLayout({
@@ -23,11 +17,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        
+    <html lang="pt" className={cn("font-mono")}>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta charSet="UTF-8" />
+      </head>
+      <body className="antialiased">
+        <Suspense fallback={null}>
+          <ToastProvider />
+          <Toaster />
+        </Suspense>
         {children}
 
       </body>

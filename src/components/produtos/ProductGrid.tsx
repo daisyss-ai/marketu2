@@ -1,15 +1,16 @@
 'use client';
-import React from 'react';
+import type { CSSProperties } from 'react';
 import ProductCard from './ProductCard';
-import { Product } from '../../types';
+import type { ProductCardItem } from '../../types';
 
 interface ProductGridProps {
-  products: Product[];
+  products: ProductCardItem[];
   loading?: boolean;
   error?: string | null;
   totalProducts?: number;
   page?: number;
   totalPages?: number;
+  showPagination?: boolean;
   onPageChange?: (page: number) => void;
   onToggleFavorite?: (id: string | number) => void;
   favorites?: (string | number)[];
@@ -32,6 +33,7 @@ const ProductGrid = ({
   totalProducts = 0,
   page = 1,
   totalPages = 1,
+  showPagination = true,
   onPageChange = () => {},
   onToggleFavorite = () => {},
   favorites = [],
@@ -93,7 +95,7 @@ const ProductGrid = ({
             className="animate-fade-in"
             style={{
               animation: 'fadeIn 0.3s ease-in-out',
-            } as React.CSSProperties}
+            } as CSSProperties}
           >
             <ProductCard
               product={product}
@@ -105,7 +107,7 @@ const ProductGrid = ({
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {showPagination && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 py-8">
           <button
             onClick={() => onPageChange(page - 1)}

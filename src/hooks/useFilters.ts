@@ -133,13 +133,8 @@ export const useFilters = () => {
   }, []);
 
   const handlePriceChange = useCallback((min: number, max: number) => {
-    setFilters((prev) => ({
-      ...prev,
-      priceMin: min,
-      priceMax: max,
-    }));
-    setPage(1);
-  }, []);
+    updateURL({ ...filters, priceMin: min, priceMax: max }, sorting, 1);
+  }, [filters, sorting, updateURL]);
 
   const handleSortChange = useCallback((newSort: string) => {
     setSorting(newSort as ProductSort);
@@ -147,14 +142,17 @@ export const useFilters = () => {
   }, []);
 
   const handlePageChange = useCallback((newPage: number) => {
-    setPage(newPage);
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, []);
+    updateURL(filters, sorting, newPage);
+  }, [filters, sorting, updateURL]);
 
-  const handleClearAllFilters = useCallback(() => {
-    setFilters({
+  
+ 
+const handleClearAllFilters = useCallback(() => {
+  updateURL(
+    {
       condition: null,
       priceMin: 0,
       priceMax: Infinity,
@@ -165,10 +163,13 @@ export const useFilters = () => {
       subject: null,
       productType: null,
       location: null,
-    });
-    setSorting('newest');
-    setPage(1);
-  }, []);
+    },
+    'newest',  // ← sort
+    1          // ← page
+  );
+  setSorting('newest');
+  setPage(1);
+}, [updateURL]);
 
   const handleClearFilter = useCallback((filterType: keyof FilterState) => {
     setFilters((prev) => ({
@@ -228,11 +229,6 @@ export const useFilters = () => {
     filters,
     sorting,
     page,
-    products,
-    loading,
-    error,
-    totalProducts,
-    totalPages,
     favorites,
     handleFilterChange,
     handlePriceChange,

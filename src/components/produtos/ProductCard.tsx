@@ -1,10 +1,12 @@
 'use client';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { MouseEvent } from 'react';
 import { Heart, Bookmark } from 'lucide-react';
-import { Product } from '../../types';
+import { ReviewStats } from '@/components/reviews/ReviewStats';
+import type { ProductCardItem } from '../../types';
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductCardItem;
   onToggleFavorite?: (id: string | number) => void;
   isFavorited?: boolean;
 }
@@ -12,8 +14,17 @@ interface ProductCardProps {
 const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false }: ProductCardProps) => {
   const [showToast, setShowToast] = useState(false);
   const isGreen = product.statusColor === 'bg-green-400';
+  const ratingValue = typeof product.rating === 'number' ? product.rating : 0;
+  const totalReviews =
+    typeof product.total_reviews === 'number'
+      ? product.total_reviews
+      : typeof product.reviewCount === 'number'
+        ? product.reviewCount
+        : typeof product.reviews === 'number'
+          ? product.reviews
+          : 0;
 
-  const handleFavoriteClick = (e: React.MouseEvent) => {
+  const handleFavoriteClick = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -57,12 +68,28 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
           {product.title}
         </h3>
 
+        {product.description && (
+          <p className="text-xs text-muted line-clamp-2 leading-relaxed mb-3">{product.description}</p>
+        )}
+
         <div className="flex items-baseline gap-1 mb-3">
           <span className="text-xl font-black text-foreground tracking-tight">
             {typeof product.price === 'number' ? product.price.toLocaleString('pt-AO') : product.price}
           </span>
           <span className="text-[10px] font-black text-muted uppercase">kzs</span>
         </div>
+
+        {totalReviews > 0 ? (
+          <ReviewStats
+            size="sm"
+            stats={{
+              average: ratingValue,
+              total: totalReviews,
+              distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            }}
+            className="mb-3"
+          />
+        ) : null}
 
         <div className="mt-auto pt-4 flex items-center justify-between border-t border-muted/5">
           <div className="flex items-center text-xs text-muted font-medium">

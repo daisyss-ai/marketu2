@@ -48,8 +48,6 @@
   */
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
@@ -58,6 +56,12 @@
     ,
     "dist/types/**/*.ts",
     "dist/dev/types/**/*.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.mts",
+    "dist/types/**/*.ts",
+    "dist/dev/types/**/*.ts",
+    "./dist/types/**/*.ts",
     "./dist/dev/types/**/*.ts"
   ],
   /*
@@ -66,6 +70,8 @@
   You only care about your code.
   */
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
+    ".next"
   ]
 }

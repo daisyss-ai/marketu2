@@ -4,7 +4,6 @@ import { mockProducts } from './_mock';
 import {
   applyDatabaseFilters,
   applyDatabaseSorting,
-  buildPortugueseSearchQuery,
   buildSearchMeta,
   mapProductRow,
   parseProductQuery,
@@ -32,6 +31,41 @@ function buildLegacyPayload(products: unknown[], meta: ReturnType<typeof buildSe
   };
 }
 
+const productListSelect = [
+  'id',
+  'title',
+  'category',
+  'price',
+  'description',
+  'condition',
+  'location',
+  'subject',
+  'grade_level',
+  'product_type',
+  'seller',
+  'img',
+  'rating',
+  'total_reviews',
+  'reviews',
+  'user_id',
+  'created_at',
+].join(',');
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = Reflect.get(error, 'message');
+    if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+  }
+
+  return String(error);
+}
+
 export async function GET(request: NextRequest) {
   const query = parseProductQuery(request.nextUrl.searchParams);
 
@@ -47,14 +81,10 @@ export async function GET(request: NextRequest) {
       try {
         const result = await searchProductsWithRpc(supabase, query);
         return NextResponse.json({ data: buildLegacyPayload(result.products, result.meta) }, { status: 200 });
-      }catch (rpcError: unknown) {
-         const message = rpcError instanceof Error ? rpcError.message : (rpcError as any)?.message || '';
-         const normalizedMessage = message.toLowerCase();
-
-
+      }catch {
         let fallbackQuery = supabase
         .from('products_search_view')
-        .select('*', { count: 'exact' });
+        .select(productListSelect, { count: 'exact' });
 
         fallbackQuery = applyDatabaseFilters(fallbackQuery, query, { includeSearch: false });
 
@@ -77,7 +107,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    let dbQuery = supabase.from('products_search_view').select('*', { count: 'exact' });
+    let dbQuery = supabase.from('products_search_view').select(productListSelect, { count: 'exact' });
     dbQuery = applyDatabaseFilters(dbQuery, query);
     dbQuery = applyDatabaseSorting(dbQuery, query);
 
@@ -95,7 +125,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: buildLegacyPayload(products, resolvedMeta) }, { status: 200 });
   } catch (error: unknown) {
-    const message = (error as any) ?.message || String(error);
+    const message = getErrorMessage(error);
 
     if (message.toLowerCase().includes('does not exist') || message.toLowerCase().includes('relation')) {
       const result = searchProductsInMemory(mockProducts, query);
