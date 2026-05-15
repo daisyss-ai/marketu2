@@ -4,6 +4,14 @@ import { create } from 'zustand';
 export interface User {
   id: string;
   email?: string;
+  enrollment_code?: string;
+  full_name?: string;
+  phone?: string;
+  role?: string;
+  status?: string;
+  institution?: {
+    name: string;
+  };
   token?: string;
   [key: string]: any;
 }
