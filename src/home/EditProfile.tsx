@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 interface UserProfile {
   id: string;
   full_name: string;
-  username: string | null;
   avatar_url: string | null;
   banner_url: string | null;
   bio: string | null;
@@ -19,7 +18,6 @@ interface UserProfile {
 const EditProfile = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);
-  const login = useAuthStore((state) => state.login);
   const supabase = createClient();
 
   const [isHydrated, setIsHydrated] = useState(false);
@@ -28,9 +26,7 @@ const EditProfile = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   // Form state
-  const [username, setUsername] = useState('');
-  const [usernameError, setUsernameError] = useState('');
-  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -47,19 +43,6 @@ const EditProfile = () => {
     setIsHydrated(true);
   }, []);
 
-  // Username validation function
-  const validateUsername = (value: string): string => {
-    if (value.length === 0) return ''; // optional field
-    if (value.length < 2) return 'Username deve ter pelo menos 2 caracteres';
-    if (value.length > 30) return 'Username não pode exceder 30 caracteres';
-    if (value.startsWith(' ') || value.endsWith(' ')) 
-      return 'Username não pode começar ou terminar com espaço';
-    if (/^\d+$/.test(value)) return 'Username não pode ser apenas números';
-    if (!/^[\p{L}\p{N} ]+$/u.test(value)) 
-      return 'Username só pode conter letras, números e espaços';
-    return '';
-  };
-
   // Fetch user profile on mount
   useEffect(() => {
     if (!isHydrated || !authUser?.id) return;
@@ -68,7 +51,7 @@ const EditProfile = () => {
       try {
         const { data, error } = await supabase
           .from('users')
-          .select('id, full_name, username, avatar_url, banner_url, bio')
+          .select('id, full_name, avatar_url, banner_url, bio')
           .eq('id', authUser.id)
           .single();
 
@@ -76,7 +59,7 @@ const EditProfile = () => {
 
         if (data) {
           setUserProfile(data);
-          setUsername(data.username || '');
+          setFullName(data.full_name || '');
           setBio(data.bio || '');
           setAvatarPreview(data.avatar_url);
           setBannerPreview(data.banner_url);
@@ -91,47 +74,6 @@ const EditProfile = () => {
 
     fetchUserProfile();
   }, [isHydrated, authUser?.id, supabase]);
-
-  // Real-time uniqueness check for username
-  useEffect(() => {
-    const checkUsernameUniqueness = async () => {
-      // Skip check if empty or has validation error
-      const validationError = validateUsername(username);
-      if (!username || validationError) {
-        setUsernameError(validationError);
-        return;
-      }
-
-      setCheckingUsername(true);
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('id')
-          .eq('username', username.trim())
-          .neq('id', authUser?.id || '')
-          .limit(1);
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          setUsernameError('Este username já está em uso');
-        } else {
-          setUsernameError('');
-        }
-      } catch (error) {
-        console.error('Error checking username:', error);
-      } finally {
-        setCheckingUsername(false);
-      }
-    };
-
-    // Debounce the check by 600ms
-    const timer = setTimeout(() => {
-      checkUsernameUniqueness();
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, [username, authUser?.id, supabase]);
 
   // Handle avatar file change
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,7 +143,7 @@ const EditProfile = () => {
 
   // Check if form has changes
   const hasChanges = (): boolean => {
-    if (username !== (userProfile?.username || '')) return true;
+    if (fullName !== (userProfile?.full_name || '')) return true;
     if (bio !== (userProfile?.bio || '')) return true;
     if (avatarFile) return true;
     if (bannerFile) return true;
@@ -218,8 +160,8 @@ const EditProfile = () => {
       return;
     }
 
-    if (usernameError) {
-      toast.error('Por favor, corrija o erro no username');
+    if (!fullName.trim()) {
+      toast.error('Nome completo é obrigatório');
       return;
     }
 
@@ -252,7 +194,7 @@ const EditProfile = () => {
       const { error } = await supabase
         .from('users')
         .update({
-          username: username.trim() || null,
+          full_name: fullName.trim(),
           bio: bio.trim() || null,
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
@@ -261,14 +203,6 @@ const EditProfile = () => {
         .eq('id', authUser.id);
 
       if (error) throw error;
-
-      // Update authStore with new profile data
-      login({
-        ...authUser,
-        username: username.trim() || null,
-        avatar_url: avatarUrl ?? authUser.avatar_url ?? undefined,
-        banner_url: bannerUrl ?? authUser.banner_url ?? undefined,
-      });
 
       toast.success('Perfil atualizado!');
       router.push('/profile');
@@ -413,7 +347,7 @@ const EditProfile = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  getInitials(userProfile?.full_name || '')
+                  getInitials(fullName)
                 )}
               </div>
 
@@ -431,49 +365,22 @@ const EditProfile = () => {
 
           {/* Form fields */}
           <div className="px-6 pb-6">
-            {/* Username field */}
+            {/* Full name field */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Username
-                <span className="text-gray-400 font-normal ml-1">(opcional)</span>
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => {
-                  const val = e.target.value.slice(0, 30);
-                  setUsername(val);
-                  setUsernameError(validateUsername(val));
-                }}
-                maxLength={30}
-                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4B187C] focus:border-transparent transition-all ${
-                  usernameError ? 'border-red-400' : 'border-gray-300'
-                }`}
-                placeholder="Ex: Daisy, Maria Lucia, Saturno Ao"
-              />
-              {usernameError && (
-                <p className="text-xs text-red-500 mt-1">{usernameError}</p>
-              )}
-              {checkingUsername && (
-                <p className="text-xs text-gray-400 mt-1">A verificar disponibilidade...</p>
-              )}
-              <p className="text-xs text-gray-500 mt-1">{username.length}/30</p>
-            </div>
-
-            {/* Full name field (read-only) */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
                 Nome Completo
-                <span className="text-xs text-gray-400 font-normal ml-2">
-                  (usado para verificação institucional — não editável)
-                </span>
               </label>
               <input
+                id="fullName"
                 type="text"
-                value={userProfile?.full_name || ''}
-                disabled
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value.slice(0, 100))}
+                maxLength={100}
+                required
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4B187C] focus:border-transparent transition-all"
+                placeholder="Seu nome completo"
               />
+              <p className="text-xs text-gray-500 mt-1">{fullName.length}/100</p>
             </div>
 
             {/* Bio field */}
