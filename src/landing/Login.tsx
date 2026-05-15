@@ -1,7 +1,9 @@
 'use client';
+import { login } from '@/app/auth/actions';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { useAuthStore } from '../store/authStore';
+import { toast } from 'sonner';
 
 interface LoginProps {
   onFlipToSignup?: () => void;
@@ -11,23 +13,26 @@ interface LoginProps {
 const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
   const handleSwitch = onFlipToSignup || onSlideToSignup;
   const router = useRouter();
-  const loginStore = useAuthStore((state) => state.login);
-  const [studentId, setStudentId] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
+
+  const goToSignup = () => {
+    if (handleSwitch) return handleSwitch();
+    router.push('/signup');
+  };
 
   const validateForm = () => {
     const newErrors: any = {};
 
-    // Student ID or Phone validation
-    if (!studentId.trim()) {
-      newErrors.studentId = 'ID de Estudante ou Telemóvel é obrigatório';
-    } else if (studentId.trim().length < 5) {
-      newErrors.studentId = 'Por favor, introduza um ID ou telemóvel válido';
+    // Email validation (Supabase Auth uses email/password)
+    if (!email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      newErrors.email = 'Por favor, introduza um email válido';
     }
 
     // Password validation
@@ -40,36 +45,20 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
     return newErrors;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     const newErrors = validateForm();
-
     if (Object.keys(newErrors).length > 0) {
+      e.preventDefault();
       setErrors(newErrors);
+      toast.error('Verifique os campos e tente novamente');
       return;
     }
 
     setLoading(true);
-    setErrors({});
-    setSuccess('');
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSuccess('Login realizado com sucesso!');
-      // store user info
-      loginStore({ id: studentId, fullName: 'Usuário Teste' });
-      // navigate after short delay
-      setTimeout(() => router.push('/home'), 500);
-    } catch (error) {
-      setErrors({ submit: 'Erro ao fazer login. Tente novamente.' });
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
-    <div className="flex bg-surface rounded-2xl overflow-hidden shadow-xl w-full max-w-4xl min-h-[500px]">
+    <div className="flex bg-surface rounded-2xl overflow-hidden shadow-xl w-full max-w-4xl min-h-125">
       {/* Left Side - Light Gray */}
       <div className="hidden md:flex md:w-1/2 bg-background items-center justify-center relative">
         <div className="text-center p-8">
@@ -85,41 +74,36 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
           <h1 className="text-3xl font-bold text-primary-foreground mb-2">Entrar</h1>
           <p className="text-primary-foreground/80 mb-8 text-sm">Acede à tua conta Marketu</p>
 
-          {success && (
-            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded text-sm">
-              {success}
-            </div>
-          )}
-
           {errors.submit && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
               {errors.submit}
             </div>
           )}
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form className="space-y-5" action={login} onSubmit={handleSubmit}>
             <div>
               <label htmlFor="studentId" className="block text-white text-sm font-semibold mb-2">
-                ID de Estudante ou Telemóvel
+                Email
               </label>
               <input
                 id="studentId"
-                type="text"
-                value={studentId}
+                name="email"
+                type="email"
+                value={email}
                 onChange={(e) => {
-                  setStudentId(e.target.value);
-                  if (errors.studentId) setErrors({ ...errors, studentId: '' });
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors({ ...errors, email: '' });
                 }}
                 className={`w-full px-4 py-3 rounded-xl border-0 focus:outline-none focus:ring-4 transition-all text-sm ${
-                  errors.studentId
+                  errors.email
                     ? 'bg-error/5 text-error focus:ring-error/30'
                     : 'bg-surface text-foreground focus:ring-primary/40'
                 }`}
-                placeholder="2034xx-xxx ou 9xx..."
-                aria-invalid={!!errors.studentId}
+                placeholder="nome@instituicao.edu"
+                aria-invalid={!!errors.email}
               />
-              {errors.studentId && (
-                <p className="text-red-100 text-xs mt-1.5 font-medium">{errors.studentId}</p>
+              {errors.email && (
+                <p className="text-red-100 text-xs mt-1.5 font-medium">{errors.email}</p>
               )}
             </div>
 
@@ -130,6 +114,7 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
               <div className="relative">
                 <input
                   id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => {
@@ -147,7 +132,7 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-primary hover:text-primary/80 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-primary hover:text-primary/80 transition-colors min-w-11 min-h-11 flex items-center justify-center"
                   aria-label={showPassword ? "Ocultar palavra-passe" : "Mostrar palavra-passe"}
                 >
                   {showPassword ? 'Hide' : 'Show'}
@@ -171,7 +156,7 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
                   Lembrar-me
                 </label>
               </div>
-              <a href="/recover" className="text-white text-xs hover:underline">Esqueceste a senha?</a>
+              <Link href="/recover" className="text-white text-xs hover:underline">Esqueceste a senha?</Link>
             </div>
 
             <button
@@ -186,8 +171,9 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
           <div className="mt-8 text-center">
             <p className="text-primary-foreground/80 text-xs">
               Ainda não tens conta?{' '}
-              <button 
-                onClick={handleSwitch}
+              <button
+                type="button"
+                onClick={goToSignup}
                 className="text-primary-foreground hover:underline font-bold"
               >
                 Criar agora

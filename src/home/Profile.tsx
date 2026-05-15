@@ -28,7 +28,7 @@ interface StatCardProps {
 }
 
 const StatCard = ({ icon, label, value, isRating = false }: StatCardProps) => (
-  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
+  <div className="bg-linear-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
     <div className="flex items-center justify-between mb-2">
       <span className="text-gray-600 text-sm font-medium">{label}</span>
       <div className="text-purple-600">{icon}</div>
@@ -55,7 +55,7 @@ const ProductCard = ({ product, onDelete, onEdit }: ProductCardProps) => (
           className="w-full h-full object-cover hover:scale-105 transition-transform"
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+        <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-gray-200 to-gray-300">
           <Package className="w-12 h-12 text-gray-400" />
         </div>
       )}
@@ -211,7 +211,7 @@ const Profile = () => {
         <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <div className="flex items-start gap-6 flex-1">
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+              <div className="w-24 h-24 bg-linear-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
                 {displayName?.charAt(0).toUpperCase()}
               </div>
 

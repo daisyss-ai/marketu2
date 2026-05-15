@@ -10,6 +10,7 @@ interface ProductGridProps {
   totalProducts?: number;
   page?: number;
   totalPages?: number;
+  showPagination?: boolean;
   onPageChange?: (page: number) => void;
   onToggleFavorite?: (id: string | number) => void;
   favorites?: (string | number)[];
@@ -32,6 +33,7 @@ const ProductGrid = ({
   totalProducts = 0,
   page = 1,
   totalPages = 1,
+  showPagination = true,
   onPageChange = () => {},
   onToggleFavorite = () => {},
   favorites = [],
@@ -105,7 +107,7 @@ const ProductGrid = ({
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {showPagination && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 py-8">
           <button
             onClick={() => onPageChange(page - 1)}
