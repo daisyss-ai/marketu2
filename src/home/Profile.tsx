@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/layout/Header';
 import { useAuthStore } from '../store/authStore';
+import { createClient } from '@/lib/supabase/client';
 import { useUserProfile, useUserProducts, useDeleteProduct } from '../hooks/useAPI';
 import { LoadingSpinner, FormAlert } from '../components/FormFields';
 import type { ProductWithDetails } from '../types';
@@ -151,11 +152,11 @@ const Profile = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const supabase = createClient();
   const [activeTab, setActiveTab] = useState('products');
   const [deleteConfirm, setDeleteConfirm] = useState<string | number | null>(null);
   const [alertMessage, setAlertMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
-
   // Prevent hydration mismatch by only rendering after client hydration
   useEffect(() => {
     setIsHydrated(true);
@@ -214,7 +215,7 @@ const Profile = () => {
     );
   }
 
-  const displayName = authUser?.full_name || 'Usuário';
+  const displayName = authUser?.username || authUser?.full_name || 'Usuário';
   const studentInfo = `${authUser?.student_id || 'N/A'} • ${authUser?.course || 'Curso'} • ${authUser?.classroom || 'Sala'}`;
   const avgRating = stats?.stats?.avgRating || 0;
   const reviewCount = stats?.stats?.reviewCount || 0;
@@ -224,7 +225,11 @@ const Profile = () => {
       <Header />
 
       {/* Profile Header with Purple Banner */}
-      <div className="h-36 w-full bg-gradient-to-r from-[#4B187C] to-[#6d28b0]" />
+      {authUser?.banner_url ? (
+        <img src={authUser.banner_url} className="h-36 w-full object-cover" alt="Banner" />
+      ) : (
+        <div className="h-36 w-full bg-gradient-to-r from-[#4B187C] to-[#6d28b0]" />
+      )}
 
       <div className="max-w-5xl mx-auto px-4 -mt-16 relative z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -232,8 +237,12 @@ const Profile = () => {
           <div className="flex flex-col gap-6 flex-1">
             {/* Avatar with verified badge */}
             <div className="relative flex-shrink-0 w-fit">
-              <div className="w-32 h-32 bg-[#EDE7FF] text-[#4B187C] text-4xl font-bold rounded-full border-4 border-white flex items-center justify-center shadow-lg">
-                {displayName?.charAt(0).toUpperCase()}
+              <div className="w-32 h-32 bg-[#EDE7FF] text-[#4B187C] text-4xl font-bold rounded-full border-4 border-white flex items-center justify-center shadow-lg overflow-hidden">
+                {authUser?.avatar_url ? (
+                  <img src={authUser.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  displayName?.charAt(0).toUpperCase()
+                )}
               </div>
               <div className="absolute bottom-1 right-2 w-6 h-6 bg-green-500 border-2 border-white rounded-full flex items-center justify-center">
                 <Check className="w-3 h-3 text-white" />
