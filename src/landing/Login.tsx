@@ -1,8 +1,8 @@
 'use client';
 import { login } from '@/app/auth/actions';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface LoginProps {
@@ -13,6 +13,8 @@ interface LoginProps {
 const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
   const handleSwitch = onFlipToSignup || onSlideToSignup;
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') ?? '';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -81,6 +83,7 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
           )}
 
           <form className="space-y-5" action={login} onSubmit={handleSubmit}>
+            <input type="hidden" name="redirectTo" value={redirectTo} readOnly />
             <div>
               <label htmlFor="studentId" className="block text-white text-sm font-semibold mb-2">
                 Email

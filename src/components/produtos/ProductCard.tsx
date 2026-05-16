@@ -1,10 +1,11 @@
 'use client';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { MouseEvent } from 'react';
 import { Heart, Bookmark } from 'lucide-react';
-import { Product } from '../../types';
+import type { ProductCardItem } from '../../types';
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductCardItem;
   onToggleFavorite?: (id: string | number) => void;
   isFavorited?: boolean;
 }
@@ -13,7 +14,7 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
   const [showToast, setShowToast] = useState(false);
   const isGreen = product.statusColor === 'bg-green-400';
 
-  const handleFavoriteClick = (e: React.MouseEvent) => {
+  const handleFavoriteClick = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 

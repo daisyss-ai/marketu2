@@ -44,16 +44,15 @@
   */
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts",
-    "./src", //reasonable — explicitly including the src directory is good practice for a Next.js project, though it may already be implicitly matched by **/*.ts and **/*.tsx.
-    "./dist/types/**/*.ts" //intentional — this suggests you're including generated type definitions from a build output, which makes sense if you need those types available during compilation.
-    ,
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.mts",
     "dist/types/**/*.ts",
-    "dist/dev/types/**/*.ts"
+    "dist/dev/types/**/*.ts",
+    "./dist/types/**/*.ts",
+    "./dist/dev/types/**/*.ts"
   ],
   /*
   Which boxes should TypeScript IGNORE?"
@@ -61,6 +60,8 @@
   You only care about your code.
   */
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
+    ".next"
   ]
 }

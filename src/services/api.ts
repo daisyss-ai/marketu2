@@ -9,13 +9,16 @@ const getToken = () => {
 };
 
 // Make API requests with common error handling
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function apiRequest(endpoint: string, options: any = {}) {
   const token = getToken();
   const headers: any = {
-    'Content-Type': 'application/json',
     ...options.headers,
   };
+
+  // Only set Content-Type if not explicitly skipped (for FormData uploads)
+  if (!options.skipContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -27,36 +30,35 @@ async function apiRequest(endpoint: string, options: any = {}) {
       headers,
     });
 
-    // Check if response is ok and contains JSON
-    if (!response.ok) {
-      let errorData;
-      try {
-        errorData = await response.json();
-      } catch {
-        errorData = { error: `Erro HTTP ${response.status}` };
-      }
-      throw {
-        status: response.status,
-        message: errorData.error || 'Erro ao comunicar com servidor',
-        data: errorData,
-      };
-    }
+    // Handle non-JSON responses (e.g., HTML error pages)
+    const contentType = response.headers.get('content-type');
+    let data: unknown;
 
-    // Try to parse JSON, handle non-JSON responses
-    let data;
-    try {
+    if (contentType?.includes('application/json')) {
       data = await response.json();
-    } catch {
-      throw {
-        status: response.status,
-        message: 'Resposta inválida do servidor (não é JSON)',
-        data: null,
-      };
+    } else {
+      const text = await response.text();
+      data = { error: text || 'Non-JSON response from server' };
     }
 
-    return data.data || data;
-  } catch (error) {
-    console.error('API Error:', error);
+    if (!response.ok) {
+      const errorData =
+        typeof data === 'object' && data !== null ? (data as { error?: string }) : null;
+      const message = errorData?.error || 'Erro ao comunicar com servidor';
+      const err = new Error(message) as Error & { status?: number; data?: unknown };
+      err.status = response.status;
+      err.data = data;
+      throw err;
+    }
+
+    if (typeof data === 'object' && data !== null && 'data' in data) {
+      return (data as { data: unknown }).data;
+    }
+
+    return data;
+  } catch (error: any) {
+    const errorMessage = error?.message || error?.error || 'Erro desconhecido';
+    console.error('API Error:', errorMessage, error);
     throw error;
   }
 }
@@ -145,11 +147,22 @@ export const productsAPI = {
       method: 'GET',
     }),
 
-  createProduct: (productData: any) =>
-    apiRequest('/products', {
+  createProduct: (productData: any) => {
+    // Check if productData is FormData (for multipart uploads with files)
+    if (productData instanceof FormData) {
+      return apiRequest('/products', {
+        method: 'POST',
+        body: productData,
+        skipContentType: true, // Let browser set Content-Type with boundary
+      });
+    }
+
+    // Otherwise, send as JSON
+    return apiRequest('/products', {
       method: 'POST',
       body: JSON.stringify(productData),
-    }),
+    });
+  },
 
   updateProduct: (productId: string, data: any) =>
     apiRequest(`/products/${productId}`, {

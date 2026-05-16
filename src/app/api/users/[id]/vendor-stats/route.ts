@@ -2,44 +2,64 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: userId } = await params;
     const supabase = await createClient();
-    const userId = params.id;
 
-    // Get total products
-    const { count: totalProducts } = await supabase
+    // Get product count and stats
+    const { data: products, error: productsError } = await supabase
       .from('products')
-      .select('*', { count: 'exact', head: true })
+      .select('rating, total_reviews')
       .eq('seller_id', userId);
 
-    // Get active products
-    const { count: activeProducts } = await supabase
-      .from('products')
+    if (productsError) throw productsError;
+
+    const productCount = products?.length || 0;
+    const avgRating =
+      products && products.length > 0
+        ? products.reduce((sum, p) => sum + (p.rating || 0), 0) / products.length
+        : 0;
+    const reviewCount = products?.reduce((sum, p) => sum + (p.total_reviews || 0), 0) || 0;
+
+    // Get completed sales count
+    const { count: completedSales, error: ordersError } = await supabase
+      .from('orders')
       .select('*', { count: 'exact', head: true })
       .eq('seller_id', userId)
-      .eq('is_active', true);
+      .eq('status', 'completed');
 
-    // Get total sales (sum of prices of sold products)
-    const { data: soldProducts } = await supabase
-      .from('products')
-      .select('price')
-      .eq('seller_id', userId)
-      .eq('is_active', false);
+    if (ordersError) throw ordersError;
 
-    const totalSales = (soldProducts || []).reduce((acc, p) => acc + (p.price || 0), 0);
+    // Calculate positive rating percentage
+    const positiveRating =
+      reviewCount === 0 ? '0%' : `${Math.round((avgRating / 5) * 100)}%`;
 
     return NextResponse.json({
-      totalProducts: totalProducts || 0,
-      activeProducts: activeProducts || 0,
-      totalSales,
+      data: {
+        stats: {
+          avgRating,
+          reviewCount,
+          productCount,
+          completedSales: completedSales || 0,
+          positiveRating,
+        },
+      },
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Erro ao buscar estatísticas' },
-      { status: 500 }
-    );
+    console.error('Error fetching vendor stats:', error);
+    return NextResponse.json({
+      data: {
+        stats: {
+          avgRating: 0,
+          reviewCount: 0,
+          productCount: 0,
+          completedSales: 0,
+          positiveRating: '0%',
+        },
+      },
+    });
   }
 }
