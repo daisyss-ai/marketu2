@@ -26,7 +26,7 @@ const EditProfile = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   // Form state
-  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -59,7 +59,7 @@ const EditProfile = () => {
 
         if (data) {
           setUserProfile(data);
-          setFullName(data.full_name || '');
+          setUsername(authUser.username || '');
           setBio(data.bio || '');
           setAvatarPreview(data.avatar_url);
           setBannerPreview(data.banner_url);
@@ -143,7 +143,7 @@ const EditProfile = () => {
 
   // Check if form has changes
   const hasChanges = (): boolean => {
-    if (fullName !== (userProfile?.full_name || '')) return true;
+    if (username !== (authUser?.username || '')) return true;
     if (bio !== (userProfile?.bio || '')) return true;
     if (avatarFile) return true;
     if (bannerFile) return true;
@@ -160,8 +160,8 @@ const EditProfile = () => {
       return;
     }
 
-    if (!fullName.trim()) {
-      toast.error('Nome completo é obrigatório');
+    if (!username.trim()) {
+      toast.error('Username é obrigatório');
       return;
     }
 
@@ -194,7 +194,7 @@ const EditProfile = () => {
       const { error } = await supabase
         .from('users')
         .update({
-          full_name: fullName.trim(),
+          username: username.trim(),
           bio: bio.trim() || null,
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
@@ -203,6 +203,27 @@ const EditProfile = () => {
         .eq('id', authUser.id);
 
       if (error) throw error;
+
+      // Merge current user data with new values and update auth store
+      const { login } = useAuthStore.getState();
+      const currentUser = useAuthStore.getState().user;
+      login({
+        ...currentUser,
+        username: username.trim() || null,
+        avatar_url: avatarUrl ?? currentUser?.avatar_url ?? null,
+        banner_url: bannerUrl ?? currentUser?.banner_url ?? null,
+      });
+
+      // Update localStorage directly to ensure profile page reads new values immediately
+      if (typeof window !== 'undefined') {
+        const updated = {
+          ...currentUser,
+          username: username.trim() || null,
+          avatar_url: avatarUrl ?? currentUser?.avatar_url ?? null,
+          banner_url: bannerUrl ?? currentUser?.banner_url ?? null,
+        };
+        window.localStorage.setItem('marketu_user', JSON.stringify(updated));
+      }
 
       toast.success('Perfil atualizado!');
       router.push('/profile');
@@ -347,7 +368,7 @@ const EditProfile = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  getInitials(fullName)
+                  getInitials(userProfile?.full_name || '')
                 )}
               </div>
 
@@ -365,7 +386,7 @@ const EditProfile = () => {
 
           {/* Form fields */}
           <div className="px-6 pb-6">
-            {/* Full name field */}
+            {/* Full name field (read-only) */}
             <div className="mb-6">
               <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
                 Nome Completo
@@ -373,14 +394,28 @@ const EditProfile = () => {
               <input
                 id="fullName"
                 type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value.slice(0, 100))}
-                maxLength={100}
+                value={userProfile?.full_name || ''}
+                readOnly
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+              />
+            </div>
+
+            {/* Username field */}
+            <div className="mb-6">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                Username
+              </label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.slice(0, 50))}
+                maxLength={50}
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4B187C] focus:border-transparent transition-all"
-                placeholder="Seu nome completo"
+                placeholder="Seu username"
               />
-              <p className="text-xs text-gray-500 mt-1">{fullName.length}/100</p>
+              <p className="text-xs text-gray-500 mt-1">{username.length}/50</p>
             </div>
 
             {/* Bio field */}
