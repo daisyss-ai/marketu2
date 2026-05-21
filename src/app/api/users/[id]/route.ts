@@ -34,7 +34,7 @@ function getErrorMeta(error: unknown): { name?: string; code?: string } {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
