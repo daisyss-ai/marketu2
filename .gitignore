@@ -10,7 +10,10 @@
 !.yarn/releases
 !.yarn/versions
 /.specify
-/dist
+/dist/
+/dist/dev/cache/turbopack/2275bd85/CURRENT
+/dist/dev/cache/turbopack/2275bd85/LOG
+
 
 # testing
 /coverage
