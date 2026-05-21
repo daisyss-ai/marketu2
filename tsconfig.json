@@ -9,6 +9,11 @@
       "dom.iterable",
       "esnext"
     ],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -23,6 +28,9 @@
     "incremental": true,
     "forceConsistentCasingInFileNames": true, //Always use the same UPPERCASE and lowercase pattern in file names." Like if you name a file MyFile.tsx — don't later accidentally call it myfile.tsx. It keeps things organized and clear.
     "noFallthroughCasesInSwitch": true, //Don't let your code accidentally 'slip through' switch statements." Imagine a instruction manual: "If the box is red: paint it. If it's blue: paint it." If you forget to STOP at red before moving to blue, you might paint everything! This rule says "Hey, you forgot a STOP sign!" (the break statement).
+    "noUnusedParameters": true, //If you ask for something, USE it!" Like saying "give me a toy" but then never playing with it. This rule warns: "You wrote a function that asks for information, but you never use it — why are you asking for it?
+    "noUnusedLocals": true, //Don't leave toys lying around." If you create a variable or something but never use it, this says "Hey, this is clutter — clean it up!
+    "useDefineForClassFields": true, //Use the modern way to set up class pieces." This tells TypeScript to follow a specific technical rule so your code works safely across all computers and browsers.
     "noUnusedParameters": true, //If you ask for something, USE it!" Like saying "give me a toy" but then never playing with it. This rule warns: "You wrote a function that asks for information, but you never use it — why are you asking for it?
     "noUnusedLocals": true, //Don't leave toys lying around." If you create a variable or something but never use it, this says "Hey, this is clutter — clean it up!
     "useDefineForClassFields": true, //Use the modern way to set up class pieces." This tells TypeScript to follow a specific technical rule so your code works safely across all computers and browsers.
@@ -45,8 +53,6 @@
   */
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
@@ -62,6 +68,8 @@
   You only care about your code.
   */
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
+    ".next"
   ]
 }

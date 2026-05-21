@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface RecoverErrors {
   [key: string]: string | undefined;
@@ -18,15 +18,12 @@ const Recover = () => {
 
   // Step 3: SMS Code
   const [smsCode, setSmsCode] = useState(Array(6).fill(''));
-  const [codeRequested, setCodeRequested] = useState(false);
-  const [canResend, setCanResend] = useState(false);
-  const [countdown, setCountdown] = useState(0);
 
   // Step 4: New Password
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPassword] = useState(false);
+  const [showConfirmPassword] = useState(false);
 
   // Error states
   const [errors, setErrors] = useState<RecoverErrors>({});
@@ -87,9 +84,6 @@ const Recover = () => {
       if (step === 2) {
         // Step 2 to 3: Send code
         await new Promise((resolve) => setTimeout(resolve, 800));
-        setCodeRequested(true);
-        setCanResend(false);
-        setCountdown(50);
       } else if (step === 3) {
         await new Promise((resolve) => setTimeout(resolve, 800));
       } else if (step === 4) {
