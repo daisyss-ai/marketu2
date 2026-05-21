@@ -1,6 +1,6 @@
 'use client';
 import { Box, DollarSign, Receipt, ThumbsUp, Users,Zap } from 'lucide-react'
-import React from 'react'
+
 
 const Vantagens = () => {
     const Categoria=[

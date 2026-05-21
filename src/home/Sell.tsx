@@ -1,26 +1,19 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import { ChevronLeft, Upload } from 'lucide-react';
 import Header from '../components/layout/Header';
 import { useAuthStore } from '../store/authStore';
-import {
-  FormInput,
-  FormTextarea,
-  FormSelect,
-  FormFileUpload,
-  FormAlert,
-  LoadingSpinner,
-} from '../components/FormFields';
-import { useProductUpload, useImageUpload } from '../hooks/useAPI';
+import { FormInput, FormTextarea, FormSelect, FormFileUpload, FormAlert, LoadingSpinner } from '../components/FormFields';
+import { useProductUpload } from '../hooks/useAPI';
 
 interface SellFormData {
   title: string;
   description: string;
-  category: string;
-  condition: string;
+  category_id: string;
+  condition: 'new' | 'used' | 'digital' | '';
   price: string;
-  location: string;
   image_urls: string[];
 }
 
@@ -31,47 +24,80 @@ interface ValidationErrors {
 const Sell = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);
-  const { uploadProduct, loading, error, success } = useProductUpload();
-  const { uploadImages } = useImageUpload();
+  const { uploadProduct, loading, error } = useProductUpload();
+
+  const [mounted, setMounted] = useState(false);
+  const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setCategoriesLoading(true);
+    setCategoriesError(null);
+    fetch('/api/categories', { method: 'GET' })
+      .then(async (res) => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error((json && (json.error || json.message)) || 'Erro ao carregar categorias');
+        return json?.data?.categories as Array<{ id: string; name: string | null }> | undefined;
+      })
+      .then((rows) => {
+        if (!active) return;
+        const next = (Array.isArray(rows) ? rows : []).map((c) => ({ value: c.id, label: c.name || 'Sem nome' }));
+        setCategories(next);
+        if (next[0]?.value) {
+          setFormData((prev) => ({ ...prev, category_id: prev.category_id || next[0].value }));
+        }
+      })
+      .catch((e: unknown) => {
+        if (!active) return;
+        const msg = e instanceof Error ? e.message : 'Erro ao carregar categorias';
+        setCategoriesError(msg);
+      })
+      .finally(() => {
+        if (active) setCategoriesLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const [formData, setFormData] = useState<SellFormData>({
     title: '',
     description: '',
-    category: '',
+    category_id: '',
     condition: '',
     price: '',
-    location: '',
     image_urls: [],
   });
 
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-  const [, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const categories = [
-    { value: 'Material Escolar', label: 'Material Escolar' },
-    { value: 'Tecnologia', label: 'Tecnologia' },
-    { value: 'Livros', label: 'Livros' },
-    { value: 'Roupas e Acessórios', label: 'Roupas e Acessórios' },
-    { value: 'Eletrônicos', label: 'Eletrônicos' },
-    { value: 'Móveis', label: 'Móveis' },
-    { value: 'Esportes', label: 'Esportes' },
-    { value: 'Outros', label: 'Outros' },
-  ];
+  const conditions = useMemo(
+    () => [
+      { value: 'new', label: 'Novo' },
+      { value: 'used', label: 'Usado' },
+      { value: 'digital', label: 'Digital' },
+    ],
+    []
+  );
 
-  const conditions = [
-    { value: 'novo', label: 'Novo' },
-    { value: 'como_novo', label: 'Como Novo' },
-    { value: 'usado', label: 'Usado' },
-  ];
-
-  const locations = [
-    { value: 'Luanda', label: 'Luanda' },
-    { value: 'Huambo', label: 'Huambo' },
-    { value: 'Benguela', label: 'Benguela' },
-    { value: 'Cabinda', label: 'Cabinda' },
-    { value: 'Online', label: 'Online' },
-  ];
+  if (!mounted) {
+    return (
+      <div>
+        <Header />
+        <div className="max-w-md mx-auto mt-12 p-6 bg-white rounded shadow text-center">
+          <p className="text-gray-600 mb-4">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!authUser) {
     return (
@@ -96,7 +122,6 @@ const Sell = () => {
       ...prev,
       [name]: value,
     }));
-    // Clear error for this field when user starts typing
     if (validationErrors[name]) {
       setValidationErrors((prev) => ({
         ...prev,
@@ -106,9 +131,9 @@ const Sell = () => {
   };
 
   const handleFilesSelected = async (files: File[]) => {
-    setUploadedFiles(files);
-    // For now, create URLs for preview
-    const urls = files.map((file) => URL.createObjectURL(file));
+    const limited = files.slice(0, 5);
+    setUploadedFiles(limited);
+    const urls = limited.map((file) => URL.createObjectURL(file));
     setFormData((prev) => ({
       ...prev,
       image_urls: urls,
@@ -132,8 +157,8 @@ const Sell = () => {
       errors.description = 'Descrição não pode exceder 500 caracteres';
     }
 
-    if (!formData.category) {
-      errors.category = 'Categoria é obrigatória';
+    if (!formData.category_id) {
+      errors.category_id = 'Categoria é obrigatória';
     }
 
     if (!formData.condition) {
@@ -142,12 +167,8 @@ const Sell = () => {
 
     if (!formData.price) {
       errors.price = 'Preço é obrigatório';
-    } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) <= 0) {
-      errors.price = 'Preço deve ser um número positivo';
-    }
-
-    if (!formData.location) {
-      errors.location = 'Localização é obrigatória';
+    } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
+      errors.price = 'Preço deve ser um número válido';
     }
 
     if (formData.image_urls.length === 0) {
@@ -160,7 +181,19 @@ const Sell = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Validate form
+    if (categoriesLoading) {
+      setValidationErrors({ submit: 'Aguarde o carregamento das categorias.' });
+      return;
+    }
+    if (categories.length === 0) {
+      setValidationErrors({
+        submit:
+          categoriesError ||
+          'Sem categorias disponíveis. Ative/crie categorias no Supabase (tabela categories com is_active=true) e garanta permissão de leitura (RLS).',
+      });
+      return;
+    }
+
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
@@ -170,42 +203,37 @@ const Sell = () => {
     try {
       setValidationErrors({});
 
-      // Prepare product data
-      const productData = {
+      await uploadProduct({
         title: formData.title.trim(),
         description: formData.description.trim(),
-        category: formData.category,
-        condition: formData.condition,
+        category_id: formData.category_id,
+        condition: (formData.condition || 'used') as 'new' | 'used' | 'digital',
         price: parseFloat(formData.price),
-        location: formData.location,
-        image_urls: formData.image_urls,
-        stock: 1, // Default stock quantity
-      };
+        is_free: false,
+        quantity: 1,
+        files: uploadedFiles,
+      });
 
-      // Upload product
-      await uploadProduct(productData);
+      setSuccessMessage('âœ… Produto publicado com sucesso! Redirecionando para a home...');
 
-      // Show success message
-      setSuccessMessage('✅ Produto publicado com sucesso! Redirecionando para a home...');
-
-      // Reset form
       setFormData({
         title: '',
         description: '',
-        category: '',
+        category_id: '',
         condition: '',
         price: '',
-        location: '',
         image_urls: [],
       });
       setUploadedFiles([]);
 
-      // Redirect to home after 2 seconds to see the product
       setTimeout(() => {
         router.push('/home');
       }, 2000);
     } catch (err) {
       console.error('Error uploading product:', err);
+      const errorMsg =
+        err instanceof Error ? err.message : (err as { error?: string } | null)?.error || 'Erro desconhecido ao publicar produto';
+      setValidationErrors({ submit: errorMsg });
     }
   };
 
@@ -213,7 +241,6 @@ const Sell = () => {
     <div className="bg-gray-50 min-h-screen">
       <Header />
 
-      {/* Page Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-2xl mx-auto px-6 py-6">
           <button
@@ -224,36 +251,27 @@ const Sell = () => {
             Voltar ao Perfil
           </button>
           <h1 className="text-3xl font-bold text-gray-900">Publicar Produto</h1>
-          <p className="text-gray-600 mt-2">Preencha os detalhes do seu product e publique para venda</p>
+          <p className="text-gray-600 mt-2">Preencha os detalhes do seu produto e publique para venda</p>
         </div>
       </div>
 
-      {/* Form Section */}
       <div className="max-w-2xl mx-auto px-6 py-8">
         {error && <FormAlert type="error" message={error} />}
-        {successMessage && (
-          <FormAlert
-            type="success"
-            message={successMessage}
-            onClose={() => setSuccessMessage('')}
-          />
-        )}
+        {successMessage && <FormAlert type="success" message={successMessage} />}
+        {validationErrors.submit && <FormAlert type="error" message={validationErrors.submit} />}
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          {/* Images Section */}
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Imagens do Produto</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Fotos do Produto</h2>
             <FormFileUpload
-              label="Fotos do Produto"
+              label="Imagens"
               onFilesSelected={handleFilesSelected}
-              error={validationErrors.images || undefined}
               maxFiles={5}
               acceptedTypes="image/*"
+              error={validationErrors.images || undefined}
               required
             />
-            <p className="text-xs text-gray-500 mt-2">
-              Máximo 5 imagens. Use alta qualidade para melhor visualização.
-            </p>
+            <p className="text-xs text-gray-500 mt-2">Máximo 5 imagens. Use alta qualidade para melhor visualização.</p>
           </div>
 
           <div className="mb-8">
@@ -286,13 +304,14 @@ const Sell = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormSelect
                 label="Categoria"
-                name="category"
-                value={formData.category}
+                name="category_id"
+                value={formData.category_id}
                 onChange={handleInputChange}
                 options={categories}
-                error={validationErrors.category || undefined}
+                error={validationErrors.category_id || undefined}
                 required
                 placeholder="Selecione uma categoria"
+                disabled={categoriesLoading || categories.length === 0}
               />
 
               <FormSelect
@@ -319,17 +338,6 @@ const Sell = () => {
                 required
                 min="0"
                 step="100"
-              />
-
-              <FormSelect
-                label="Localização"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                options={locations}
-                error={validationErrors.location || undefined}
-                required
-                placeholder="Selecione a localização"
               />
             </div>
           </div>
@@ -365,18 +373,13 @@ const Sell = () => {
               )}
             </button>
           </div>
-
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h3 className="font-semibold text-gray-900 mb-3">💡 Dicas para vender mais rápido:</h3>
-            <ul className="text-sm text-gray-600 space-y-2">
-              <li>✓ Use um título claro e descritivo</li>
-              <li>✓ Adicione fotos de alta qualidade do produto</li>
-              <li>✓ Descreva o estado real do produto</li>
-              <li>✓ Defina um preço competitivo</li>
-              <li>✓ Responda rapidamente às mensagens</li>
-            </ul>
-          </div>
         </form>
+
+        {categoriesError && (
+          <div className="mt-4">
+            <FormAlert type="error" message={`Categorias: ${categoriesError}`} />
+          </div>
+        )}
       </div>
     </div>
   );

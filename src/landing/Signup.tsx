@@ -1,6 +1,6 @@
 'use client';
-import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -37,6 +37,8 @@ interface SignupProps {
 const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
   const handleSwitch = onFlipToLogin || onSlideToLogin;
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') ?? '';
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -45,7 +47,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
     router.push('/login');
   };
 
-  const { register, control, watch, trigger, getValues, formState: { errors } } = useForm<SignupFormData>({
+  const { register, control, watch, trigger, formState: { errors } } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
       studentId: '',
@@ -175,7 +177,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
               />
             </div>
 
-            <button type="button" onClick={handleNextStep} className={buttonClass}>Continuar</button>
+            <button type="button" onClick={handleNextStep} className={buttonClass} disabled={loading}>Continuar</button>
           </div>
         );
       case 2:
@@ -206,8 +208,8 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
             </div>
 
             <div className="flex gap-3">
-              <button type="button" onClick={() => setStep(1)} className={secondaryButtonClass}>Voltar</button>
-              <button type="button" onClick={handleNextStep} className="flex-2 bg-primary text-white py-3 rounded-xl font-bold hover:opacity-90 shadow-md">Sim, sou eu</button>
+              <button type="button" onClick={() => setStep(1)} className={secondaryButtonClass} disabled={loading}>Voltar</button>
+              <button type="button" onClick={handleNextStep} disabled={loading} className="flex-2 bg-primary text-white py-3 rounded-xl font-bold hover:opacity-90 shadow-md">Sim, sou eu</button>
             </div>
           </div>
         );
@@ -246,7 +248,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
             </div>
 
             <div className="flex justify-center gap-2">
-              {smsCode.map((d, i) => (
+              {smsCode.map((_, i) => (
                 <input 
                   key={i} 
                   className="w-12 h-14 border-2 border-muted/20 rounded-xl text-center text-xl font-bold focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none" 
@@ -257,7 +259,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
             </div>
             
             <div className="pt-2">
-              <button type="button" onClick={handleNextStep} className={buttonClass}>Verificar</button>
+              <button type="button" onClick={handleNextStep} className={buttonClass} disabled={loading}>Verificar</button>
               <button type="button" className="mt-4 text-sm text-primary font-bold hover:underline">Reenviar código</button>
             </div>
           </div>
@@ -299,7 +301,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
             {errors.password && <p className="text-error text-sm font-medium">{errors.password.message}</p>}
             {errors.confirmPassword && <p className="text-error text-sm font-medium">{errors.confirmPassword.message}</p>}
 
-            <button type="button" onClick={handleNextStep} className={buttonClass}>Criar Conta</button>
+            <button type="button" onClick={handleNextStep} className={buttonClass} disabled={loading}>Criar Conta</button>
           </div>
         );
       case 6:
@@ -330,6 +332,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
       <input type="hidden" name="email" value={watchedEmail ?? ''} readOnly />
       <input type="hidden" name="institution" value={watchedInstitution ?? ''} readOnly />
       <input type="hidden" name="phone" value={watchedPhone ?? ''} readOnly />
+      <input type="hidden" name="redirectTo" value={redirectTo} readOnly />
       <div className="hidden md:flex md:w-1/2 bg-primary items-center justify-center p-12 text-white relative">
         <div className="relative z-10 text-center">
           <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">

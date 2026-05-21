@@ -1,4 +1,4 @@
-import type { Product } from '@/types';
+import type { ProductCardItem } from '@/types';
 import { createClient } from '@/lib/supabase/server';
 
 export type GetProductsParams = {
@@ -26,6 +26,7 @@ type DbProductRow = {
   description: string | null;
   price: number | string | null;
   rating: number | null;
+  is_approved?: boolean | null;
   created_at: string | null;
   categories: DbCategory | DbCategory[] | null;
   product_media: DbMedia[] | null;
@@ -70,7 +71,7 @@ export async function getProducts(params: GetProductsParams) {
       .single();
 
     if (catError || !cat?.id) {
-      return { products: [] as Product[], total: 0, page, limit };
+      return { products: [] as ProductCardItem[], total: 0, page, limit };
     }
 
     categoryId = cat.id as string;
@@ -114,7 +115,7 @@ export async function getProducts(params: GetProductsParams) {
   if (error) throw new Error(error.message);
 
   const rows = (data ?? []) as DbProductRow[];
-  const products: Product[] = rows.map((p) => ({
+  const products: ProductCardItem[] = rows.map((p) => ({
     id: p.id,
     title: p.title,
     category: pickCategoryName(p.categories),

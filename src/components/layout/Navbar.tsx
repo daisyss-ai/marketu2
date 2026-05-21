@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Link as ScrollLink } from 'react-scroll';
 import { AiOutlineMenu } from 'react-icons/ai';
