@@ -1,12 +1,10 @@
 'use client';
-import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Login from './Login';
 import Signup from './Signup';
 
 const AuthFlip = () => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const navigate = useRouter();
 
   const handleFlipToSignup = () => {
     setIsFlipped(true);

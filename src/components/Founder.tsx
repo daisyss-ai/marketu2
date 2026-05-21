@@ -1,5 +1,6 @@
 'use client';
-import React from 'react'
+import Link from 'next/link';
+
 
 const Founder = () => {
   return (
@@ -45,7 +46,9 @@ const Founder = () => {
 
                 <div className="text-white pt-6 border-t border-white/90 mt-6">
                     <p className="text-[10px] opacity-70">Os teus dados estão seguros e nunca serão partilhados.</p>
-                    <p className="text-[11px] mt-1">Já tens conta? <a href=""> Entrar aqui</a> </p>
+                    <p className="text-[11px] mt-1">
+                      Já tens conta? <Link href="/login" className="underline">Entrar aqui</Link>
+                    </p>
                 </div>
 
             </div>
