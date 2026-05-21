@@ -1,12 +1,36 @@
-export type ProductType = 'physical' | 'digital' | 'service';
+export type ProductEntityType = 'physical' | 'digital' | 'service';
+export type ProductConditionEntity = 'new' | 'used' | 'digital';
 export type ProductCondition = 'new' | 'used' | 'digital';
 export type ModerationStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Product {
+  id: string | number;
+  title: string;
+  category: string;
+  price: number | string;
+  seller: string;
+  img: string;
+  statusColor?: string;
+  description?: string;
+  condition?: string;
+  location?: string;
+  subject?: string;
+  gradeLevel?: number;
+  productType?: 'material' | 'servico';
+  rating?: number;
+  reviews?: number;
+  createdAt?: string;
+  userId?: string;
+  searchScore?: number;
+}
+
+export type ProductCardItem = Product;
+
+export interface ProductEntity {
   id: string;
   seller_id: string;
   category_id: string | null;
-  type: ProductType;
+  type: ProductEntityType;
   title: string;
   description: string | null;
   price: number | null;
@@ -39,7 +63,7 @@ export interface ProductStock {
   updated_at: string;
 }
 
-export interface ProductWithDetails extends Product {
+export interface ProductWithDetails extends ProductEntity {
   preview_url: string | null;
   stock: number | null;
   moderation_status: ModerationStatus | null;
@@ -50,25 +74,11 @@ export interface ProductFormData {
   title: string;
   description: string;
   category_id: string;
-  condition: ProductCondition;
+  condition: ProductConditionEntity;
   price: number;
   is_free: boolean;
   quantity: number;
   images: File[];
-}
-
-// UI model used by feed/product cards (kept to avoid leaking DB shape to the UI).
-export interface ProductCardItem {
-  id: string;
-  title: string;
-  category: string;
-  price: number;
-  seller: string;
-  img: string;
-  statusColor?: string;
-  description?: string;
-  rating?: number;
-  createdAt?: string;
 }
 
 export interface FilterState {
@@ -78,6 +88,68 @@ export interface FilterState {
   priceMax: number;
   rating: number | null;
   search: string;
+  gradeLevel: number | null;
+  subject: string | null;
+  productType: 'material' | 'servico' | null;
+  location: string | null;
+}
+
+export type ProductSort = 'relevance' | 'newest' | 'price_asc' | 'price_desc' | 'rating';
+
+export interface ProductSearchOptions {
+  page?: number;
+  limit?: number;
+  category?: string | null;
+  condition?: string | null;
+  minPrice?: number;
+  maxPrice?: number;
+  rating?: number | null;
+  search?: string;
+  gradeLevel?: number | null;
+  subject?: string | null;
+  productType?: 'material' | 'servico' | null;
+  location?: string | null;
+  sort?: ProductSort;
+}
+
+export interface ProductSearchMeta {
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+    offset: number;
+    to: number;
+  };
+  sort: ProductSort;
+  search?: string;
+  appliedFilters: Record<string, unknown>;
+}
+
+export interface ProductSuggestion {
+  type: 'product';
+  value: string;
+  label: string;
+}
+
+export interface ProductSearchResponse {
+  products: Product[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  sort: ProductSort;
+  appliedFilters: Record<string, unknown>;
+  search?: string;
+  meta: ProductSearchMeta;
+}
+
+export interface ProductSuggestionOptions {
+  limit?: number;
 }
 
 export interface FilterOption {

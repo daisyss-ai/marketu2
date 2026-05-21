@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { usersAPI, productsAPI, authAPI } from '../services/api';
 import { useAuthStore } from '../store/authStore';
-import { Product, User } from '../types';
+import { ProductWithDetails, User } from '../types';
 
 // Hook for fetching user profile
 export const useUserProfile = (userId?: string) => {
@@ -57,7 +57,7 @@ export const useUserProfile = (userId?: string) => {
 
 // Hook for fetching user's products
 export const useUserProducts = (userId?: string, page = 1, limit = 20) => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductWithDetails[]>([]);
   const [pagination, setPagination] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

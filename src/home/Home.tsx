@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect } from 'react';
 import Header from '../components/layout/Header';
 import FilterBar from '../components/FilterBar';
 import ProductGrid from '../components/produtos/ProductGrid';
@@ -12,7 +12,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 
 
 const Home = () => {
-  const navigate = useRouter();
+  useRouter();
   const login = useAuthStore((state) => state.login);
   
   const {
