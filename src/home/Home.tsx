@@ -9,6 +9,7 @@ import { useAuthStore } from '../store/authStore';
 import { createClient } from '@/lib/supabase/client';
 import ProductsFeed from '@/app/home/ProductsFeed';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import Footer from '../components/layout/Footer';
 
 
 const Home = () => {
@@ -217,6 +218,7 @@ const Home = () => {
           </Suspense>
         </ErrorBoundary>
       </section>
+      <Footer />
     </div>
   );
 };
