@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { startTransition, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { ChevronLeft, Upload } from 'lucide-react';
 import Header from '../components/layout/Header';
@@ -30,15 +30,24 @@ const Sell = () => {
   const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<SellFormData>({
+    title: '',
+    description: '',
+    category_id: '',
+    condition: '',
+    price: '',
+    image_urls: [],
+  });
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  
 
   useEffect(() => {
     let active = true;
-    setCategoriesLoading(true);
-    setCategoriesError(null);
+    startTransition(() => setCategoriesLoading(true));
+    startTransition(() => setCategoriesError(null));
     fetch('/api/categories', { method: 'GET' })
       .then(async (res) => {
         const json = await res.json().catch(() => ({}));
@@ -66,18 +75,9 @@ const Sell = () => {
     };
   }, []);
 
-  const [formData, setFormData] = useState<SellFormData>({
-    title: '',
-    description: '',
-    category_id: '',
-    condition: '',
-    price: '',
-    image_urls: [],
-  });
-
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [successMessage, setSuccessMessage] = useState('');
+  useEffect(() => {
+    startTransition(() => setMounted(true));
+  }, []);
 
   const conditions = useMemo(
     () => [

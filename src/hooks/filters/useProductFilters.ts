@@ -13,6 +13,7 @@ import type {
   SortOption,
   URLSearchParams as URLSearchParamsType,
 } from '@/types/search';
+import { startTransition } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -47,7 +48,7 @@ export function useProductFilters(): UseFiltersReturn {
     const params = Object.fromEntries(searchParams.entries()) as URLSearchParamsType;
     const nextQuery = urlToSearchQuery(params);
     if (JSON.stringify(nextQuery) !== JSON.stringify(query)) {
-      setQuery(nextQuery);
+      startTransition(() => setQuery(nextQuery));
     }
   }, [query, searchParams]);
 

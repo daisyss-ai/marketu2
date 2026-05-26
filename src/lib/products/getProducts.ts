@@ -22,6 +22,7 @@ type DbMedia = {
 
 type DbProductRow = {
   id: string;
+  seller_id: string;
   title: string;
   description: string | null;
   price: number | string | null;
@@ -82,6 +83,7 @@ export async function getProducts(params: GetProductsParams) {
     .select(
       `
         id,
+        seller_id,
         title,
         description,
         price,
@@ -126,6 +128,7 @@ export async function getProducts(params: GetProductsParams) {
     description: p.description ?? undefined,
     createdAt: p.created_at ?? undefined,
     rating: typeof p.rating === 'number' ? p.rating : undefined,
+    userId: p.seller_id,
   }));
 
   return { products, total: count ?? products.length, page, limit };
