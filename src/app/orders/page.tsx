@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import OrdersPage from '@/home/OrdersPage';
-import { getOrders } from '@/lib/orders/getOrders';
+import { getBuyerOrders, getSellerOrders } from '@/lib/orders/getOrders';
+import { getSavedProducts } from '@/lib/saved/getSavedProducts';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,18 @@ export default async function Page() {
     redirect('/login');
   }
 
-  const orders = await getOrders(user.id);
+  const [buyerOrders, sellerOrders, savedProducts] = await Promise.all([
+    getBuyerOrders(user.id),
+    getSellerOrders(user.id),
+    getSavedProducts(user.id),
+  ]);
 
-  return <OrdersPage orders={orders} />;
+  return (
+    <OrdersPage
+      buyerOrders={buyerOrders}
+      sellerOrders={sellerOrders}
+      currentUserId={user.id}
+      savedProducts={savedProducts}
+    />
+  );
 }

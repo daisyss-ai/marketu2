@@ -6,25 +6,22 @@ interface OrderStatusBadgeProps {
   className?: string;
 }
 
-const statusConfig: Record<
-  OrderStatus,
-  { label: string; className: string }
-> = {
+const statusConfig: Record<OrderStatus, { label: string; className: string }> = {
   pending: {
     label: 'Pendente',
-    className: 'bg-muted/10 text-muted-foreground border-muted/20',
+    className: 'bg-gray-100 text-gray-600',
   },
   confirmed: {
-    label: 'Em curso',
-    className: 'bg-primary/10 text-focus border-primary/15',
+    label: 'Confirmado',
+    className: 'bg-blue-50 text-blue-600',
   },
   delivered: {
     label: 'Entregue',
-    className: 'bg-success/10 text-success border-success/20',
+    className: 'bg-green-50 text-green-600',
   },
   cancelled: {
     label: 'Cancelado',
-    className: 'bg-error/10 text-error border-error/20',
+    className: 'bg-red-50 text-red-500',
   },
 };
 
@@ -37,7 +34,7 @@ export default function OrderStatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wide',
+        'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold',
         config.className,
         className
       )}

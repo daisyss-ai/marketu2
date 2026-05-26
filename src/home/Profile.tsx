@@ -160,7 +160,7 @@ const Profile = () => {
 
   // Prevent hydration mismatch by only rendering after client hydration
   useEffect(() => {
-    setIsHydrated(true);
+    queueMicrotask(() => setIsHydrated(true));
   }, []);
 
   const { stats, loading: profileLoading } = useUserProfile(authUser?.id);
