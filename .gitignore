@@ -12,6 +12,8 @@
 /.specify
 /dist
 
+/dist
+
 # testing
 /coverage
 
