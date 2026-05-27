@@ -1,7 +1,4 @@
 {
-  /*tools and rules for building
-  It tells TypeScript how to build your code
-  — like saying "I want my LEGO house to be modern, with strict safety checks, and using React pieces.*/
   "compilerOptions": {
     "target": "ES2017",
     "lib": [
@@ -16,7 +13,7 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "noImplicitAny": false,
     "noEmit": true,
     "esModuleInterop": true,
@@ -46,11 +43,6 @@
       ]
     }
   },
-  /*
-  Which boxes should TypeScript CHECK?"
-  Without this, TypeScript might ignore some of your code. 
-  It's saying "I want you to look at THESE files, not somewhere else."
-  */
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
@@ -62,14 +54,5 @@
     "dist/types/**/*.ts",
     "dist/dev/types/**/*.ts"
   ],
-  /*
-  Which boxes should TypeScript IGNORE?"
-  Speeds things up! You don't need TypeScript checking millions of files from the internet. 
-  You only care about your code.
-  */
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".next"
-  ]
+  "exclude": ["node_modules", "dist", ".next"]
 }

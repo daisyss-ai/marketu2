@@ -190,7 +190,7 @@ const ProductPage = () => {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="max-w-6xl mx-auto px-6 py-8">
         {/* breadcrumb */}
@@ -199,8 +199,7 @@ const ProductPage = () => {
           <span className="text-gray-700 font-medium">{product.title}</span>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-10">
-          {/* left: gallery */}
+        <div className="grid gap-10 md:grid-cols-2">
           <div>
             <div className="bg-white rounded-2xl p-4 shadow-md flex items-center justify-center overflow-hidden group min-h-[400px]">
               {activeImage ? (
@@ -238,7 +237,6 @@ const ProductPage = () => {
             )}
           </div>
 
-          {/* right: details */}
           <div className="space-y-5">
             <div>
               <span className="inline-flex items-center rounded-full bg-purple-100 text-[#4B187C] px-3 py-1 text-xs font-semibold uppercase">
@@ -264,12 +262,15 @@ const ProductPage = () => {
               {stockStatus}
             </div>
 
-            {/* meta cards */}
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <div className="bg-white rounded-2xl p-4 border border-gray-100 space-y-2 shadow-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Categoria</span>
-                  <span className="font-medium text-gray-900">{categoryName}</span>
+            <p className="text-sm leading-relaxed text-gray-600">{product.description}</p>
+
+            <div className="grid gap-4 text-sm md:grid-cols-2">
+              <div className="space-y-2 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="flex justify-between gap-4">
+                  <span className="text-gray-500">Tipo</span>
+                  <span className="text-right font-medium text-gray-900">
+                    {formatProductType(product.type)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Condição</span>
@@ -277,7 +278,7 @@ const ProductPage = () => {
                     {getProductTypeLabel(product.type)}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-4">
                   <span className="text-gray-500">Publicado</span>
                   <span className="font-medium text-gray-900">
                     {formatRelativeDate(product.created_at)}
@@ -285,7 +286,7 @@ const ProductPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col justify-between shadow-sm">
+              <div className="flex flex-col justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                 <div className="flex items-center gap-3">
                   {seller.avatar_url ? (
                     <img
@@ -316,7 +317,4 @@ const ProductPage = () => {
       </main>
     </div>
   );
-};
-
-export default ProductPage;
-
+}

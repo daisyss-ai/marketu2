@@ -1,22 +1,31 @@
-// API service for making requests to the backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+import type {
+  ProductSearchOptions,
+  ProductSearchResponse,
+  ProductSuggestion,
+  ProductSuggestionOptions,
+} from '../types';
 
-// Get token from localStorage
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+
 const getToken = () => {
   if (typeof window === 'undefined') return null;
   const user = JSON.parse(window.localStorage.getItem('marketu_user') || 'null');
   return user?.token || null;
 };
 
-// Make API requests with common error handling
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getErrorMessage = (data: any, rawText: string): string => {
+  if (data?.error) return String(data.error);
+  if (data?.message) return String(data.message);
+  if (rawText && typeof rawText === 'string' && rawText.trim()) return rawText.trim();
+  return 'Erro ao comunicar com servidor';
+};
+
 async function apiRequest(endpoint: string, options: any = {}) {
   const token = getToken();
   const headers: any = {
     ...options.headers,
   };
 
-  // Only set Content-Type if not explicitly skipped (for FormData uploads)
   if (!options.skipContentType) {
     headers['Content-Type'] = 'application/json';
   }
@@ -31,26 +40,40 @@ async function apiRequest(endpoint: string, options: any = {}) {
       headers,
     });
 
-    // Handle non-JSON responses (e.g., HTML error pages)
-    const contentType = response.headers.get('content-type');
-    let data;
-    
-    if (contentType?.includes('application/json')) {
-      data = await response.json();
-    } else {
-      const text = await response.text();
-      data = { error: text || 'Non-JSON response from server' };
+    const contentType = response.headers.get('content-type') || '';
+    const rawText = await response.text();
+    let data: any = null;
+
+    try {
+      data = contentType.includes('application/json') && rawText
+        ? JSON.parse(rawText)
+        : rawText
+          ? { data: rawText }
+          : null;
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError, rawText);
+      data = { data: rawText };
     }
 
     if (!response.ok) {
-      const message = data?.error || 'Erro ao comunicar com servidor';
-      const err = new Error(message) as Error & { status?: number; data?: unknown };
-      err.status = response.status;
-      err.data = data;
-      throw err;
+      const error = new Error(getErrorMessage(data, rawText)) as Error & {
+        status?: number;
+        data?: unknown;
+      };
+      error.status = response.status;
+      error.data = data;
+      throw error;
     }
 
-    return data.data || data;
+    if (data === null || data === undefined) {
+      return {};
+    }
+
+    if (data && typeof data === 'object' && 'data' in data) {
+      return data.data ?? data;
+    }
+
+    return data;
   } catch (error: any) {
     const errorMessage = error?.message || error?.error || 'Erro desconhecido';
     console.error('API Error:', errorMessage, error);
@@ -58,7 +81,6 @@ async function apiRequest(endpoint: string, options: any = {}) {
   }
 }
 
-// Authentication API
 export const authAPI = {
   verifyStudent: (studentData: any) =>
     apiRequest('/auth/verify-student', {
@@ -89,7 +111,6 @@ export const authAPI = {
     }),
 };
 
-// Users API
 export const usersAPI = {
   getUserProfile: (userId: string) =>
     apiRequest(`/users/${userId}`, {
@@ -118,23 +139,40 @@ export const usersAPI = {
   },
 };
 
-// Products API
 export const productsAPI = {
-  listProducts: (options: any = {}) => {
+  listProducts: (options: ProductSearchOptions = {}) => {
     const params = new URLSearchParams();
-    if (options.page) params.append('page', options.page);
-    if (options.limit) params.append('limit', options.limit);
+    if (options.page) params.append('page', String(options.page));
+    if (options.limit) params.append('limit', String(options.limit));
     if (options.category) params.append('category', options.category);
     if (options.condition) params.append('condition', options.condition);
-    if (options.minPrice) params.append('minPrice', options.minPrice);
-    if (options.maxPrice) params.append('maxPrice', options.maxPrice);
+    if (typeof options.minPrice === 'number') params.append('minPrice', String(options.minPrice));
+    if (typeof options.maxPrice === 'number' && Number.isFinite(options.maxPrice)) {
+      params.append('maxPrice', String(options.maxPrice));
+    }
+    if (typeof options.rating === 'number') params.append('rating', String(options.rating));
     if (options.search) params.append('search', options.search);
+    if (options.gradeLevel) params.append('gradeLevel', String(options.gradeLevel));
+    if (options.subject) params.append('subject', options.subject);
+    if (options.productType) params.append('productType', options.productType);
+    if (options.location) params.append('location', options.location);
     if (options.sort) params.append('sort', options.sort);
 
     const queryString = params.toString();
     return apiRequest(`/products${queryString ? '?' + queryString : ''}`, {
       method: 'GET',
-    });
+    }) as Promise<ProductSearchResponse>;
+  },
+
+  suggest: (query: string, options: ProductSuggestionOptions & { signal?: AbortSignal } = {}) => {
+    const params = new URLSearchParams();
+    if (query) params.append('q', query);
+    if (options.limit) params.append('limit', String(options.limit));
+    const queryString = params.toString();
+    return apiRequest(`/products/suggest${queryString ? '?' + queryString : ''}`, {
+      method: 'GET',
+      signal: options.signal,
+    }) as Promise<{ suggestions: ProductSuggestion[] }>;
   },
 
   getProduct: (productId: string) =>
@@ -143,16 +181,14 @@ export const productsAPI = {
     }),
 
   createProduct: (productData: any) => {
-    // Check if productData is FormData (for multipart uploads with files)
     if (productData instanceof FormData) {
       return apiRequest('/products', {
         method: 'POST',
         body: productData,
-        skipContentType: true, // Let browser set Content-Type with boundary
+        skipContentType: true,
       });
     }
-    
-    // Otherwise, send as JSON
+
     return apiRequest('/products', {
       method: 'POST',
       body: JSON.stringify(productData),
@@ -171,7 +207,6 @@ export const productsAPI = {
     }),
 };
 
-// Messages API
 export const messagesAPI = {
   listConversations: () =>
     apiRequest('/messages', {
@@ -200,7 +235,6 @@ export const messagesAPI = {
     }),
 };
 
-// Reviews API
 export const reviewsAPI = {
   getProductReviews: (productId: string, options: any = {}) => {
     const params = new URLSearchParams();
@@ -219,7 +253,6 @@ export const reviewsAPI = {
     }),
 };
 
-// Favorites API
 export const favoritesAPI = {
   listFavorites: (options: any = {}) => {
     const params = new URLSearchParams();
@@ -242,7 +275,6 @@ export const favoritesAPI = {
     }),
 };
 
-// Cart API
 export const cartAPI = {
   getCart: () =>
     apiRequest('/cart', {
@@ -267,10 +299,8 @@ export const cartAPI = {
     }),
 };
 
-// Helper function to create test/sample products for development
 export const createSampleProducts = async () => {
   try {
-    // Use the /dev-seed endpoint that creates test data in development
     return apiRequest('/products/dev-seed', {
       method: 'POST',
     });

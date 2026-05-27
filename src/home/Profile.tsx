@@ -154,7 +154,7 @@ const Profile = () => {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    setIsHydrated(true);
+    queueMicrotask(() => setIsHydrated(true));
   }, []);
 
   const { stats, loading: profileLoading } = useUserProfile(authUser?.id);
@@ -306,6 +306,17 @@ const Profile = () => {
             {profileLoading || productsLoading ? (
               <div className="flex justify-center py-12">
                 <LoadingSpinner text="Carregando produtos..." />
+              </div>
+            ) : products?.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onDelete={(id) => setDeleteConfirm(id)}
+                    onEdit={(id) => router.push(`/profile/${id}/edit`)}
+                  />
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
