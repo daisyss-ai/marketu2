@@ -1,10 +1,9 @@
 'use client';
-import { useState } from 'react';
-import type { MouseEvent } from 'react';
+import { Bookmark, Heart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Heart, Bookmark } from 'lucide-react';
+import type { MouseEvent } from 'react';
+import { useState } from 'react';
 import type { ProductCardItem } from '../../types';
-import AddToCartButton from './AddToCartButton';
 
 interface ProductCardProps {
   product: ProductCardItem;
@@ -52,7 +51,7 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
             />
           </button>
 
-          <Image
+          <img
             src={product.img || '/assets/placeholder-product.png'}
             alt={product.title}
             className="w-full h-full object-cover"
