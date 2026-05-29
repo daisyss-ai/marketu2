@@ -1,6 +1,10 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
+<<<<<<< HEAD
   "style": "base-nova",
+=======
+  "style": "radix-lyra",
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   "rsc": true,
   "tsx": true,
   "tailwind": {
@@ -10,7 +14,11 @@
     "cssVariables": true,
     "prefix": ""
   },
+<<<<<<< HEAD
   "iconLibrary": "lucide",
+=======
+  "iconLibrary": "phosphor",
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   "rtl": false,
   "aliases": {
     "components": "@/components",

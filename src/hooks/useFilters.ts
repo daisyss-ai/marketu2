@@ -1,4 +1,5 @@
 'use client';
+<<<<<<< HEAD
 
 import type { Route } from 'next';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -24,12 +25,18 @@ function getInitialFilters(searchParams: SearchParamsLike): FilterState {
     location: searchParams.get('location') || null,
   };
 }
+=======
+import { useCallback, useMemo, useState } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { FilterState } from '../types';
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
 export const useFilters = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+<<<<<<< HEAD
   const filters = useMemo(() => getInitialFilters(searchParams), [searchParams]);
   const sorting = useMemo<ProductSort>(() => {
     const sortParam = searchParams.get('sort');
@@ -45,6 +52,20 @@ export const useFilters = () => {
     [searchParams]
   );
   const [favorites, setFavorites] = useState<(string | number)[]>(() => {
+=======
+  const filters = useMemo<FilterState>(() => ({
+    condition: searchParams.get('condition') || null,
+    priceMin: searchParams.get('priceMin') ? parseInt(searchParams.get('priceMin')!, 10) : 0,
+    priceMax: searchParams.get('priceMax') ? parseInt(searchParams.get('priceMax')!, 10) : Infinity,
+    category: searchParams.get('category') || null,
+    rating: searchParams.get('rating') ? parseInt(searchParams.get('rating')!, 10) : null,
+    search: searchParams.get('search') || '',
+  }), [searchParams]);
+
+  const sorting = useMemo(() => searchParams.get('sort') || 'newest', [searchParams]);
+  const page = useMemo(() => (searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1), [searchParams]);
+  const [favorites, setFavorites] = useState<any[]>(() => {
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('marketu_favorites');
       return saved ? JSON.parse(saved) : [];
@@ -53,6 +74,7 @@ export const useFilters = () => {
     return [];
   });
 
+<<<<<<< HEAD
   useEffect(() => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('marketu_favorites', JSON.stringify(favorites));
@@ -102,6 +124,69 @@ export const useFilters = () => {
     },
     [filters, updateURL]
   );
+=======
+  // Update URL when filters change
+  const updateURL = useCallback((newFilters: FilterState, newSort: string, newPage: number) => {
+    const params = new URLSearchParams();
+
+    if (newFilters?.condition) params.set('condition', newFilters.condition);
+    if (newFilters?.category) params.set('category', newFilters.category);
+    if (newFilters?.priceMin && newFilters.priceMin > 0) params.set('priceMin', String(newFilters.priceMin));
+    if (newFilters?.priceMax && newFilters.priceMax !== Infinity) params.set('priceMax', String(newFilters.priceMax));
+    if (newFilters?.rating) params.set('rating', String(newFilters.rating));
+    if (newFilters?.search) params.set('search', newFilters.search);
+    if (newSort && newSort !== 'newest') params.set('sort', newSort);
+    if (newPage && newPage > 1) params.set('page', String(newPage));
+
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [pathname, router]);
+
+  // Handle filter change
+  const handleFilterChange = useCallback((filterType: keyof FilterState, value: any) => {
+    updateURL({ ...filters, [filterType]: value }, sorting, 1);
+  }, [filters, sorting, updateURL]);
+
+  // Handle price range change
+  const handlePriceChange = useCallback((min: number, max: number) => {
+    updateURL({ ...filters, priceMin: min, priceMax: max }, sorting, 1);
+  }, [filters, sorting, updateURL]);
+
+  // Handle sort change
+  const handleSortChange = useCallback((newSort: string) => {
+    updateURL(filters, newSort, 1);
+  }, [filters, updateURL]);
+
+  // Handle page change
+  const handlePageChange = useCallback((newPage: number) => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    updateURL(filters, sorting, newPage);
+  }, [filters, sorting, updateURL]);
+
+  // Clear all filters
+  const handleClearAllFilters = useCallback(() => {
+    updateURL({
+      condition: null,
+      priceMin: 0,
+      priceMax: Infinity,
+      category: null,
+      rating: null,
+      search: '',
+    }, 'newest', 1);
+  }, [updateURL]);
+
+  // Clear specific filter
+  const handleClearFilter = useCallback((filterType: keyof FilterState) => {
+    updateURL({
+      ...filters,
+      [filterType]: filterType === 'priceMin' || filterType === 'priceMax'
+        ? (filterType === 'priceMin' ? 0 : Infinity)
+        : (filterType === 'search' ? '' : null),
+    }, sorting, 1);
+  }, [filters, sorting, updateURL]);
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
   const handlePageChange = useCallback(
     (newPage: number) => {

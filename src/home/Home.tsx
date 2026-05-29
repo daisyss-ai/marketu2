@@ -1,6 +1,10 @@
 'use client';
 import { useRouter } from 'next/navigation';
+<<<<<<< HEAD
 import { Suspense, useEffect } from 'react';
+=======
+import { Suspense, useEffect, useState } from 'react';
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 import Header from '../components/layout/Header';
 import FilterBar from '../components/FilterBar';
 import ProductGrid from '../components/produtos/ProductGrid';
