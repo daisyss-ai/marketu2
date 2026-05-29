@@ -1,22 +1,15 @@
 'use client';
-<<<<<<< HEAD
-=======
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Search, ShoppingCart, ChevronDown } from 'lucide-react'
-import { logout } from '@/app/auth/actions';
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
+import { logout } from '@/app/auth/actions';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
+import { ChevronDown, ShoppingCart } from 'lucide-react';
+import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { Route } from 'next';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useEffectEvent, useState } from 'react';
-import { ChevronDown, ShoppingCart } from 'lucide-react';
-import { logout } from '@/app/auth/actions';
-import ProductSearchBar from '../search/ProductSearchBar';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
-import { createClient as createBrowserClient } from '@/lib/supabase/client';
+import ProductSearchBar from '../search/ProductSearchBar';
 
 function SavedProductsLink() {
   const [count, setCount] = useState(0);
@@ -88,7 +81,6 @@ function SavedProductsLink() {
 }
 
 const Header = () => {
-<<<<<<< HEAD
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -120,9 +112,6 @@ const Header = () => {
     if (debouncedSearch.trim() === currentSearch.trim()) return;
     pushSearchEffect(debouncedSearch);
   }, [currentSearch, debouncedSearch]);
-=======
-  const pathname = usePathname();
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
   return (
     <div>
@@ -175,14 +164,7 @@ const Header = () => {
                 Vender
               </Link>
             )}
-<<<<<<< HEAD
             <SavedProductsLink />
-=======
-            <button className="relative group focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-full p-2" aria-label="Ver carrinho">
-              <ShoppingCart className="w-6 h-6 text-muted group-hover:text-primary transition-colors" />
-              <span className="absolute -top-1 -right-1 bg-error text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">0</span>
-            </button>
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
           </div>
         </div>
       </header>

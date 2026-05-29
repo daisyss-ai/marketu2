@@ -1,19 +1,15 @@
 'use client';
+import ProductsFeed from '@/app/home/ProductsFeed';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-<<<<<<< HEAD
 import { Suspense, useEffect } from 'react';
-=======
-import { Suspense, useEffect, useState } from 'react';
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
-import Header from '../components/layout/Header';
 import FilterBar from '../components/FilterBar';
+import Footer from '../components/layout/Footer';
+import Header from '../components/layout/Header';
 import ProductGrid from '../components/produtos/ProductGrid';
 import { useFilters } from '../hooks/useFilters';
 import { useAuthStore } from '../store/authStore';
-import { createClient } from '@/lib/supabase/client';
-import ProductsFeed from '@/app/home/ProductsFeed';
-import ErrorBoundary from '@/components/ErrorBoundary';
-import Footer from '../components/layout/Footer';
 
 
 const Home = () => {

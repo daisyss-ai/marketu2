@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-export type ProductEntityType = 'physical' | 'digital' | 'service';
+﻿export type ProductEntityType = 'physical' | 'digital' | 'service';
 export type ProductConditionEntity = 'new' | 'used' | 'digital';
-=======
-export type ProductType = 'physical' | 'digital' | 'service';
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 export type ProductCondition = 'new' | 'used' | 'digital';
 export type ModerationStatus = 'pending' | 'approved' | 'rejected';
 
@@ -67,87 +63,16 @@ export interface ProductCardItem {
   id: string;
   title: string;
   category: string;
-<<<<<<< HEAD
   price: number | string;
-=======
-  price: number;
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   seller: string;
   img: string;
   statusColor?: string;
   description?: string;
-<<<<<<< HEAD
   condition?: string;
   location?: string;
   subject?: string;
   gradeLevel?: number;
   productType?: 'material' | 'servico';
-=======
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
-  rating?: number;
-  createdAt?: string;
-<<<<<<< HEAD
-  userId?: string;
-  searchScore?: number;
-}
-
-export type ProductCardItem = Product;
-
-export interface ProductEntity {
-  id: string;
-  seller_id: string;
-  category_id: string | null;
-  type: ProductEntityType;
-  title: string;
-  description: string | null;
-  price: number | null;
-  is_free: boolean | null;
-  is_active: boolean | null;
-  is_approved: boolean | null;
-  rating: number | null;
-  total_reviews: number | null;
-  total_sales: number | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ProductMedia {
-  id: string;
-  product_id: string;
-  url: string;
-  media_type: string | null;
-  filename: string | null;
-  size_bytes: number | null;
-  position: number | null;
-  is_preview: boolean | null;
-  created_at: string;
-}
-
-export interface ProductStock {
-  id: string;
-  product_id: string;
-  quantity: number | null;
-  updated_at: string;
-}
-
-export interface ProductWithDetails extends ProductEntity {
-  preview_url: string | null;
-  stock: number | null;
-  moderation_status: ModerationStatus | null;
-  category_name: string | null;
-}
-
-export interface ProductFormData {
-  title: string;
-  description: string;
-  category_id: string;
-  condition: ProductConditionEntity;
-  price: number;
-  is_free: boolean;
-  quantity: number;
-  images: File[];
-=======
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 }
 
 export interface FilterState {
@@ -240,3 +165,4 @@ export interface FormOption {
   label: string;
   value: string | number;
 }
+

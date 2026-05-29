@@ -1,4 +1,4 @@
-import type { ProductCardItem } from '@/types';
+﻿import type { ProductCardItem } from '@/types';
 import { createClient } from '@/lib/supabase/server';
 
 export type GetProductsParams = {
@@ -22,74 +22,7 @@ type DbMedia = {
 
 type DbProductRow = {
   id: string;
-<<<<<<< HEAD
   seller_id: string;
-=======
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
-  title: string;
-  description: string | null;
-  price: number | string | null;
-  rating: number | null;
-  is_approved?: boolean | null;
-  created_at: string | null;
-  categories: DbCategory | DbCategory[] | null;
-  product_media: DbMedia[] | null;
-};
-
-function pickCategoryName(v: DbProductRow['categories']): string {
-  if (!v) return 'Geral';
-  if (Array.isArray(v)) return v[0]?.name || 'Geral';
-  return v.name || 'Geral';
-}
-
-function pickCoverUrl(v: DbProductRow['product_media']): string {
-  const media = Array.isArray(v) ? v.filter(Boolean) : [];
-  const cover =
-    media.find((m) => m?.media_type === 'image' && m?.is_preview) ||
-    media.find((m) => m?.media_type === 'image') ||
-    media[0];
-  return (cover?.url ?? '') || '';
-}
-
-export async function getProducts(params: GetProductsParams) {
-  const page = Math.max(1, params.page ?? 1);
-  const limit = Math.min(48, Math.max(1, params.limit ?? 12));
-  const sort = params.sort ?? 'newest';
-  const search = (params.search ?? '').trim();
-  const categorySlug = (params.categorySlug ?? '').trim();
-  const minPrice = Number.isFinite(params.minPrice) ? (params.minPrice as number) : 0;
-  const maxPrice =
-    params.maxPrice === undefined || params.maxPrice === null
-      ? Number.POSITIVE_INFINITY
-      : (params.maxPrice as number);
-  const minRating = Number.isFinite(params.minRating) ? (params.minRating as number) : 0;
-
-  const supabase = await createClient();
-
-  let categoryId: string | null = null;
-  if (categorySlug) {
-    const { data: cat, error: catError } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('slug', categorySlug)
-      .single();
-
-    if (catError || !cat?.id) {
-      return { products: [] as ProductCardItem[], total: 0, page, limit };
-    }
-
-    categoryId = cat.id as string;
-  }
-
-  let q = supabase
-    .from('products')
-    .select(
-      `
-        id,
-<<<<<<< HEAD
-        seller_id,
-=======
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
         title,
         description,
         price,
@@ -134,12 +67,10 @@ export async function getProducts(params: GetProductsParams) {
     description: p.description ?? undefined,
     createdAt: p.created_at ?? undefined,
     rating: typeof p.rating === 'number' ? p.rating : undefined,
-<<<<<<< HEAD
     userId: p.seller_id,
-=======
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
-  }));
+  });
 
   return { products, total: count ?? products.length, page, limit };
 }
+
 
