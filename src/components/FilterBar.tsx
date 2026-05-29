@@ -1,8 +1,14 @@
 'use client';
+<<<<<<< HEAD
 
 import { ChevronDown, LucideIcon, SlidersHorizontal, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { FilterOption, FilterState } from '../types';
+=======
+import { useState, useRef, useEffect } from 'react';
+import { ChevronDown, X, LucideIcon } from 'lucide-react';
+import { FilterState, FilterOption } from '../types';
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
 interface FilterDropdownProps {
   label: string;
@@ -243,7 +249,7 @@ const FilterBar = ({
   onClearAll,
   sorting,
   hasActiveFilters,
-  activeFilterCount,
+  activeFilterCount: _activeFilterCount,
 }: FilterBarProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
 

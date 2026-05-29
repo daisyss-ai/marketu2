@@ -1,4 +1,10 @@
 {
+<<<<<<< HEAD
+=======
+  /*tools and rules for building
+  It tells TypeScript how to build your code
+  — like saying "I want my LEGO house to be modern, with strict safety checks, and using React pieces.*/
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   "compilerOptions": {
     "target": "ES2017",
     "lib": [
@@ -6,11 +12,14 @@
       "dom.iterable",
       "esnext"
     ],
+<<<<<<< HEAD
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
     ],
+=======
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -28,25 +37,41 @@
     "noUnusedParameters": true, //If you ask for something, USE it!" Like saying "give me a toy" but then never playing with it. This rule warns: "You wrote a function that asks for information, but you never use it — why are you asking for it?
     "noUnusedLocals": true, //Don't leave toys lying around." If you create a variable or something but never use it, this says "Hey, this is clutter — clean it up!
     "useDefineForClassFields": true, //Use the modern way to set up class pieces." This tells TypeScript to follow a specific technical rule so your code works safely across all computers and browsers.
+<<<<<<< HEAD
     "noUnusedParameters": true, //If you ask for something, USE it!" Like saying "give me a toy" but then never playing with it. This rule warns: "You wrote a function that asks for information, but you never use it — why are you asking for it?
     "noUnusedLocals": true, //Don't leave toys lying around." If you create a variable or something but never use it, this says "Hey, this is clutter — clean it up!
     "useDefineForClassFields": true, //Use the modern way to set up class pieces." This tells TypeScript to follow a specific technical rule so your code works safely across all computers and browsers.
+=======
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     "plugins": [
       {
         "name": "next"
       }
     ],
+<<<<<<< HEAD
     "paths": 
     {
+=======
+    "paths": {
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
       "@/*": [
         "./src/*"
       ]
     }
   },
+<<<<<<< HEAD
+=======
+  /*
+  Which boxes should TypeScript CHECK?"
+  Without this, TypeScript might ignore some of your code. 
+  It's saying "I want you to look at THESE files, not somewhere else."
+  */
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
+<<<<<<< HEAD
     "**/*.mts",
     "./src", //reasonable — explicitly including the src directory is good practice for a Next.js project, though it may already be implicitly matched by **/*.ts and **/*.tsx.
     "./dist/types/**/*.ts" //intentional — this suggests you're including generated type definitions from a build output, which makes sense if you need those types available during compilation.
@@ -55,4 +80,24 @@
     "dist/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules", "dist", ".next"]
+=======
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.mts",
+    "dist/types/**/*.ts",
+    "dist/dev/types/**/*.ts",
+    "./dist/types/**/*.ts",
+    "./dist/dev/types/**/*.ts"
+  ],
+  /*
+  Which boxes should TypeScript IGNORE?"
+  Speeds things up! You don't need TypeScript checking millions of files from the internet. 
+  You only care about your code.
+  */
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".next"
+  ]
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 }

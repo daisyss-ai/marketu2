@@ -1,8 +1,9 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Header from '../components/layout/Header';
+<<<<<<< HEAD
 import { Package } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import Header from '../components/layout/Header';
 import { createClient } from '../lib/supabase/client';
 
 interface ProductDetail {
@@ -13,16 +14,17 @@ interface ProductDetail {
   is_free: boolean | null;
   type: string;
   created_at: string;
-  categories: { name: string; slug: string } | null;
-  product_media: Array<{ url: string; is_preview: boolean | null; position: number | null }>;
-  product_stock: Array<{ quantity: number | null }>;
-  users: {
+  seller_id: string;
+  seller: {
     id: string;
     full_name: string | null;
     username: string | null;
     avatar_url: string | null;
     created_at: string;
-  };
+  } | null;
+  categories: { name: string; slug: string } | null;
+  product_media: Array<{ url: string; is_preview: boolean | null; position: number | null }>;
+  product_stock: Array<{ quantity: number | null }>;
 }
 
 // Helper to format date as relative time
@@ -46,12 +48,46 @@ function getYear(date: string): number {
 }
 
 // Helper to map product type
+=======
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import Header from '../components/layout/Header';
+import { Heart, Star, Package, Loader } from 'lucide-react';
+
+interface Product {
+  id: string;
+  title: string;
+  description: string;
+  price: number | null;
+  is_free: boolean;
+  type: 'physical_product' | 'digital_material' | 'service';
+  created_at: string;
+  categories: { name: string } | null;
+  product_media: Array<{ url: string; is_preview: boolean; position: number }>;
+  product_stock: { quantity: number } | null;
+  users: { id: string; full_name: string; username: string; avatar_url: string | null; created_at: string } | null;
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Hoje';
+  if (days === 1) return 'Há 1 dia';
+  if (days < 30) return `Há ${days} dias`;
+  const months = Math.floor(days / 30);
+  if (months === 1) return 'Há 1 mês';
+  return `Há ${months} meses`;
+}
+
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 function getProductTypeLabel(type: string): string {
   const typeMap: Record<string, string> = {
     physical_product: 'Físico',
     digital_material: 'Digital',
     service: 'Serviço',
   };
+<<<<<<< HEAD
   return typeMap[type] || type;
 }
 
@@ -80,10 +116,15 @@ const LoadingSkeleton = () => (
     </div>
   </div>
 );
+=======
+  return typeMap[type] || 'Físico';
+}
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
 const ProductPage = () => {
   const params = useParams();
   const router = useRouter();
+<<<<<<< HEAD
   const productId = params.id as string;
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
@@ -101,38 +142,95 @@ const ProductPage = () => {
     const fetchProduct = async () => {
       try {
         const supabase = createClient();
+        
+        // Step 1: Fetch the product with seller_id only
         const { data, error: dbError } = await supabase
           .from('products')
-          .select(
-            `
-            id, title, description, price, is_free, type, created_at,
+          .select(`
+            id, title, description, price, is_free, type, created_at, seller_id,
             categories(name, slug),
             product_media(url, is_preview, position),
-            product_stock(quantity),
-            users!seller_id(id, full_name, username, avatar_url, created_at)
-          `
-          )
+            product_stock(quantity)
+          `)
           .eq('id', productId)
-          .single();
+          .maybeSingle();
 
         if (dbError || !data) {
           setError('Produto não encontrado');
-        } else {
-          setProduct(data as unknown as ProductDetail);
-          // Set the first preview image or first image as active
-          const sortedMedia = (data.product_media || []).sort(
-            (a, b) => ((a.position ?? 0) - (b.position ?? 0))
-          );
-          const previewImage =
-            sortedMedia.find((m) => m.is_preview)?.url || sortedMedia[0]?.url;
-          setActiveImage(previewImage || null);
+          setLoading(false);
+          return;
         }
+
+        // Step 2: Fetch seller data from users table using seller_id directly
+        const { data: sellerData } = await supabase
+          .from('users')
+          .select('id, full_name, username, avatar_url, created_at')
+          .eq('id', data.seller_id)
+          .maybeSingle();
+
+        // Step 3: Combine and set state
+        setProduct({ ...data, seller: sellerData } as unknown as ProductDetail);
+        
+        // Set the first preview image or first image as active
+        const sortedMedia = (data.product_media || []).sort(
+          (a, b) => ((a.position ?? 0) - (b.position ?? 0))
+        );
+        const previewImage =
+          sortedMedia.find((m) => m.is_preview)?.url || sortedMedia[0]?.url;
+        setActiveImage(previewImage || null);
       } catch (err) {
         setError('Erro ao carregar produto');
         console.error(err);
       } finally {
         setLoading(false);
       }
+=======
+  const productId = params?.id as string;
+
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeImage, setActiveImage] = useState<string>('');
+
+  useEffect(() => {
+    if (!productId) return;
+
+    const fetchProduct = async () => {
+      setLoading(true);
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('products')
+        .select(
+          `
+          id,
+          title,
+          description,
+          price,
+          is_free,
+          type,
+          created_at,
+          categories(name),
+          product_media(url, is_preview, position),
+          product_stock(quantity),
+          users!seller_id(id, full_name, username, avatar_url, created_at)
+        `
+        )
+        .eq('id', productId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Erro ao buscar produto:', error);
+      }
+
+      if (data) {
+        setProduct(data as Product);
+        const images = (data.product_media as Array<any>) || [];
+        const sortedImages = images.sort((a, b) => (a.position || 0) - (b.position || 0));
+        const mainImage = sortedImages.find((m) => m.is_preview) || sortedImages[0];
+        setActiveImage(mainImage?.url || '');
+      }
+
+      setLoading(false);
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     };
 
     fetchProduct();
@@ -142,24 +240,45 @@ const ProductPage = () => {
     return (
       <div className="bg-gray-50 min-h-screen">
         <Header />
+<<<<<<< HEAD
         <main className="max-w-6xl mx-auto px-6 py-8">
           <LoadingSkeleton />
+=======
+        <main className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-center h-96">
+          <div className="text-center">
+            <Loader className="w-12 h-12 text-[#4B187C] animate-spin mx-auto mb-4" />
+            <p className="text-gray-600 font-medium">Carregando produto...</p>
+          </div>
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
         </main>
       </div>
     );
   }
 
+<<<<<<< HEAD
   if (error || !product) {
+=======
+  if (!product) {
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     return (
       <div className="bg-gray-50 min-h-screen">
         <Header />
         <main className="max-w-6xl mx-auto px-6 py-8">
+<<<<<<< HEAD
           <div className="text-center py-12">
             <h1 className="text-2xl font-semibold text-gray-900 mb-4">Produto não encontrado</h1>
             <p className="text-gray-600 mb-6">Este produto não está disponível ou foi removido.</p>
             <button
               onClick={() => router.push('/home')}
               className="bg-[#4B187C] hover:bg-[#3E1367] text-white px-6 py-3 rounded-full text-sm font-semibold transition-colors"
+=======
+          <div className="text-center py-20">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Produto não encontrado</h2>
+            <p className="text-gray-500 mb-6">Este produto não está disponível ou foi removido.</p>
+            <button
+              onClick={() => router.push('/home')}
+              className="bg-[#4B187C] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#3E1367] transition-colors"
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
             >
               Voltar para Home
             </button>
@@ -169,11 +288,12 @@ const ProductPage = () => {
     );
   }
 
+<<<<<<< HEAD
   const sortedMedia = (product.product_media || []).sort(
     (a, b) => ((a.position ?? 0) - (b.position ?? 0))
   );
   const stock = product.product_stock?.[0]?.quantity ?? 0;
-  const seller = product.users;
+  const seller = product.seller ?? null;
   const categoryName = product.categories?.name || 'Sem categoria';
 
   let stockStatus = '';
@@ -188,42 +308,72 @@ const ProductPage = () => {
     stockStatus = 'Em stock';
     stockBadgeClass = 'bg-green-50 text-green-600';
   }
+=======
+  const images = (product.product_media || []).sort((a, b) => (a.position || 0) - (b.position || 0));
+  const quantity = product.product_stock?.quantity ?? 0;
+  const seller = product.users;
+  const sellerName = seller?.username || seller?.full_name || 'Vendedor';
+  const categoryName = product.categories?.name || 'Geral';
+  const sellerYear = new Date(seller?.created_at || '').getFullYear();
+
+  let stockStatus = { text: 'Em stock', color: 'text-green-600' };
+  if (quantity === 0) {
+    stockStatus = { text: 'Esgotado', color: 'text-red-600' };
+  } else if (quantity <= 3) {
+    stockStatus = { text: `Apenas ${quantity} itens em stock`, color: 'text-orange-500' };
+  }
+
+  const priceDisplay = product.is_free ? 'Gratuito' : `${product.price?.toLocaleString('pt-AO')} Kz`;
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen overflow-hidden bg-gray-50 flex flex-col">
       <Header />
+<<<<<<< HEAD
+      <main className="flex-1 overflow-hidden max-w-6xl w-full mx-auto px-6 py-4 flex flex-col">
+        
+        {/* Breadcrumb */}
+        <div className="text-xs text-gray-500 mb-3">
+=======
       <main className="max-w-6xl mx-auto px-6 py-8">
         {/* breadcrumb */}
-        <div className="text-xs text-gray-500 mb-6">
+        <div className="text-xs text-gray-500 mb-4">
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
           {categoryName} /{' '}
           <span className="text-gray-700 font-medium">{product.title}</span>
         </div>
 
-        <div className="grid gap-10 md:grid-cols-2">
-          <div>
-            <div className="bg-white rounded-2xl p-4 shadow-md flex items-center justify-center overflow-hidden group min-h-[400px]">
+<<<<<<< HEAD
+        {/* Main grid */}
+        <div className="grid md:grid-cols-2 gap-8 flex-1 min-h-0">
+          
+          {/* Left: image */}
+          <div className="flex flex-col gap-3 min-h-0">
+            <div className="bg-white rounded-2xl shadow-sm flex items-center justify-center overflow-hidden flex-1 min-h-0">
               {activeImage ? (
                 <img
                   src={activeImage}
                   alt={product.title}
-                  className="w-full h-auto object-contain rounded-xl group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-full object-contain p-4"
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center text-gray-400">
                   <Package className="w-12 h-12 mb-2" />
-                  <span className="text-sm">Nenhuma imagem disponível</span>
+                  <span className="text-sm">Sem imagem</span>
                 </div>
               )}
             </div>
 
-            {sortedMedia.length > 0 && (
-              <div className="mt-4 grid grid-cols-4 gap-3">
+            {sortedMedia.length > 1 && (
+              <div className="grid grid-cols-4 gap-2 flex-shrink-0">
                 {sortedMedia.map((media) => (
                   <button
                     key={media.url}
                     onClick={() => setActiveImage(media.url)}
-                    className={`h-20 rounded-xl border-2 bg-white overflow-hidden hover:border-[#4B187C] transition-colors ${
-                      activeImage === media.url ? 'border-[#4B187C]' : 'border-gray-200'
+                    className={`h-16 rounded-xl border-2 bg-white overflow-hidden hover:border-[#4B187C] transition-colors ${
+                      activeImage === media.url 
+                        ? 'border-[#4B187C]' 
+                        : 'border-gray-200'
                     }`}
                   >
                     <img
@@ -233,83 +383,207 @@ const ProductPage = () => {
                     />
                   </button>
                 ))}
+=======
+        <div className="grid md:grid-cols-2 gap-10">
+          {/* left: gallery */}
+          <div>
+            {images.length > 0 ? (
+              <>
+                <div className="bg-white rounded-2xl p-4 shadow-md flex items-center justify-center overflow-hidden group">
+                  <img
+                    src={activeImage}
+                    alt={product.title}
+                    className="w-full h-auto object-contain rounded-xl group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+
+                {images.length > 1 && (
+                  <div className="mt-4 grid grid-cols-4 gap-3">
+                    {images.map((src) => {
+                      const isActive = src.url === activeImage;
+                      return (
+                        <button
+                          type="button"
+                          key={src.url}
+                          onClick={() => setActiveImage(src.url)}
+                          className={`h-20 rounded-xl border-2 bg-white overflow-hidden hover:border-[#4B187C] transition-colors ${
+                            isActive ? 'border-[#4B187C]' : 'border-gray-200'
+                          }`}
+                        >
+                          <img
+                            src={src.url}
+                            alt="Miniatura"
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="bg-gray-100 rounded-2xl p-4 shadow-md flex items-center justify-center h-80">
+                <div className="text-center">
+                  <Package className="w-16 h-16 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">Nenhuma imagem disponível</p>
+                </div>
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
               </div>
             )}
           </div>
 
-          <div className="space-y-5">
+<<<<<<< HEAD
+          {/* Right: details */}
+          <div className="flex flex-col gap-3 min-h-0 overflow-y-auto">
+            
+            {/* Category badge */}
+            <span className="inline-flex items-center rounded-full bg-purple-100 text-[#4B187C] px-3 py-1 text-xs font-semibold uppercase w-fit">
+              {categoryName}
+            </span>
+
+            {/* Title and price */}
             <div>
+              <h1 className="text-xl font-bold text-gray-900 mb-1">
+                {product.title}
+              </h1>
+              <div className="text-2xl font-extrabold text-[#4B187C]">
+                {product.is_free 
+                  ? 'Gratuito' 
+                  : `${(product.price ?? 0).toLocaleString('pt-AO')} Kz`}
+              </div>
+            </div>
+
+            {/* Description */}
+            {product.description && (
+              <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+                {product.description}
+=======
+          {/* right: details */}
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
               <span className="inline-flex items-center rounded-full bg-purple-100 text-[#4B187C] px-3 py-1 text-xs font-semibold uppercase">
                 {categoryName}
               </span>
+              <button
+                aria-label="Favoritar"
+                className="w-9 h-9 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-red-500 hover:border-red-300 transition-colors"
+              >
+                <Heart className="w-5 h-5" />
+              </button>
             </div>
 
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">{product.title}</h1>
-              <div className="flex items-baseline gap-2 mb-4">
-                <div className="text-3xl font-extrabold text-[#4B187C]">
-                  {product.is_free ? 'Gratuito' : `${product.price} Kz`}
-                </div>
-              </div>
+              <div className="text-3xl font-extrabold text-[#4B187C] mb-1">{priceDisplay}</div>
+              <h1 className="text-2xl font-semibold text-gray-900">{product.title}</h1>
             </div>
 
-            {product.description && (
-              <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
+            <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
+
+            {/* stock status */}
+            <div>
+              <p className={`text-xs font-semibold ${stockStatus.color}`}>
+                {stockStatus.text}
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
+              </p>
             )}
 
-            {/* Stock info */}
-            <div className={`text-xs font-semibold px-3 py-2 rounded-full w-fit ${stockBadgeClass}`}>
+            {/* Stock badge */}
+            <div className={`text-xs font-semibold px-3 py-1.5 rounded-full w-fit ${stockBadgeClass}`}>
               {stockStatus}
             </div>
 
-            <p className="text-sm leading-relaxed text-gray-600">{product.description}</p>
-
-            <div className="grid gap-4 text-sm md:grid-cols-2">
-              <div className="space-y-2 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-                <div className="flex justify-between gap-4">
-                  <span className="text-gray-500">Tipo</span>
-                  <span className="text-right font-medium text-gray-900">
-                    {formatProductType(product.type)}
-                  </span>
+<<<<<<< HEAD
+            {/* Meta card */}
+            <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm space-y-2 text-sm flex-shrink-0">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Tipo</span>
+                <span className="font-medium text-gray-900">
+                  {getProductTypeLabel(product.type)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Condição</span>
+                <span className="font-medium text-gray-900">
+                  {getProductTypeLabel(product.type)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Publicado</span>
+                <span className="font-medium text-gray-900">
+                  {formatRelativeDate(product.created_at)}
+                </span>
+=======
+            {/* meta cards */}
+            <div className="grid md:grid-cols-2 gap-4 text-sm">
+              <div className="bg-white rounded-2xl p-4 border border-gray-100 space-y-2 shadow-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Categoria</span>
+                  <span className="font-medium text-gray-900">{categoryName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Condição</span>
-                  <span className="font-medium text-gray-900">
-                    {getProductTypeLabel(product.type)}
-                  </span>
+                  <span className="font-medium text-gray-900">{getProductTypeLabel(product.type)}</span>
                 </div>
-                <div className="flex justify-between gap-4">
+                <div className="flex justify-between">
                   <span className="text-gray-500">Publicado</span>
-                  <span className="font-medium text-gray-900">
-                    {formatRelativeDate(product.created_at)}
-                  </span>
+                  <span className="font-medium text-gray-900">{timeAgo(product.created_at)}</span>
                 </div>
               </div>
 
-              <div className="flex flex-col justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+              <div className="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col justify-between shadow-sm">
                 <div className="flex items-center gap-3">
-                  {seller.avatar_url ? (
+                  {seller?.avatar_url ? (
                     <img
                       src={seller.avatar_url}
-                      alt={seller.username || seller.full_name || 'Vendedor'}
+                      alt={sellerName}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-[#EDE7FF] text-[#4B187C] flex items-center justify-center font-bold">
-                      {(seller.username || seller.full_name || 'V')?.[0]?.toUpperCase()}
+                    <div className="w-10 h-10 rounded-full bg-[#EDE7FF] text-[#4B187C] font-bold flex items-center justify-center">
+                      {sellerName[0]?.toUpperCase() || 'V'}
                     </div>
                   )}
                   <div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      {seller.username || seller.full_name || 'Vendedor'}
+                    <div className="text-sm font-semibold text-gray-900">{sellerName}</div>
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <Star className="w-3 h-3 text-yellow-400" />
+                      <span>4.8 (121)</span>
                     </div>
-                    <div className="text-xs text-gray-500">Membro desde {getYear(seller.created_at)}</div>
                   </div>
+                </div>
+                <div className="mt-3 text-xs text-gray-500">Membro desde {sellerYear}</div>
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
+              </div>
+            </div>
+
+            {/* Seller card */}
+            <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm flex items-center gap-3 flex-shrink-0">
+              {seller?.avatar_url ? (
+                <img
+                  src={seller.avatar_url}
+                  alt={seller?.username || seller?.full_name || 'Vendedor'}
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-[#EDE7FF] text-[#4B187C] flex items-center justify-center font-bold flex-shrink-0">
+                  {(seller?.username || seller?.full_name || 'V')
+                    ?.[0]?.toUpperCase()}
+                </div>
+              )}
+              <div>
+                <div className="text-sm font-semibold text-gray-900">
+                  {seller?.username || seller?.full_name || 'Vendedor'}
+                </div>
+                <div className="text-xs text-gray-500">
+                  Membro desde {seller?.created_at 
+                    ? new Date(seller.created_at).getFullYear() 
+                    : '2025'}
                 </div>
               </div>
             </div>
 
-            <button className="w-full bg-[#4B187C] hover:bg-[#3E1367] text-white py-3 rounded-full text-sm font-semibold shadow-md transition-colors">
+            {/* CTA button */}
+            <button className="w-full bg-[#4B187C] hover:bg-[#3E1367] text-white py-3 rounded-full text-sm font-semibold shadow-md transition-colors flex-shrink-0 mt-auto">
               Contatar Vendedor
             </button>
           </div>
@@ -318,3 +592,5 @@ const ProductPage = () => {
     </div>
   );
 }
+
+export default ProductPage;

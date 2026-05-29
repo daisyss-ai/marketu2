@@ -2,7 +2,14 @@
   "servers": {
     "supabase": {
       "type": "http",
+<<<<<<< HEAD
       "url": "https://mcp.supabase.com/mcp?project_ref=mloazyfnidtziewujxgj&read_only=true&features=account%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage%2Cdocs"
     }
   }
 }
+=======
+      "url": "https://mcp.supabase.com/mcp?project_ref=mloazyfnidtziewujxgj&read_only=true&features=docs%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage"
+    }
+  }
+}
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864

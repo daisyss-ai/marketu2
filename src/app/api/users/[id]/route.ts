@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+<<<<<<< HEAD
 function normalizeAvatarUrl(value: unknown): { url: string | null; error?: string } {
   if (typeof value !== 'string') {
     return { url: null };
@@ -35,6 +36,10 @@ function getErrorMeta(error: unknown): { name?: string; code?: string } {
 
 export async function GET(
   request: Request,
+=======
+export async function GET(
+  _request: Request,
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -92,6 +97,7 @@ export async function GET(
     );
   }
 }
+<<<<<<< HEAD
 
 export async function PUT(
   req: Request,
@@ -160,3 +166,5 @@ export async function PUT(
     );
   }
 }
+=======
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864

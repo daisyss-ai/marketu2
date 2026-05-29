@@ -1,6 +1,10 @@
 'use client';
 import { useRouter } from 'next/navigation';
+<<<<<<< HEAD
 import { startTransition, useEffect, useMemo, useState } from 'react';
+=======
+import { useEffect, useMemo, useState } from 'react';
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 import type { ChangeEvent, FormEvent } from 'react';
 import { ChevronLeft, Upload } from 'lucide-react';
 import Header from '../components/layout/Header';
@@ -25,6 +29,49 @@ const Sell = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);
   const { uploadProduct, loading, error } = useProductUpload();
+<<<<<<< HEAD
+=======
+
+  const [mounted, setMounted] = useState(false);
+  const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setCategoriesLoading(true);
+    setCategoriesError(null);
+    fetch('/api/categories', { method: 'GET' })
+      .then(async (res) => {
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error((json && (json.error || json.message)) || 'Erro ao carregar categorias');
+        return json?.data?.categories as Array<{ id: string; name: string | null }> | undefined;
+      })
+      .then((rows) => {
+        if (!active) return;
+        const next = (Array.isArray(rows) ? rows : []).map((c) => ({ value: c.id, label: c.name || 'Sem nome' }));
+        setCategories(next);
+        if (next[0]?.value) {
+          setFormData((prev) => ({ ...prev, category_id: prev.category_id || next[0].value }));
+        }
+      })
+      .catch((e: unknown) => {
+        if (!active) return;
+        const msg = e instanceof Error ? e.message : 'Erro ao carregar categorias';
+        setCategoriesError(msg);
+      })
+      .finally(() => {
+        if (active) setCategoriesLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
   const [mounted, setMounted] = useState(false);
   const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
@@ -42,6 +89,7 @@ const Sell = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
 
+<<<<<<< HEAD
   
 
   useEffect(() => {
@@ -88,6 +136,17 @@ const Sell = () => {
     []
   );
 
+=======
+  const conditions = useMemo(
+    () => [
+      { value: 'new', label: 'Novo' },
+      { value: 'used', label: 'Usado' },
+      { value: 'digital', label: 'Digital' },
+    ],
+    []
+  );
+
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   if (!mounted) {
     return (
       <div>

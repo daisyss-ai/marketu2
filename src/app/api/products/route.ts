@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { NextResponse, type NextRequest } from 'next/server';
 import { getProducts } from '@/lib/products/getProducts';
 import { createClient } from '@/lib/supabase/server';
@@ -23,6 +24,11 @@ type CreateProductBody = {
   is_free?: unknown;
   quantity?: unknown;
 };
+=======
+import { NextResponse } from 'next/server';
+import { getProducts } from '@/lib/products/getProducts';
+import { createClient } from '@/lib/supabase/server';
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
 function toNumber(v: string | null, fallback: number) {
   if (!v) return fallback;
@@ -30,6 +36,7 @@ function toNumber(v: string | null, fallback: number) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+<<<<<<< HEAD
 function isSupabaseConfigured() {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
@@ -108,6 +115,27 @@ export async function GET(request: NextRequest) {
     const maxPriceRaw = legacySearchParams.get('maxPrice');
     const maxPrice = maxPriceRaw ? toNumber(maxPriceRaw, Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
 
+=======
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+
+  const page = Math.max(1, toNumber(searchParams.get('page'), 1));
+  const limit = Math.min(48, Math.max(1, toNumber(searchParams.get('limit'), 12)));
+  const sortParam = searchParams.get('sort') || 'newest';
+  const sort =
+    sortParam === 'price_asc' || sortParam === 'price_desc' || sortParam === 'rating' || sortParam === 'newest'
+      ? sortParam
+      : 'newest';
+  const search = (searchParams.get('search') || '').trim();
+  const category = (searchParams.get('category') || '').trim(); // slug
+  const minRating = Math.max(0, toNumber(searchParams.get('rating'), 0));
+
+  const minPrice = toNumber(searchParams.get('minPrice'), 0);
+  const maxPriceRaw = searchParams.get('maxPrice');
+  const maxPrice = maxPriceRaw ? toNumber(maxPriceRaw, Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
+
+  try {
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     const { products, total } = await getProducts({
       page,
       limit,
@@ -127,6 +155,7 @@ export async function GET(request: NextRequest) {
         limit,
       },
     });
+<<<<<<< HEAD
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno ao pesquisar produtos';
 
@@ -136,10 +165,29 @@ export async function GET(request: NextRequest) {
     }
 
     console.error('[API /products] Erro não tratado:', error);
+=======
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Erro interno';
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
+<<<<<<< HEAD
+=======
+export const runtime = 'nodejs';
+
+type CreateProductBody = {
+  title?: unknown;
+  description?: unknown;
+  category_id?: unknown;
+  condition?: unknown;
+  price?: unknown;
+  is_free?: unknown;
+  quantity?: unknown;
+};
+
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 export async function POST(req: Request) {
   try {
     const body = (await req.json().catch(() => null)) as CreateProductBody | null;
@@ -152,6 +200,10 @@ export async function POST(req: Request) {
 
     const conditionRaw = body?.condition;
     const condition = conditionRaw === 'digital' || conditionRaw === 'new' || conditionRaw === 'used' ? conditionRaw : null;
+<<<<<<< HEAD
+=======
+    // Keep in sync with DB enum `product_type`
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     const type = condition === 'digital' ? 'digital_material' : 'physical_product';
 
     const isFreeRaw = body?.is_free;
@@ -164,6 +216,7 @@ export async function POST(req: Request) {
     const quantityNum = typeof quantityRaw === 'number' ? quantityRaw : Number(quantityRaw ?? 1);
     const quantity = Number.isFinite(quantityNum) && quantityNum > 0 ? Math.floor(quantityNum) : 1;
 
+<<<<<<< HEAD
     if (!title) return NextResponse.json({ error: 'Título é obrigatório' }, { status: 400 });
     if (title.length > 100) return NextResponse.json({ error: 'Título deve ter no máximo 100 caracteres' }, { status: 400 });
     if (description.length < 20 || description.length > 500) {
@@ -171,11 +224,24 @@ export async function POST(req: Request) {
     }
     if (!condition) return NextResponse.json({ error: 'Condição inválida' }, { status: 400 });
     if (!Number.isFinite(priceNum) || priceNum < 0) return NextResponse.json({ error: 'Preço inválido' }, { status: 400 });
+=======
+    if (!title) return NextResponse.json({ error: 'TÃ­tulo Ã© obrigatÃ³rio' }, { status: 400 });
+    if (title.length > 100) return NextResponse.json({ error: 'TÃ­tulo deve ter no mÃ¡ximo 100 caracteres' }, { status: 400 });
+    if (description.length < 20 || description.length > 500) {
+      return NextResponse.json({ error: 'DescriÃ§Ã£o deve ter entre 20 e 500 caracteres' }, { status: 400 });
+    }
+    if (!condition) return NextResponse.json({ error: 'CondiÃ§Ã£o invÃ¡lida' }, { status: 400 });
+    if (!Number.isFinite(priceNum) || priceNum < 0) return NextResponse.json({ error: 'PreÃ§o invÃ¡lido' }, { status: 400 });
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
     const supabase = await createClient();
     const { data: auth, error: authError } = await supabase.auth.getUser();
     if (authError) return NextResponse.json({ error: authError.message }, { status: 401 });
+<<<<<<< HEAD
     if (!auth?.user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+=======
+    if (!auth?.user) return NextResponse.json({ error: 'NÃ£o autenticado' }, { status: 401 });
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
     const userId = auth.user.id;
 
@@ -211,8 +277,13 @@ export async function POST(req: Request) {
     if (moderationError) return NextResponse.json({ error: moderationError.message }, { status: 400 });
 
     return NextResponse.json({ data: { id: productId, seller_id: userId } }, { status: 201 });
+<<<<<<< HEAD
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno';
+=======
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Erro interno';
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
