@@ -6,18 +6,12 @@ export interface User {
   email?: string;
   enrollment_code?: string;
   full_name?: string;
-<<<<<<< HEAD
   username?: string | null;
   phone?: string;
   role?: string;
   status?: string;
   avatar_url?: string | null;
   banner_url?: string | null;
-=======
-  phone?: string;
-  role?: string;
-  status?: string;
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   institution?: {
     name: string;
   };

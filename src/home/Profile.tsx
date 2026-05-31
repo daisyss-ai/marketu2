@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import {
@@ -30,19 +30,11 @@ interface StatCardProps {
   reviewCount?: number;
 }
 
-<<<<<<< HEAD
 const StatCard = ({ icon, label, value, isRating = false, reviewCount }: StatCardProps) => (
   <div className="bg-white p-4 rounded-2xl border border-[#EDE7FF] shadow-sm">
     <div className="flex items-center justify-between mb-3">
       <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">{label}</span>
       <div className="text-[#4B187C]">{icon}</div>
-=======
-const StatCard = ({ icon, label, value, isRating = false }: StatCardProps) => (
-  <div className="bg-linear-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
-    <div className="flex items-center justify-between mb-2">
-      <span className="text-gray-600 text-sm font-medium">{label}</span>
-      <div className="text-purple-600">{icon}</div>
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     </div>
     <div>
       <div className="text-2xl font-bold text-gray-800">
@@ -62,13 +54,8 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, onDelete, onEdit }: ProductCardProps) => (
-<<<<<<< HEAD
   <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 group">
     <div className="relative h-44 bg-gray-200">
-=======
-  <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-gray-100">
-    <div className="relative h-48 bg-gray-100 overflow-hidden">
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
       {product.preview_url ? (
         <img
           src={product.preview_url}
@@ -76,7 +63,6 @@ const ProductCard = ({ product, onDelete, onEdit }: ProductCardProps) => (
           className="w-full h-full object-cover"
         />
       ) : (
-<<<<<<< HEAD
         <div className="w-full h-full flex items-center justify-center bg-gray-200">
           <Package className="w-12 h-12 text-gray-400" />
         </div>
@@ -89,25 +75,6 @@ const ProductCard = ({ product, onDelete, onEdit }: ProductCardProps) => (
         {product.is_active ? 'Ativo' : 'Inativo'}
       </span>
       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-=======
-        <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-gray-200 to-gray-300">
-          <Package className="w-12 h-12 text-gray-400" />
-        </div>
-      )}
-      <span className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-1 rounded text-xs font-semibold">
-        {product.type === 'digital' ? 'Digital' : 'FÃ­sico'}
-      </span>
-    </div>
-
-    <div className="p-4">
-      <h3 className="font-semibold text-gray-900 mb-1 truncate">{product.title}</h3>
-      <p className="text-sm text-gray-600 mb-2">{product.category_name || 'Geral'}</p>
-      <p className="text-lg font-bold text-[#4B187C] mb-4">
-        {product.is_free ? 'Gratuito' : `${(product.price ?? 0).toLocaleString('pt-AO')} Kz`}
-      </p>
-
-      <div className="flex gap-2">
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
         <button
           onClick={() => onEdit(product.id)}
           className="bg-white p-2 rounded-full text-[#4B187C] hover:bg-gray-100"
@@ -186,14 +153,8 @@ const Profile = () => {
   const [alertMessage, setAlertMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
 
-<<<<<<< HEAD
   useEffect(() => {
     queueMicrotask(() => setIsHydrated(true));
-=======
-  // Prevent hydration mismatch by only rendering after client hydration
-  useEffect(() => {
-    setIsHydrated(true);
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   }, []);
 
   const { stats, loading: profileLoading } = useUserProfile(authUser?.id);
@@ -214,16 +175,9 @@ const Profile = () => {
     }
   };
 
-<<<<<<< HEAD
   if (!isHydrated) {
     return (
       <div className="bg-[#f8f7ff] min-h-screen">
-=======
-  // Show loading/placeholder until hydrated
-  if (!isHydrated) {
-    return (
-      <div className="bg-gray-50 min-h-screen">
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
         <Header />
         <div className="max-w-6xl mx-auto px-6 py-8 text-center text-gray-600">
           Carregando...
@@ -237,7 +191,7 @@ const Profile = () => {
       <div>
         <Header />
         <div className="max-w-md mx-auto mt-12 p-6 bg-white rounded shadow text-center">
-          <p className="text-gray-600 mb-4">Você não está autenticado.</p>
+          <p className="text-gray-600 mb-4">VocÃª nÃ£o estÃ¡ autenticado.</p>
           <button
             onClick={() => router.push('/login')}
             className="bg-[#4B187C] text-white px-4 py-2 rounded hover:bg-[#3E1367]"
@@ -250,7 +204,7 @@ const Profile = () => {
   }
 
   const displayName = (authUser as any)?.username || authUser?.full_name || 'Utilizador';
-  const studentInfo = `${authUser?.student_id || 'N/A'} • ${authUser?.course || 'Curso'} • ${authUser?.classroom || 'Sala'}`;
+  const studentInfo = `${authUser?.student_id || 'N/A'} â€¢ ${authUser?.course || 'Curso'} â€¢ ${authUser?.classroom || 'Sala'}`;
   const avgRating = stats?.stats?.avgRating || 0;
   const reviewCount = stats?.stats?.reviewCount || 0;
   const avatarUrl = (authUser as any)?.avatar_url;
@@ -260,7 +214,6 @@ const Profile = () => {
     <div className="bg-[#f8f7ff] min-h-screen">
       <Header />
 
-<<<<<<< HEAD
       {/* Banner */}
       <div className="relative">
         {bannerUrl ? (
@@ -269,16 +222,6 @@ const Profile = () => {
           <div className="h-36 w-full bg-gradient-to-r from-[#4B187C] to-[#6d28b0]" />
         )}
       </div>
-=======
-      {/* Profile Header Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="flex items-start gap-6 flex-1">
-              <div className="w-24 h-24 bg-linear-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-                {displayName?.charAt(0).toUpperCase()}
-              </div>
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
       <div className="max-w-5xl mx-auto px-4 -mt-16 relative z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
@@ -316,17 +259,17 @@ const Profile = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
             icon={<Package className="w-5 h-5" />}
-            label="Produtos à Venda"
+            label="Produtos Ã  Venda"
             value={stats?.stats?.productCount || 0}
           />
           <StatCard
             icon={<TrendingUp className="w-5 h-5" />}
-            label="Vendas Concluídas"
+            label="Vendas ConcluÃ­das"
             value={stats?.stats?.completedSales || 0}
           />
           <StatCard
             icon={<Star className="w-5 h-5" />}
-            label="Avaliação"
+            label="AvaliaÃ§Ã£o"
             value={avgRating}
             isRating
             reviewCount={reviewCount}
@@ -354,7 +297,7 @@ const Profile = () => {
             Meus Produtos
           </TabButton>
           <TabButton active={activeTab === 'actions'} onClick={() => setActiveTab('actions')}>
-            Minhas Ações & Configurações
+            Minhas AÃ§Ãµes & ConfiguraÃ§Ãµes
           </TabButton>
         </div>
 
@@ -366,11 +309,7 @@ const Profile = () => {
               </div>
             ) : products?.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-<<<<<<< HEAD
                 {products.map((product) => (
-=======
-                {products.map((product: ProductWithDetails) => (
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -389,7 +328,7 @@ const Profile = () => {
                     <Plus className="w-6 h-6" />
                   </div>
                   <p className="font-semibold text-[#4B187C]">Anunciar Algo</p>
-                  <p className="text-xs text-gray-400">Rápido e fácil</p>
+                  <p className="text-xs text-gray-400">RÃ¡pido e fÃ¡cil</p>
                 </div>
 
                 {products && products.length > 0 ? (
@@ -406,7 +345,7 @@ const Profile = () => {
                     <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum produto publicado</h3>
                     <p className="text-gray-600 mb-6">
-                      Ainda não tens nenhum produto. Clica no botão para publicar o teu primeiro!
+                      Ainda nÃ£o tens nenhum produto. Clica no botÃ£o para publicar o teu primeiro!
                     </p>
                     <button
                       onClick={() => router.push('/sell')}
@@ -426,7 +365,7 @@ const Profile = () => {
             <ActionCard
               icon={<ShoppingCart className="w-5 h-5" />}
               title="Minhas Compras"
-              description="Acompanhe as suas compras e transações"
+              description="Acompanhe as suas compras e transaÃ§Ãµes"
               onClick={() => setActiveTab('purchases')}
             />
             <ActionCard
@@ -444,7 +383,7 @@ const Profile = () => {
             <ActionCard
               icon={<UserPen className="w-5 h-5" />}
               title="Editar Perfil"
-              description="Actualize as suas informações"
+              description="Actualize as suas informaÃ§Ãµes"
               onClick={() => router.push('/edit-profile')}
             />
           </div>
@@ -456,7 +395,7 @@ const Profile = () => {
           <div className="bg-white rounded-lg p-6 max-w-sm">
             <h3 className="text-xl font-bold mb-2">Eliminar Produto?</h3>
             <p className="text-gray-600 mb-6">
-              Tens a certeza que queres eliminar este produto? Esta acção não pode ser desfeita.
+              Tens a certeza que queres eliminar este produto? Esta acÃ§Ã£o nÃ£o pode ser desfeita.
             </p>
             <div className="flex gap-3">
               <button
@@ -482,3 +421,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

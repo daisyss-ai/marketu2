@@ -1,5 +1,5 @@
+﻿import { createClient } from '@/lib/supabase/server';
 import type { ProductCardItem } from '@/types';
-import { createClient } from '@/lib/supabase/server';
 
 export type GetProductsParams = {
   page?: number;
@@ -22,63 +22,51 @@ type DbMedia = {
 
 type DbProductRow = {
   id: string;
-<<<<<<< HEAD
   seller_id: string;
-=======
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   title: string;
   description: string | null;
   price: number | string | null;
   rating: number | null;
-  is_approved?: boolean | null;
   created_at: string | null;
-  categories: DbCategory | DbCategory[] | null;
+  categories: DbCategory | DbCategory[];
   product_media: DbMedia[] | null;
 };
 
-function pickCategoryName(v: DbProductRow['categories']): string {
-  if (!v) return 'Geral';
-  if (Array.isArray(v)) return v[0]?.name || 'Geral';
-  return v.name || 'Geral';
+function pickCategoryName(cat: DbCategory | DbCategory[]): string {
+  if (!cat) return 'Geral';
+  const single = Array.isArray(cat) ? cat[0] : cat;
+  return single?.name ?? 'Geral';
 }
 
-function pickCoverUrl(v: DbProductRow['product_media']): string {
-  const media = Array.isArray(v) ? v.filter(Boolean) : [];
-  const cover =
-    media.find((m) => m?.media_type === 'image' && m?.is_preview) ||
-    media.find((m) => m?.media_type === 'image') ||
-    media[0];
-  return (cover?.url ?? '') || '';
+function pickCoverUrl(media: DbMedia[] | null): string | undefined {
+  if (!media || media.length === 0) return undefined;
+  const sorted = [...media]
+    .filter(Boolean)
+    .sort((a, b) => (a?.position ?? 0) - (b?.position ?? 0));
+  const preview = sorted.find((m) => m?.is_preview) ?? sorted[0];
+  return preview?.url ?? undefined;
 }
 
-export async function getProducts(params: GetProductsParams) {
-  const page = Math.max(1, params.page ?? 1);
-  const limit = Math.min(48, Math.max(1, params.limit ?? 12));
-  const sort = params.sort ?? 'newest';
-  const search = (params.search ?? '').trim();
-  const categorySlug = (params.categorySlug ?? '').trim();
-  const minPrice = Number.isFinite(params.minPrice) ? (params.minPrice as number) : 0;
-  const maxPrice =
-    params.maxPrice === undefined || params.maxPrice === null
-      ? Number.POSITIVE_INFINITY
-      : (params.maxPrice as number);
-  const minRating = Number.isFinite(params.minRating) ? (params.minRating as number) : 0;
-
+export async function getProducts({
+  page = 1,
+  limit = 12,
+  sort = 'newest',
+  search = '',
+  categorySlug = '',
+  minPrice = 0,
+  maxPrice = Infinity,
+  minRating = 0,
+}: GetProductsParams = {}) {
   const supabase = await createClient();
 
   let categoryId: string | null = null;
   if (categorySlug) {
-    const { data: cat, error: catError } = await supabase
+    const { data: cat } = await supabase
       .from('categories')
       .select('id')
       .eq('slug', categorySlug)
-      .single();
-
-    if (catError || !cat?.id) {
-      return { products: [] as ProductCardItem[], total: 0, page, limit };
-    }
-
-    categoryId = cat.id as string;
+      .maybeSingle();
+    categoryId = cat?.id ?? null;
   }
 
   let q = supabase
@@ -86,10 +74,7 @@ export async function getProducts(params: GetProductsParams) {
     .select(
       `
         id,
-<<<<<<< HEAD
         seller_id,
-=======
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
         title,
         description,
         price,
@@ -105,7 +90,6 @@ export async function getProducts(params: GetProductsParams) {
   if (search) q = q.ilike('title', `%${search}%`);
   if (categoryId) q = q.eq('category_id', categoryId);
   if (Number.isFinite(minRating) && minRating > 0) q = q.gte('rating', minRating);
-
   if (Number.isFinite(minPrice) && minPrice > 0) q = q.gte('price', minPrice);
   if (Number.isFinite(maxPrice)) q = q.lte('price', maxPrice);
 
@@ -134,12 +118,10 @@ export async function getProducts(params: GetProductsParams) {
     description: p.description ?? undefined,
     createdAt: p.created_at ?? undefined,
     rating: typeof p.rating === 'number' ? p.rating : undefined,
-<<<<<<< HEAD
     userId: p.seller_id,
-=======
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   }));
 
   return { products, total: count ?? products.length, page, limit };
 }
+
 

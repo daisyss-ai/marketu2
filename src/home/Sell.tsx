@@ -1,10 +1,6 @@
-'use client';
+﻿'use client';
 import { useRouter } from 'next/navigation';
-<<<<<<< HEAD
 import { startTransition, useEffect, useMemo, useState } from 'react';
-=======
-import { useEffect, useMemo, useState } from 'react';
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 import type { ChangeEvent, FormEvent } from 'react';
 import { ChevronLeft, Upload } from 'lucide-react';
 import Header from '../components/layout/Header';
@@ -29,49 +25,6 @@ const Sell = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);
   const { uploadProduct, loading, error } = useProductUpload();
-<<<<<<< HEAD
-=======
-
-  const [mounted, setMounted] = useState(false);
-  const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [categoriesError, setCategoriesError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    setCategoriesLoading(true);
-    setCategoriesError(null);
-    fetch('/api/categories', { method: 'GET' })
-      .then(async (res) => {
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error((json && (json.error || json.message)) || 'Erro ao carregar categorias');
-        return json?.data?.categories as Array<{ id: string; name: string | null }> | undefined;
-      })
-      .then((rows) => {
-        if (!active) return;
-        const next = (Array.isArray(rows) ? rows : []).map((c) => ({ value: c.id, label: c.name || 'Sem nome' }));
-        setCategories(next);
-        if (next[0]?.value) {
-          setFormData((prev) => ({ ...prev, category_id: prev.category_id || next[0].value }));
-        }
-      })
-      .catch((e: unknown) => {
-        if (!active) return;
-        const msg = e instanceof Error ? e.message : 'Erro ao carregar categorias';
-        setCategoriesError(msg);
-      })
-      .finally(() => {
-        if (active) setCategoriesLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 
   const [mounted, setMounted] = useState(false);
   const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
@@ -89,8 +42,9 @@ const Sell = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
 
-<<<<<<< HEAD
-  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -136,17 +90,6 @@ const Sell = () => {
     []
   );
 
-=======
-  const conditions = useMemo(
-    () => [
-      { value: 'new', label: 'Novo' },
-      { value: 'used', label: 'Usado' },
-      { value: 'digital', label: 'Digital' },
-    ],
-    []
-  );
-
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   if (!mounted) {
     return (
       <div>
@@ -273,7 +216,7 @@ const Sell = () => {
         files: uploadedFiles,
       });
 
-      setSuccessMessage('âœ… Produto publicado com sucesso! Redirecionando para a home...');
+      setSuccessMessage('✅ Produto publicado com sucesso! Redirecionando para a home...');
 
       setFormData({
         title: '',
@@ -330,16 +273,16 @@ const Sell = () => {
               error={validationErrors.images || undefined}
               required
             />
-            <p className="text-xs text-gray-500 mt-2">Máximo 5 imagens. Use alta qualidade para melhor visualização.</p>
+            <p className="text-xs text-gray-500 mt-2">MÃ¡ximo 5 imagens. Use alta qualidade para melhor visualizaÃ§Ã£o.</p>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Informações do Produto</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">InformaÃ§Ãµes do Produto</h2>
 
             <FormInput
-              label="Título do Produto"
+              label="TÃ­tulo do Produto"
               name="title"
-              placeholder="Ex: Livro de Cálculo - 1ª Edição"
+              placeholder="Ex: Livro de CÃ¡lculo - 1Âª EdiÃ§Ã£o"
               value={formData.title}
               onChange={handleInputChange}
               error={validationErrors.title || undefined}
@@ -348,16 +291,16 @@ const Sell = () => {
             />
 
             <FormTextarea
-              label="Descrição Detalhada"
+              label="DescriÃ§Ã£o Detalhada"
               name="description"
-              placeholder="Descreva seu produto em detalhes: estado, características, motivo da venda, defeitos (se houver), etc."
+              placeholder="Descreva seu produto em detalhes: estado, caracterÃ­sticas, motivo da venda, defeitos (se houver), etc."
               value={formData.description}
               onChange={handleInputChange}
               error={validationErrors.description || undefined}
               required
               maxLength={500}
               rows={5}
-              hint="Mínimo 20 caracteres, máximo 500"
+              hint="MÃ­nimo 20 caracteres, mÃ¡ximo 500"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -374,20 +317,20 @@ const Sell = () => {
               />
 
               <FormSelect
-                label="Condição"
+                label="CondiÃ§Ã£o"
                 name="condition"
                 value={formData.condition}
                 onChange={handleInputChange}
                 options={conditions}
                 error={validationErrors.condition || undefined}
                 required
-                placeholder="Selecione a condição"
+                placeholder="Selecione a condiÃ§Ã£o"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormInput
-                label="Preço (em Kz)"
+                label="PreÃ§o (em Kz)"
                 name="price"
                 type="number"
                 placeholder="Ex: 5000"
@@ -445,3 +388,4 @@ const Sell = () => {
 };
 
 export default Sell;
+

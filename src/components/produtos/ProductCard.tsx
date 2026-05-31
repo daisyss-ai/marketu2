@@ -1,14 +1,8 @@
 'use client';
-<<<<<<< HEAD
 import { Bookmark, Heart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { MouseEvent } from 'react';
 import { useState } from 'react';
-=======
-import { useState } from 'react';
-import type { MouseEvent } from 'react';
-import { Heart, Bookmark } from 'lucide-react';
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
 import type { ProductCardItem } from '../../types';
 
 interface ProductCardProps {
@@ -64,7 +58,6 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
           />
         </div>
 
-<<<<<<< HEAD
         {/* Card body */}
         <div className="p-4 flex flex-col flex-1">
           {/* Category row */}
@@ -110,34 +103,6 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
             >
               {isGreen ? 'Em stock' : 'Poucas unidades'}
             </span>
-=======
-        {/* meta */}
-        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-widest mb-2">
-          <Bookmark className="w-3 h-3 text-primary" />
-          <span>{product.category}</span>
-        </div>
-        <h3 className="font-bold text-foreground text-sm mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
-          {product.title}
-        </h3>
-
-        {product.description && (
-          <p className="text-xs text-muted line-clamp-2 leading-relaxed mb-3">{product.description}</p>
-        )}
-
-        <div className="flex items-baseline gap-1 mb-3">
-          <span className="text-xl font-black text-foreground tracking-tight">
-            {typeof product.price === 'number' ? product.price.toLocaleString('pt-AO') : product.price}
-          </span>
-          <span className="text-[10px] font-black text-muted uppercase">kzs</span>
-        </div>
-
-        <div className="mt-auto pt-4 flex items-center justify-between border-t border-muted/5">
-          <div className="flex items-center text-xs text-muted font-medium">
-            <span
-              className={`w-2.5 h-2.5 rounded-full mr-2 shadow-sm ${product.statusColor || 'bg-error'}`}
-            />
-            <span className="truncate max-w-[80px]">{product.seller || 'MarketU'}</span>
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
           </div>
         </div>
       </div>

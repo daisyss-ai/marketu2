@@ -26,10 +26,7 @@ async function apiRequest(endpoint: string, options: any = {}) {
     ...options.headers,
   };
 
-<<<<<<< HEAD
-=======
   // Only set Content-Type if not explicitly skipped (for FormData uploads)
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   if (!options.skipContentType) {
     headers['Content-Type'] = 'application/json';
   }
@@ -44,7 +41,6 @@ async function apiRequest(endpoint: string, options: any = {}) {
       headers,
     });
 
-<<<<<<< HEAD
     const contentType = response.headers.get('content-type') || '';
     const rawText = await response.text();
     let data: any = null;
@@ -79,28 +75,6 @@ async function apiRequest(endpoint: string, options: any = {}) {
     }
 
     return data;
-=======
-    // Handle non-JSON responses (e.g., HTML error pages)
-    const contentType = response.headers.get('content-type');
-    let data;
-    
-    if (contentType?.includes('application/json')) {
-      data = await response.json();
-    } else {
-      const text = await response.text();
-      data = { error: text || 'Non-JSON response from server' };
-    }
-
-    if (!response.ok) {
-      const message = data?.error || 'Erro ao comunicar com servidor';
-      const err = new Error(message) as Error & { status?: number; data?: unknown };
-      err.status = response.status;
-      err.data = data;
-      throw err;
-    }
-
-    return data.data || data;
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   } catch (error: any) {
     const errorMessage = error?.message || error?.error || 'Erro desconhecido';
     console.error('API Error:', errorMessage, error);
@@ -208,26 +182,15 @@ export const productsAPI = {
     }),
 
   createProduct: (productData: any) => {
-<<<<<<< HEAD
-=======
     // Check if productData is FormData (for multipart uploads with files)
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     if (productData instanceof FormData) {
       return apiRequest('/products', {
         method: 'POST',
         body: productData,
-<<<<<<< HEAD
         skipContentType: true,
       });
     }
 
-=======
-        skipContentType: true, // Let browser set Content-Type with boundary
-      });
-    }
-    
-    // Otherwise, send as JSON
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
     return apiRequest('/products', {
       method: 'POST',
       body: JSON.stringify(productData),
