@@ -243,7 +243,7 @@ const FilterBar = ({
   onClearAll,
   sorting,
   hasActiveFilters,
-  activeFilterCount: _activeFilterCount,
+  activeFilterCount,
 }: FilterBarProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
 

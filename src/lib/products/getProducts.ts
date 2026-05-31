@@ -1,5 +1,5 @@
-﻿import type { ProductCardItem } from '@/types';
-import { createClient } from '@/lib/supabase/server';
+﻿import { createClient } from '@/lib/supabase/server';
+import type { ProductCardItem } from '@/types';
 
 export type GetProductsParams = {
   page?: number;
@@ -23,6 +23,58 @@ type DbMedia = {
 type DbProductRow = {
   id: string;
   seller_id: string;
+  title: string;
+  description: string | null;
+  price: number | string | null;
+  rating: number | null;
+  created_at: string | null;
+  categories: DbCategory | DbCategory[];
+  product_media: DbMedia[] | null;
+};
+
+function pickCategoryName(cat: DbCategory | DbCategory[]): string {
+  if (!cat) return 'Geral';
+  const single = Array.isArray(cat) ? cat[0] : cat;
+  return single?.name ?? 'Geral';
+}
+
+function pickCoverUrl(media: DbMedia[] | null): string | undefined {
+  if (!media || media.length === 0) return undefined;
+  const sorted = [...media]
+    .filter(Boolean)
+    .sort((a, b) => (a?.position ?? 0) - (b?.position ?? 0));
+  const preview = sorted.find((m) => m?.is_preview) ?? sorted[0];
+  return preview?.url ?? undefined;
+}
+
+export async function getProducts({
+  page = 1,
+  limit = 12,
+  sort = 'newest',
+  search = '',
+  categorySlug = '',
+  minPrice = 0,
+  maxPrice = Infinity,
+  minRating = 0,
+}: GetProductsParams = {}) {
+  const supabase = await createClient();
+
+  let categoryId: string | null = null;
+  if (categorySlug) {
+    const { data: cat } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', categorySlug)
+      .maybeSingle();
+    categoryId = cat?.id ?? null;
+  }
+
+  let q = supabase
+    .from('products')
+    .select(
+      `
+        id,
+        seller_id,
         title,
         description,
         price,
@@ -38,7 +90,6 @@ type DbProductRow = {
   if (search) q = q.ilike('title', `%${search}%`);
   if (categoryId) q = q.eq('category_id', categoryId);
   if (Number.isFinite(minRating) && minRating > 0) q = q.gte('rating', minRating);
-
   if (Number.isFinite(minPrice) && minPrice > 0) q = q.gte('price', minPrice);
   if (Number.isFinite(maxPrice)) q = q.lte('price', maxPrice);
 
@@ -68,7 +119,7 @@ type DbProductRow = {
     createdAt: p.created_at ?? undefined,
     rating: typeof p.rating === 'number' ? p.rating : undefined,
     userId: p.seller_id,
-  });
+  }));
 
   return { products, total: count ?? products.length, page, limit };
 }
