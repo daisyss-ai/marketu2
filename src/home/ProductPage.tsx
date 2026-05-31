@@ -1,9 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { Loader, Package } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Header from '../components/layout/Header';
-import { Heart, Star, Package, Loader } from 'lucide-react';
 
 interface Product {
   id: string;
