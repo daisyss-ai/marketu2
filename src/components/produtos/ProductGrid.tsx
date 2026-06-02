@@ -1,10 +1,10 @@
 'use client';
-import React from 'react';
+import type { CSSProperties } from 'react';
 import ProductCard from './ProductCard';
-import { Product } from '../../types';
+import type { ProductCardItem } from '../../types';
 
 interface ProductGridProps {
-  products: Product[];
+  products: ProductCardItem[];
   loading?: boolean;
   error?: string | null;
   totalProducts?: number;
@@ -95,7 +95,7 @@ const ProductGrid = ({
             className="animate-fade-in"
             style={{
               animation: 'fadeIn 0.3s ease-in-out',
-            } as React.CSSProperties}
+            } as CSSProperties}
           >
             <ProductCard
               product={product}

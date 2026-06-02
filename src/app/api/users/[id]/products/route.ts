@@ -8,56 +8,55 @@ function toNumber(v: string | null, fallback: number) {
 }
 
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { id: userId } = await params;
+    const { searchParams } = new URL(request.url);
     const supabase = await createClient();
-    const userId = params.id;
 
     const page = Math.max(1, toNumber(searchParams.get('page'), 1));
     const limit = Math.min(48, Math.max(1, toNumber(searchParams.get('limit'), 12)));
 
-    let q = supabase
+    const { data: products, error, count } = await supabase
       .from('products')
-      .select('id,title,description,price,created_at', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .eq('seller_id', userId)
-      .eq('is_active', true);
-
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    const { data, error, count } = await q.range(from, to);
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      console.error('Error fetching products:', error);
+      return NextResponse.json({
+        data: {
+          products: [],
+          pagination: { page, limit, total: 0, pages: 0 },
+        },
+      });
     }
 
-    const products = (data || []).map((p) => ({
-      id: p.id,
-      title: p.title,
-      description: p.description,
-      price: p.price,
-      created_at: p.created_at,
-    }));
+    const total = count || 0;
 
     return NextResponse.json({
-      products,
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        pages: Math.ceil((count || 0) / limit),
+      data: {
+        products: products || [],
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Erro ao buscar produtos' },
-      { status: 500 }
-    );
+    console.error('Error fetching vendor products:', error);
+    return NextResponse.json({
+      data: {
+        products: [],
+        pagination: { page: 1, limit: 12, total: 0, pages: 0 },
+      },
+    });
   }
 }

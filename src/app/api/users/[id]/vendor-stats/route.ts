@@ -2,44 +2,72 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: userId } = await params;
     const supabase = await createClient();
-    const userId = params.id;
 
-    // Get total products
+    const { data: user, error: userError } = await supabase
+      .from('students')
+      .select('is_seller, rating, total_reviews')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !user) {
+      return NextResponse.json({
+        data: {
+          rating: 0,
+          total_reviews: 0,
+          total_products: 0,
+          total_orders: 0,
+          total_revenue: 0,
+        },
+      });
+    }
+
+    if (!user.is_seller) {
+      return NextResponse.json({
+        data: {
+          rating: user.rating || 0,
+          total_reviews: user.total_reviews || 0,
+          total_products: 0,
+          total_orders: 0,
+          total_revenue: 0,
+        },
+      });
+    }
+
     const { count: totalProducts } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
       .eq('seller_id', userId);
 
-    // Get active products
-    const { count: activeProducts } = await supabase
-      .from('products')
+    const { count: totalOrders } = await supabase
+      .from('orders')
       .select('*', { count: 'exact', head: true })
-      .eq('seller_id', userId)
-      .eq('is_active', true);
+      .eq('seller_id', userId);
 
-    // Get total sales (sum of prices of sold products)
-    const { data: soldProducts } = await supabase
-      .from('products')
-      .select('price')
+    const { data: revenueData } = await supabase
+      .from('orders')
+      .select('total_amount')
       .eq('seller_id', userId)
-      .eq('is_active', false);
+      .eq('status', 'confirmed');
 
-    const totalSales = (soldProducts || []).reduce((acc, p) => acc + (p.price || 0), 0);
+    const totalRevenue = revenueData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
 
     return NextResponse.json({
-      totalProducts: totalProducts || 0,
-      activeProducts: activeProducts || 0,
-      totalSales,
+      data: {
+        rating: user.rating || 0,
+        total_reviews: user.total_reviews || 0,
+        total_products: totalProducts || 0,
+        total_orders: totalOrders || 0,
+        total_revenue: totalRevenue,
+      },
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Erro ao buscar estatísticas' },
-      { status: 500 }
-    );
+    console.error('Error fetching vendor stats:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

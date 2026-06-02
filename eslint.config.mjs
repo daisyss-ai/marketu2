@@ -8,11 +8,22 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+<<<<<<< HEAD
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
+=======
     },
   },
   // Override default ignores of eslint-config-next.
+>>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "dist/**",
     "out/**",

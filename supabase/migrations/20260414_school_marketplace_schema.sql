@@ -113,7 +113,7 @@ CREATE TABLE products (
   price NUMERIC(10,2) DEFAULT 0.00,
   is_free BOOLEAN DEFAULT false,
   is_active BOOLEAN DEFAULT true,
-  is_approved BOOLEAN DEFAULT false,
+  is_approved BOOLEAN DEFAULT true,
   rating NUMERIC(3,2) DEFAULT 0.00,
   total_reviews INT DEFAULT 0,
   total_sales INT DEFAULT 0,
