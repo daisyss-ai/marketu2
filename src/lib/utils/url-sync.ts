@@ -6,7 +6,7 @@
 
 import { PAGINATION, URL_PARAMS } from '@/lib/constants/search';
 import { SearchQuery, SortOption, URLSearchParams as URLSearchParamsType } from '@/types/search';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect } from 'react';
 
 /**
@@ -111,7 +111,6 @@ export function useURLSync(
   query: SearchQuery,
   onQueryChange: (query: SearchQuery) => void
 ) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Sincronizar URL quando query muda

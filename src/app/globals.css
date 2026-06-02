@@ -9,7 +9,7 @@
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --surface: #FFFFFF;
-  --muted: oklch(0.97 0 0);
+  --muted: oklch(0.45 0 0);
   --success: #166534;
   --error: #B91C1C;
   --warning: #92400E;

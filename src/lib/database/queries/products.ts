@@ -154,7 +154,7 @@ export async function searchProducts(query: SearchQuery) {
   }
 
   return {
-    products: data as SearchResult[],
+    products: data as unknown as SearchResult[],
     total: count || 0,
   };
 }
@@ -181,16 +181,14 @@ export async function getSuggestions(searchTerm: string, limit: number = 5) {
     .from('products')
     .select('category')
     .ilike('category', `${sanitizedTerm}%`)
-    .limit(5)
-    .distinct();
+    .limit(5);
 
   // Buscar subjects que começam com termo
   const { data: subjects } = await supabase
     .from('products')
     .select('subject')
     .ilike('subject', `${sanitizedTerm}%`)
-    .limit(5)
-    .distinct();
+    .limit(5);
 
   return {
     titles: [...new Set(titles?.map((t) => t.title) || [])],
@@ -296,7 +294,7 @@ export async function getProductDetail(productId: string | number) {
     );
   }
 
-  return data as Product;
+  return data as unknown as Product;
 }
 
 /**
@@ -324,7 +322,7 @@ export async function getUserProducts(userId: string, page: number = 1, limit: n
   }
 
   return {
-    products: data as SearchResult[],
+    products: data as unknown as SearchResult[],
     total: count || 0,
   };
 }
@@ -353,7 +351,7 @@ export async function getFeaturedProducts(limit: number = 12) {
     );
   }
 
-  return data as SearchResult[];
+  return data as unknown as SearchResult[];
 }
 
 /**
@@ -398,5 +396,5 @@ export async function getTrendingProducts(limit: number = 10, days: number = 7) 
     );
   }
 
-  return data as SearchResult[];
+  return data as unknown as SearchResult[];
 }

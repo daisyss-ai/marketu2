@@ -33,7 +33,7 @@ export function tokenizeQuery(query: string): string[] {
  * - TF: frequência do termo no documento
  * - IDF: inverso da frequência do termo em todos os documentos
  */
-function calculateTFIDF(
+export function calculateTFIDF(
   term: string,
   documentText: string,
   totalDocuments: number,
@@ -292,7 +292,7 @@ export function mergeRankedProducts(
  * Sumarizar factors em human-readable format
  */
 export function summarizeRankingFactors(factors: SearchRankingFactors): string {
-  const components = [];
+  const components: string[] = [];
 
   if (factors.titleMatch > 50) {
     components.push(`título (${factors.titleMatch.toFixed(0)}%)`);

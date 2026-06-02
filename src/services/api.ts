@@ -1,8 +1,8 @@
 import type {
-  ProductSearchOptions,
-  ProductSearchResponse,
-  ProductSuggestion,
-  ProductSuggestionOptions,
+    ProductSearchOptions,
+    ProductSearchResponse,
+    ProductSuggestion,
+    ProductSuggestionOptions,
 } from '../types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -52,18 +52,27 @@ async function apiRequest(endpoint: string, options: any = {}) {
     }
 
     if (!response.ok) {
-      const error = new Error(getErrorMessage(data, rawText)) as any;
+      const error = new Error(getErrorMessage(data, rawText)) as Error & {
+        status?: number;
+        data?: unknown;
+      };
       error.status = response.status;
       error.data = data;
       throw error;
     }
 
-    if (data === null || data === undefined) return {};
-    if (data && typeof data === 'object' && 'data' in data) return data.data || data;
-    return data;
+    if (data === null || data === undefined) {
+      return {};
+    }
 
+    if (data && typeof data === 'object' && 'data' in data) {
+      return data.data ?? data;
+    }
+
+    return data;
   } catch (error: any) {
-    console.error('API Error:', error?.message || error);
+    const errorMessage = error?.message || error?.error || 'Erro desconhecido';
+    console.error('API Error:', errorMessage, error);
     throw error;
   }
 }
@@ -134,9 +143,17 @@ export const productsAPI = {
 
   createProduct: (productData: any) => {
     if (productData instanceof FormData) {
-      return apiRequest('/products', { method: 'POST', body: productData, skipContentType: true });
+      return apiRequest('/products', {
+        method: 'POST',
+        body: productData,
+        skipContentType: true,
+      });
     }
-    return apiRequest('/products', { method: 'POST', body: JSON.stringify(productData) });
+
+    return apiRequest('/products', {
+      method: 'POST',
+      body: JSON.stringify(productData),
+    });
   },
 
   updateProduct: (productId: string, data: any) =>
@@ -199,7 +216,9 @@ export const cartAPI = {
 
 export const createSampleProducts = async () => {
   try {
-    return apiRequest('/products/dev-seed', { method: 'POST' });
+    return apiRequest('/products/dev-seed', {
+      method: 'POST',
+    });
   } catch (err) {
     console.error('Error creating sample products:', err);
     throw err;

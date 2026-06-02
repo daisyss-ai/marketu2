@@ -9,41 +9,40 @@ export async function GET(
     const { id: userId } = await params;
     const supabase = await createClient();
 
-    // Get product count and stats
-    const { data: products, error: productsError } = await supabase
-      .from('products')
-      .select('rating, total_reviews')
-      .eq('seller_id', userId);
+    const [
+      { data: products, error: productsError },
+      { count: completedSales, error: ordersError },
+    ] = await Promise.all([
+      supabase
+        .from('products')
+        .select('id, rating, total_reviews, total_sales')
+        .eq('seller_id', userId)
+        .eq('is_active', true),
+      supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('seller_id', userId)
+        .eq('status', 'delivered'),
+    ]);
 
     if (productsError) throw productsError;
-
-    const productCount = products?.length || 0;
-    const avgRating =
-      products && products.length > 0
-        ? products.reduce((sum, p) => sum + (p.rating || 0), 0) / products.length
-        : 0;
-    const reviewCount = products?.reduce((sum, p) => sum + (p.total_reviews || 0), 0) || 0;
-
-    // Get completed sales count
-    const { count: completedSales, error: ordersError } = await supabase
-      .from('orders')
-      .select('*', { count: 'exact', head: true })
-      .eq('seller_id', userId)
-      .eq('status', 'completed');
-
     if (ordersError) throw ordersError;
 
-    // Calculate positive rating percentage
-    const positiveRating =
-      reviewCount === 0 ? '0%' : `${Math.round((avgRating / 5) * 100)}%`;
+    const productCount = products?.length || 0;
+    const reviewCount = products?.reduce((sum, p) => sum + (p.total_reviews || 0), 0) || 0;
+    const ratingSum = products?.reduce((sum, p) => sum + (p.rating || 0) * (p.total_reviews || 0), 0) || 0;
+    const avgRating = reviewCount > 0 ? ratingSum / reviewCount : 0;
+    const totalSales = products?.reduce((sum, p) => sum + (p.total_sales || 0), 0) || 0;
+    const positiveRating = reviewCount === 0 ? '0%' : `${Math.round((avgRating / 5) * 100)}%`;
 
     return NextResponse.json({
       data: {
         stats: {
-          avgRating,
+          avgRating: Math.round(avgRating * 10) / 10,
           reviewCount,
           productCount,
           completedSales: completedSales || 0,
+          totalSales,
           positiveRating,
         },
       },
@@ -57,6 +56,7 @@ export async function GET(
           reviewCount: 0,
           productCount: 0,
           completedSales: 0,
+          totalSales: 0,
           positiveRating: '0%',
         },
       },

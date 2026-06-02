@@ -1,14 +1,84 @@
 'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect } from 'react';
-import { ShoppingCart, ChevronDown } from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
 import type { Route } from 'next';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useEffectEvent, useState } from 'react';
+import { ChevronDown, ShoppingCart } from 'lucide-react';
+import { logout } from '@/app/auth/actions';
 import ProductSearchBar from '../search/ProductSearchBar';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
-import { logout } from '@/app/auth/actions';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
+
+function SavedProductsLink() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchCount = async () => {
+      try {
+        const supabase = createBrowserClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          if (isMounted) {
+            setCount(0);
+          }
+          return;
+        }
+
+        const { count: savedCount, error } = await supabase
+          .from('saved_products')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (error) {
+          setCount(0);
+          return;
+        }
+
+        setCount(savedCount ?? 0);
+      } catch {
+        if (isMounted) {
+          setCount(0);
+        }
+      }
+    };
+
+    const handleSavedProductsChanged = () => {
+      void fetchCount();
+    };
+
+    void fetchCount();
+    window.addEventListener('saved-products-changed', handleSavedProductsChanged);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('saved-products-changed', handleSavedProductsChanged);
+    };
+  }, []);
+
+  return (
+    <Link
+      href="/orders"
+      className="relative group focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-full p-2"
+      aria-label="Ver carrinho"
+    >
+      <ShoppingCart className="w-6 h-6 text-muted group-hover:text-primary transition-colors" />
+      <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-error text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
+        {count}
+      </span>
+    </Link>
+  );
+}
 
 const Header = () => {
   const router = useRouter();
@@ -29,15 +99,19 @@ const Header = () => {
     else params.delete('search');
     params.delete('page');
 
-    const targetPath = (pathname === '/' ? '/home' : pathname) as Route;
+    const targetPath = ((pathname || '/') === '/' ? '/home' : pathname) as Route;
     const qs = params.toString();
     router.push((qs ? `${targetPath}?${qs}` : targetPath) as Route, { scroll: false });
   };
 
+  const pushSearchEffect = useEffectEvent((nextValue: string) => {
+    navigateToSearch(nextValue);
+  });
+
   useEffect(() => {
     if (debouncedSearch.trim() === currentSearch.trim()) return;
-    navigateToSearch(debouncedSearch);
-  }, [debouncedSearch]);
+    pushSearchEffect(debouncedSearch);
+  }, [currentSearch, debouncedSearch]);
 
   return (
     <div>
@@ -90,10 +164,7 @@ const Header = () => {
                 Vender
               </Link>
             )}
-            <button className="relative group focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-full p-2" aria-label="Ver carrinho">
-              <ShoppingCart className="w-6 h-6 text-muted group-hover:text-primary transition-colors" />
-              <span className="absolute -top-1 -right-1 bg-error text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">0</span>
-            </button>
+            <SavedProductsLink />
           </div>
         </div>
       </header>

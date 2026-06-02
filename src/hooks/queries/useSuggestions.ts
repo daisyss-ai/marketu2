@@ -23,7 +23,7 @@ import { useEffect, useRef, useState } from 'react';
  */
 export function useSuggestions(searchTerm: string): UseQueryResult<SuggestionItem[]> {
   const [debouncedTerm, setDebouncedTerm] = useState('');
-  const debounceTimeout = useRef<NodeJS.Timeout>();
+  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Implementar debounce
   useEffect(() => {
@@ -51,7 +51,7 @@ export function useSuggestions(searchTerm: string): UseQueryResult<SuggestionIte
       }
 
       const data = await response.json();
-      return data.suggestions || [];
+      return data?.data?.suggestions || data?.suggestions || [];
     },
     // Só executar query se term tem length mínimo
     enabled: debouncedTerm.length >= SEARCH.MIN_QUERY_LENGTH,
@@ -76,7 +76,7 @@ export function useSuggestionsRaw(searchTerm: string): UseQueryResult<Suggestion
       }
 
       const data = await response.json();
-      return data.suggestions || [];
+      return data?.data?.suggestions || data?.suggestions || [];
     },
     enabled: searchTerm.length >= SEARCH.MIN_QUERY_LENGTH,
     ...queryConfigs.suggestions,

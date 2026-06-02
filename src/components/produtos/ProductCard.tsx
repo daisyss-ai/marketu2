@@ -1,9 +1,11 @@
 'use client';
 import { useState } from 'react';
 import type { MouseEvent } from 'react';
+import Image from 'next/image';
 import { Heart, Bookmark } from 'lucide-react';
 import { ReviewStats } from '@/components/reviews/ReviewStats';
 import type { ProductCardItem } from '../../types';
+import AddToCartButton from './AddToCartButton';
 
 interface ProductCardProps {
   product: ProductCardItem;
@@ -40,6 +42,11 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
       <div className="group bg-surface rounded-2xl border border-muted/10 p-4 relative flex flex-col h-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer focus-within:ring-4 focus-within:ring-primary/10">
         {/* image + favorite */}
         <div className="relative mb-4 overflow-hidden rounded-xl bg-muted/5 aspect-[4/3]">
+          <AddToCartButton
+            productId={String(product.id)}
+            sellerId={typeof product.userId === 'string' ? product.userId : null}
+            className="absolute top-3 left-3 z-10"
+          />
           <button
             aria-label={isFavorited ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
             onClick={handleFavoriteClick}
@@ -52,10 +59,12 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
             />
           </button>
 
-          <img
+          <Image
             src={product.img || '/assets/placeholder-product.png'}
             alt={product.title}
-            className="w-full h-full object-cover rounded-xl group-hover:scale-110 transition-transform duration-500"
+            fill
+            sizes="(max-width: 768px) 100vw, 25vw"
+            className="rounded-xl object-cover transition-transform duration-500 group-hover:scale-110"
           />
         </div>
 

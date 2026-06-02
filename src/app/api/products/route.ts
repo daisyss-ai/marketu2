@@ -1,138 +1,58 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createClient as createSupabaseClient } from '../../../utils/supabase/server';
-import { mockProducts } from './_mock';
-import {
-  applyDatabaseFilters,
-  applyDatabaseSorting,
-  buildSearchMeta,
-  mapProductRow,
-  parseProductQuery,
-  searchProductsInMemory,
-  searchProductsWithRpc,
-} from './_search';
+import { getProducts } from '@/lib/products/getProducts';
 
-function isSupabaseConfigured() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+function getParam(params: URLSearchParams, key: string): string {
+  return (params.get(key) ?? '').trim();
 }
 
-function buildLegacyPayload(products: unknown[], meta: ReturnType<typeof buildSearchMeta>) {
-  return {
-    products,
-    total: meta.pagination.total,
-    page: meta.pagination.page,
-    limit: meta.pagination.limit,
-    totalPages: meta.pagination.totalPages,
-    hasNextPage: meta.pagination.hasNextPage,
-    hasPrevPage: meta.pagination.hasPrevPage,
-    sort: meta.sort,
-    appliedFilters: meta.appliedFilters,
-    search: meta.search,
-    meta,
-  };
-}
-
-const productListSelect = [
-  'id',
-  'title',
-  'category',
-  'price',
-  'description',
-  'condition',
-  'location',
-  'subject',
-  'grade_level',
-  'product_type',
-  'seller',
-  'img',
-  'rating',
-  'total_reviews',
-  'reviews',
-  'user_id',
-  'created_at',
-].join(',');
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-
-  if (typeof error === 'object' && error !== null && 'message' in error) {
-    const message = Reflect.get(error, 'message');
-    if (typeof message === 'string' && message.trim()) {
-      return message;
-    }
-  }
-
-  return String(error);
+function getNumParam(params: URLSearchParams, key: string): number | undefined {
+  const v = Number(params.get(key));
+  return Number.isFinite(v) && v > 0 ? v : undefined;
 }
 
 export async function GET(request: NextRequest) {
-  const query = parseProductQuery(request.nextUrl.searchParams);
+  const p = request.nextUrl.searchParams;
 
-  if (!isSupabaseConfigured()) {
-    const result = searchProductsInMemory(mockProducts, query);
-    return NextResponse.json({ data: buildLegacyPayload(result.products, result.meta) }, { status: 200 });
-  }
+  const page = Math.max(1, Number(p.get('page') ?? 1));
+  const limit = Math.min(48, Math.max(1, Number(p.get('limit') ?? 12)));
+  const search = getParam(p, 'search');
+  const category = getParam(p, 'category');
+  const minPrice = getNumParam(p, 'minPrice');
+  const maxPrice = getNumParam(p, 'maxPrice');
+  const minRating = getNumParam(p, 'rating');
 
-  const supabase = await createSupabaseClient();
+  const sortRaw = getParam(p, 'sort');
+  const sort =
+    sortRaw === 'price_asc' || sortRaw === 'price_desc' || sortRaw === 'rating'
+      ? sortRaw
+      : 'newest';
 
   try {
-    if (query.search) {
-      try {
-        const result = await searchProductsWithRpc(supabase, query);
-        return NextResponse.json({ data: buildLegacyPayload(result.products, result.meta) }, { status: 200 });
-      }catch {
-        let fallbackQuery = supabase
-        .from('products_search_view')
-        .select(productListSelect, { count: 'exact' });
+    const result = await getProducts({
+      page,
+      limit,
+      sort,
+      search: search || undefined,
+      categorySlug: category || undefined,
+      minPrice,
+      maxPrice,
+      minRating,
+    });
 
-        fallbackQuery = applyDatabaseFilters(fallbackQuery, query, { includeSearch: false });
-
-        fallbackQuery = fallbackQuery.ilike('title', `%${query.search}%`);
-          
-        fallbackQuery = applyDatabaseSorting(fallbackQuery, query);
-
-        const initialMeta = buildSearchMeta(query, 0);
-        fallbackQuery = fallbackQuery.range(initialMeta.pagination.offset, initialMeta.pagination.to - 1);
-
-        const { data, error, count } = await fallbackQuery;
-
-        if (error) {
-          throw error;
-        }
-
-        const products = (data || []).map(mapProductRow);
-        const resolvedMeta = buildSearchMeta(query, count || 0);
-        return NextResponse.json({ data: buildLegacyPayload(products, resolvedMeta) }, { status: 200 });
-      }
-    }
-
-    let dbQuery = supabase.from('products_search_view').select(productListSelect, { count: 'exact' });
-    dbQuery = applyDatabaseFilters(dbQuery, query);
-    dbQuery = applyDatabaseSorting(dbQuery, query);
-
-    const meta = buildSearchMeta(query, 0);
-    dbQuery = dbQuery.range(meta.pagination.offset, meta.pagination.to - 1);
-
-    const { data, error, count } = await dbQuery;
-
-    if (error) {
-      throw error;
-    }
-
-    const products = (data || []).map(mapProductRow);
-    const resolvedMeta = buildSearchMeta(query, count || 0);
-
-    return NextResponse.json({ data: buildLegacyPayload(products, resolvedMeta) }, { status: 200 });
-  } catch (error: unknown) {
-    const message = getErrorMessage(error);
-
-    if (message.toLowerCase().includes('does not exist') || message.toLowerCase().includes('relation')) {
-      const result = searchProductsInMemory(mockProducts, query);
-      return NextResponse.json({ data: buildLegacyPayload(result.products, result.meta) }, { status: 200 });
-    }
-
-    console.error('[API /products] Erro não tratado:', JSON.stringify(error, null, 2));
-    return NextResponse.json({ error: message || 'Erro interno ao pesquisar produtos' }, { status: 500 });
+    return NextResponse.json({
+      data: {
+        products: result.products,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: Math.max(1, Math.ceil(result.total / result.limit)),
+        hasNextPage: result.page * result.limit < result.total,
+        hasPrevPage: result.page > 1,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erro interno';
+    console.error('[API /products]', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

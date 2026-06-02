@@ -1,12 +1,35 @@
 export type ProductType = 'physical' | 'digital' | 'service';
+export type ProductEntityType = 'physical' | 'digital' | 'service';
+export type ProductConditionEntity = 'new' | 'used' | 'digital';
 export type ProductCondition = 'new' | 'used' | 'digital';
 export type ModerationStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Product {
+  id: string | number;
+  title: string;
+  category: string;
+  price: number | string;
+  seller: string;
+  img: string;
+  statusColor?: string;
+  description?: string;
+  condition?: string;
+  location?: string;
+  subject?: string;
+  gradeLevel?: number;
+  productType?: 'material' | 'servico';
+  rating?: number;
+  reviews?: number;
+  createdAt?: string;
+  userId?: string;
+  searchScore?: number;
+}
+
+export interface ProductEntity {
   id: string;
   seller_id: string;
   category_id: string | null;
-  type: ProductType;
+  type: ProductEntityType;
   title: string;
   description: string | null;
   price: number | null;
@@ -39,7 +62,7 @@ export interface ProductStock {
   updated_at: string;
 }
 
-export interface ProductWithDetails extends Product {
+export interface ProductWithDetails extends ProductEntity {
   preview_url: string | null;
   stock: number | null;
   moderation_status: ModerationStatus | null;
@@ -50,7 +73,7 @@ export interface ProductFormData {
   title: string;
   description: string;
   category_id: string;
-  condition: ProductCondition;
+  condition: ProductConditionEntity;
   price: number;
   is_free: boolean;
   quantity: number;

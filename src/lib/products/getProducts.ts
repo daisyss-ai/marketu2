@@ -1,5 +1,5 @@
-import type { ProductCardItem } from '@/types';
 import { createClient } from '@/lib/supabase/server';
+import type { ProductCardItem } from '@/types';
 
 export type GetProductsParams = {
   page?: number;
@@ -22,6 +22,7 @@ type DbMedia = {
 
 type DbProductRow = {
   id: string;
+  seller_id: string;
   title: string;
   description: string | null;
   price: number | string | null;
@@ -83,6 +84,7 @@ export async function getProducts(params: GetProductsParams) {
     .select(
       `
         id,
+        seller_id,
         title,
         description,
         price,
@@ -129,6 +131,7 @@ export async function getProducts(params: GetProductsParams) {
     createdAt: p.created_at ?? undefined,
     rating: typeof p.rating === 'number' ? p.rating : null,
     total_reviews: typeof p.total_reviews === 'number' ? p.total_reviews : 0,
+    userId: p.seller_id,
   }));
 
   return { products, total: count ?? products.length, page, limit };

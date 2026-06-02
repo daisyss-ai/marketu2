@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient as createSupabaseClient } from '../../../../utils/supabase/server';
 import { mockProducts } from '../_mock';
-import { buildPortugueseSearchQuery, getSuggestionsFromProducts, mapProductRow } from '../_search';
+import { getSuggestionsFromProducts, mapProductRow } from '../_search';
 
 function isSupabaseConfigured() {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);

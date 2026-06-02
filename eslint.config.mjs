@@ -5,10 +5,9 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-
-  // 👇 ADICIONA ESTE BLOCO
   {
     rules: {
+      "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {
@@ -18,8 +17,6 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-
-  // Ignores
   globalIgnores([
     ".next/**",
     "dist/**",

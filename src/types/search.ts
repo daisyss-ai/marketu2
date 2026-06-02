@@ -1,12 +1,6 @@
 /**
  * @file Search & Filter Types
- * @description Tipos compartilhados para todo o sistema de busca
- * Tipagem forte, imutável, validável
  */
-
-// ============================================================================
-// ENUMS (Definições constantes)
-// ============================================================================
 
 export enum SortOption {
   RELEVANCE = 'relevance',
@@ -36,10 +30,6 @@ export enum Location {
   ONLINE = 'Online',
 }
 
-// ============================================================================
-// FILTER TYPES
-// ============================================================================
-
 export interface PriceRange {
   min: number;
   max: number;
@@ -64,10 +54,6 @@ export interface FilterOption {
   count?: number;
 }
 
-// ============================================================================
-// SEARCH TYPES
-// ============================================================================
-
 export interface SearchQuery {
   search: string | null;
   filters: Omit<FilterState, 'search' | 'sort'>;
@@ -77,12 +63,12 @@ export interface SearchQuery {
 }
 
 export interface SearchRankingFactors {
-  titleMatch: number;      // 0-100: relevância do título
-  descriptionMatch: number; // 0-50: relevância da descrição
-  popularity: number;       // 0-30: visualizações/vendas
-  recency: number;          // 0-20: produtos recentes
-  rating: number;           // 0-20: classificação
-  category: number;         // 0-20: match de categoria
+  titleMatch: number;
+  descriptionMatch: number;
+  popularity: number;
+  recency: number;
+  rating: number;
+  category: number;
 }
 
 export interface RankedProduct {
@@ -90,10 +76,6 @@ export interface RankedProduct {
   score: number;
   factors: SearchRankingFactors;
 }
-
-// ============================================================================
-// PAGINATION TYPES
-// ============================================================================
 
 export interface PaginationState {
   page: number;
@@ -109,10 +91,6 @@ export interface CursorPagination {
   limit: number;
 }
 
-// ============================================================================
-// API REQUEST/RESPONSE TYPES
-// ============================================================================
-
 export interface SearchRequest {
   query: SearchQuery;
 }
@@ -123,14 +101,23 @@ export interface SearchResult {
   price: number;
   category: string;
   image: string;
-  condition: ProductCondition;
-  location: Location;
+  description?: string;
+  condition: ProductCondition | string;
+  location: Location | string;
+  productType?: ProductType | string;
+  gradeLevel?: number;
+  subject?: string;
   rating: number;
   reviewCount: number;
+  views?: number;
+  sales?: number;
   createdAt: string;
+  updatedAt?: string;
   sellerId: string;
-  score?: number; // ranking score
+  score?: number;
 }
+
+export type Product = SearchResult;
 
 export interface SearchResponse {
   success: boolean;
@@ -159,10 +146,6 @@ export interface SuggestionItem {
   icon?: string;
 }
 
-// ============================================================================
-// FACETS (para filtering dinâmico)
-// ============================================================================
-
 export interface FacetOptions {
   categories: FilterOption[];
   conditions: FilterOption[];
@@ -172,10 +155,6 @@ export interface FacetOptions {
   locations: FilterOption[];
   priceRanges: FilterOption[];
 }
-
-// ============================================================================
-// CACHE TYPES
-// ============================================================================
 
 export interface CacheMetadata {
   timestamp: number;
@@ -188,10 +167,6 @@ export interface CachedSearchResult {
   result: SearchResponse;
   metadata: CacheMetadata;
 }
-
-// ============================================================================
-// ERROR TYPES
-// ============================================================================
 
 export class SearchError extends Error {
   constructor(
@@ -212,10 +187,6 @@ export enum SearchErrorCode {
   RATE_LIMIT = 'RATE_LIMIT',
   NOT_FOUND = 'NOT_FOUND',
 }
-
-// ============================================================================
-// URL SYNC TYPES
-// ============================================================================
 
 export interface URLSearchParams {
   page?: string;

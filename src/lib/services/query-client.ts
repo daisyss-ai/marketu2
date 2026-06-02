@@ -61,17 +61,17 @@ export function createQueryClient(): QueryClient {
          * Refetch quando componente fica em focus
          * Útil para dados que mudam frequentemente
          */
-        refetchOnWindowFocus: 'stale',
+        refetchOnWindowFocus: true,
 
         /**
          * Refetch quando reconectar internet
          */
-        refetchOnReconnect: 'stale',
+        refetchOnReconnect: true,
 
         /**
          * Refetch quando componente montar (e dados são stale)
          */
-        refetchOnMount: 'stale',
+        refetchOnMount: true,
 
         /**
          * Evitar refetch duplicado em componentes irmãos
