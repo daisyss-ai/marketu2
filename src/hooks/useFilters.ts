@@ -1,15 +1,16 @@
-﻿'use client';
-
+'use client';
+ 
 import type { Route } from 'next';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { FilterState, ProductSort } from '../types';
-
+import { useCallback, useEffect, useState } from 'react';
+import { productsAPI } from '../services/api';
+import type { FilterState, Product, ProductSearchOptions, ProductSort } from '../types';
+ 
 type SearchParamsLike = Pick<URLSearchParams, 'get'>;
-
+ 
 function getInitialFilters(searchParams: SearchParamsLike): FilterState {
   const productTypeRaw = searchParams.get('productType');
-
+ 
   return {
     condition: searchParams.get('condition') || null,
     priceMin: searchParams.get('priceMin') ? parseInt(searchParams.get('priceMin') || '0', 10) : 0,
@@ -24,44 +25,64 @@ function getInitialFilters(searchParams: SearchParamsLike): FilterState {
     location: searchParams.get('location') || null,
   };
 }
-
+ 
+function buildSearchOptions(filters: FilterState, sort: ProductSort, page: number): ProductSearchOptions {
+  return {
+    page,
+    limit: 12,
+    sort,
+    condition: filters.condition,
+    category: filters.category,
+    minPrice: filters.priceMin > 0 ? filters.priceMin : undefined,
+    maxPrice: Number.isFinite(filters.priceMax) ? filters.priceMax : undefined,
+    rating: filters.rating,
+    search: filters.search || undefined,
+    gradeLevel: filters.gradeLevel,
+    subject: filters.subject,
+    productType: filters.productType,
+    location: filters.location,
+  };
+}
+ 
 export const useFilters = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  const filters = useMemo(() => getInitialFilters(searchParams), [searchParams]);
-  const sorting = useMemo<ProductSort>(() => {
-    const sortParam = searchParams.get('sort');
-    return sortParam === 'relevance' ||
-      sortParam === 'price_asc' ||
-      sortParam === 'price_desc' ||
-      sortParam === 'rating'
-      ? sortParam
-      : 'newest';
-  }, [searchParams]);
-  const page = useMemo(
-    () => (searchParams.get('page') ? parseInt(searchParams.get('page') || '1', 10) : 1),
-    [searchParams]
-  );
+ 
+  const [filters, setFilters] = useState<FilterState>(() => getInitialFilters(searchParams));
+  const [sorting, setSorting] = useState<ProductSort>((searchParams.get('sort') as ProductSort) || 'newest');
+  const [page, setPage] = useState(searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1);
+ 
+  // FIX: these were declared but never returned — components using useFilters had no access to them
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+ 
   const [favorites, setFavorites] = useState<(string | number)[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('marketu_favorites');
       return saved ? JSON.parse(saved) : [];
     }
-
     return [];
   });
-
+ 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('marketu_favorites', JSON.stringify(favorites));
-  }, [favorites]);
-
+    const nextFilters = getInitialFilters(searchParams);
+    setFilters((prev) => (JSON.stringify(prev) === JSON.stringify(nextFilters) ? prev : nextFilters));
+ 
+    const nextSort = (searchParams.get('sort') as ProductSort) || 'newest';
+    setSorting((prev) => (prev === nextSort ? prev : nextSort));
+ 
+    const nextPage = searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1;
+    setPage((prev) => (prev === nextPage ? prev : nextPage));
+  }, [searchParams]);
+ 
   const updateURL = useCallback(
     (nextFilters: FilterState, nextSort: ProductSort, nextPage: number) => {
       const params = new URLSearchParams();
-
+ 
       if (nextFilters.condition) params.set('condition', nextFilters.condition);
       if (nextFilters.category) params.set('category', nextFilters.category);
       if (nextFilters.priceMin > 0) params.set('priceMin', String(nextFilters.priceMin));
@@ -74,45 +95,61 @@ export const useFilters = () => {
       if (nextFilters.location) params.set('location', nextFilters.location);
       if (nextSort !== 'newest') params.set('sort', nextSort);
       if (nextPage > 1) params.set('page', String(nextPage));
-
+ 
       const query = params.toString();
       const href = (query ? `${pathname}?${query}` : pathname) as Route;
       router.push(href, { scroll: false });
     },
     [pathname, router]
   );
-
-  const handleFilterChange = useCallback(
-    (filterType: keyof FilterState, value: FilterState[keyof FilterState]) => {
-      updateURL({ ...filters, [filterType]: value }, sorting, 1);
-    },
-    [filters, sorting, updateURL]
-  );
-
-  const handlePriceChange = useCallback(
-    (min: number, max: number) => {
-      updateURL({ ...filters, priceMin: min, priceMax: max }, sorting, 1);
-    },
-    [filters, sorting, updateURL]
-  );
-
-  const handleSortChange = useCallback(
-    (newSort: string) => {
-      updateURL(filters, newSort as ProductSort, 1);
-    },
-    [filters, updateURL]
-  );
-
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      if (typeof window !== 'undefined') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      updateURL(filters, sorting, newPage);
-    },
-    [filters, sorting, updateURL]
-  );
-
+ 
+  const fetchProducts = useCallback(async (nextFilters: FilterState, nextSort: ProductSort, nextPage: number) => {
+    setLoading(true);
+    setError(null);
+ 
+    try {
+      const response = await productsAPI.listProducts(buildSearchOptions(nextFilters, nextSort, nextPage));
+ 
+      setProducts(Array.isArray(response?.products) ? response.products : []);
+      setTotalProducts(typeof response?.total === 'number' ? response.total : 0);
+      setTotalPages(typeof response?.totalPages === 'number' ? response.totalPages : 1);
+    } catch (err: unknown) {
+      console.error('Error fetching products:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao carregar produtos. Tente novamente.');
+      setProducts([]);
+      setTotalProducts(0);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+ 
+  useEffect(() => {
+    fetchProducts(filters, sorting, page);
+    updateURL(filters, sorting, page);
+  }, [fetchProducts, filters, sorting, page, updateURL]);
+ 
+  const handleFilterChange = useCallback((filterType: keyof FilterState, value: FilterState[keyof FilterState]) => {
+    setFilters((prev) => ({ ...prev, [filterType]: value }));
+    setPage(1);
+  }, []);
+ 
+  const handlePriceChange = useCallback((min: number, max: number) => {
+    updateURL({ ...filters, priceMin: min, priceMax: max }, sorting, 1);
+  }, [filters, sorting, updateURL]);
+ 
+  const handleSortChange = useCallback((newSort: string) => {
+    setSorting(newSort as ProductSort);
+    setPage(1);
+  }, []);
+ 
+  const handlePageChange = useCallback((newPage: number) => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    updateURL(filters, sorting, newPage);
+  }, [filters, sorting, updateURL]);
+ 
   const handleClearAllFilters = useCallback(() => {
     updateURL(
       {
@@ -130,35 +167,31 @@ export const useFilters = () => {
       'newest',
       1
     );
+    setSorting('newest');
+    setPage(1);
   }, [updateURL]);
-
-  const handleClearFilter = useCallback(
-    (filterType: keyof FilterState) => {
-      updateURL(
-        {
-          ...filters,
-          [filterType]:
-            filterType === 'priceMin' || filterType === 'priceMax'
-              ? filterType === 'priceMin'
-                ? 0
-                : Infinity
-              : filterType === 'search'
-                ? ''
-                : null,
-        },
-        sorting,
-        1
-      );
-    },
-    [filters, sorting, updateURL]
-  );
-
+ 
+  const handleClearFilter = useCallback((filterType: keyof FilterState) => {
+    setFilters((prev) => ({
+      ...prev,
+      [filterType]:
+        filterType === 'priceMin' || filterType === 'priceMax'
+          ? filterType === 'priceMin'
+            ? 0
+            : Infinity
+          : filterType === 'search'
+            ? ''
+            : null,
+    }));
+    setPage(1);
+  }, []);
+ 
   const handleToggleFavorite = useCallback((productId: string | number) => {
     setFavorites((prev) =>
       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
     );
   }, []);
-
+ 
   const hasActiveFilters = useCallback(() => {
     return (
       filters.condition !== null ||
@@ -173,7 +206,7 @@ export const useFilters = () => {
       filters.priceMax !== Infinity
     );
   }, [filters]);
-
+ 
   const getActiveFilterCount = useCallback(() => {
     let count = 0;
     if (filters.condition) count++;
@@ -187,12 +220,20 @@ export const useFilters = () => {
     if (filters.priceMin > 0 || filters.priceMax !== Infinity) count++;
     return count;
   }, [filters]);
-
+ 
   return {
+    // State — FIX: previously missing from return object
+    products,
+    loading,
+    error,
+    totalProducts,
+    totalPages,
+    // Filter state
     filters,
     sorting,
     page,
     favorites,
+    // Handlers
     handleFilterChange,
     handlePriceChange,
     handleSortChange,

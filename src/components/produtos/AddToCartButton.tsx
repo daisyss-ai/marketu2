@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Loader2, ShoppingCart } from 'lucide-react';
 import { saveProductAction, unsaveProductAction } from '@/app/actions/saved';
 import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
-import { cn } from '@/lib/utils';
+import { Loader2, ShoppingCart } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 type AuthState = 'loading' | 'guest' | 'ready';
 

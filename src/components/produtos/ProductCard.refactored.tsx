@@ -6,7 +6,8 @@
 'use client';
 
 import { SearchResult } from '@/types/search';
-import { Bookmark, MapPin, Star } from 'lucide-react';
+import { ReviewStats } from '@/components/reviews/ReviewStats';
+import { Bookmark, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { memo } from 'react';
 
@@ -70,12 +71,16 @@ const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
             <span>{product.location}</span>
           </div>
 
-          <div className="flex items-center text-xs text-muted font-medium gap-1">
-            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-            <span>
-              {product.rating.toFixed(1)} ({product.reviewCount})
-            </span>
-          </div>
+          {product.reviewCount > 0 ? (
+            <ReviewStats
+              size="sm"
+              stats={{
+                average: product.rating,
+                total: product.reviewCount,
+                distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+              }}
+            />
+          ) : null}
         </div>
       </div>
     </Link>

@@ -1,8 +1,8 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
 import type { OrderStatus } from '@/lib/orders/getOrders';
+import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 
 type ProductForOrder = {
   id: string;

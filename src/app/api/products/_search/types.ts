@@ -64,6 +64,7 @@ export type ProductRow = {
   grade_level?: number | null;
   product_type?: 'material' | 'servico' | null;
   rating?: number | null;
+  total_reviews?: number | null;
   reviews?: number | null;
   created_at?: string | null;
   user_id?: string | null;

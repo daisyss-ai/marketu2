@@ -28,7 +28,11 @@ function getErrorMeta(error: unknown): { name?: string; code?: string } {
 }
 
 export async function GET(
+<<<<<<< HEAD
+  _request: Request,
+=======
   request: Request,
+>>>>>>> main
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -66,6 +70,12 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error fetching user profile:', error);
+<<<<<<< HEAD
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+=======
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -121,5 +131,6 @@ export async function PUT(
   } catch (error) {
     console.error('Unexpected error updating user profile', getErrorMeta(error));
     return NextResponse.json({ error: 'Erro ao atualizar perfil' }, { status: 500 });
+>>>>>>> main
   }
 }

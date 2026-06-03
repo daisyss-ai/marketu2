@@ -42,9 +42,7 @@ const Sell = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  
 
   useEffect(() => {
     let active = true;

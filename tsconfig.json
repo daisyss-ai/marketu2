@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -22,16 +18,16 @@
     "noFallthroughCasesInSwitch": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
+    "ignoreDeprecations": "6.0",
     "useDefineForClassFields": true,
+    "baseUrl": ".",
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*", "./*"]
     }
   },
   "include": [
@@ -41,14 +37,12 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.mts",
+    "**/*.mts",
     "dist/types/**/*.ts",
     "dist/dev/types/**/*.ts",
     "./dist/types/**/*.ts",
-    "./dist/dev/types/**/*.ts"
+    "./dist/dev/types/**/*.ts",
+    "./src"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".next"
-  ]
+  "exclude": ["node_modules", "dist", ".next"]
 }

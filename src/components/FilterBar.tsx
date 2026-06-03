@@ -1,5 +1,4 @@
 'use client';
-
 import { ChevronDown, LucideIcon, SlidersHorizontal, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { FilterOption, FilterState } from '../types';
@@ -258,7 +257,7 @@ const FilterBar = ({
               className="bg-surface border-2 border-muted/10 hover:border-primary/30 rounded-full px-5 py-2.5 text-xs text-foreground font-semibold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all flex items-center gap-2"
             >
               <SlidersHorizontal className="w-4 h-4" />
-              Filtros {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
+              Filtros {_activeFilterCount > 0 ? `(${_activeFilterCount})` : ''}
             </button>
 
             {hasActiveFilters && (

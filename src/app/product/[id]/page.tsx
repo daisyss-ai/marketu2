@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import ProductPage from '../../../home/ProductPage';
+import { ProductReviews } from '@/components/reviews/ProductReviews';
 import { createClient } from '@/lib/supabase/server';
 import { getProductDetail } from '@/lib/products/getProductDetail';
 
@@ -19,5 +20,10 @@ export default async function Page({ params }: ProductPageRouteProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return <ProductPage product={product} currentUserId={user?.id ?? null} />;
+  return (
+    <>
+      <ProductPage product={product} currentUserId={user?.id ?? null} />
+      <ProductReviews productId={product.id} />
+    </>
+  );
 }

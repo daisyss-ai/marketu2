@@ -1,4 +1,4 @@
-﻿import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import type { ProductCardItem } from '@/types';
 
 export type GetProductsParams = {
@@ -27,6 +27,8 @@ type DbProductRow = {
   description: string | null;
   price: number | string | null;
   rating: number | null;
+  total_reviews: number | null;
+  is_approved?: boolean | null;
   created_at: string | null;
   categories: DbCategory | DbCategory[];
   product_media: DbMedia[] | null;
@@ -79,6 +81,7 @@ export async function getProducts({
         description,
         price,
         rating,
+        total_reviews,
         created_at,
         categories(name,slug),
         product_media(url,position,media_type,is_preview)
@@ -117,7 +120,8 @@ export async function getProducts({
     statusColor: 'bg-green-400',
     description: p.description ?? undefined,
     createdAt: p.created_at ?? undefined,
-    rating: typeof p.rating === 'number' ? p.rating : undefined,
+    rating: typeof p.rating === 'number' ? p.rating : null,
+    total_reviews: typeof p.total_reviews === 'number' ? p.total_reviews : 0,
     userId: p.seller_id,
   }));
 

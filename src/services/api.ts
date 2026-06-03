@@ -1,8 +1,8 @@
 import type {
-  ProductSearchOptions,
-  ProductSearchResponse,
-  ProductSuggestion,
-  ProductSuggestionOptions,
+    ProductSearchOptions,
+    ProductSearchResponse,
+    ProductSuggestion,
+    ProductSuggestionOptions,
 } from '../types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -22,15 +22,11 @@ const getErrorMessage = (data: any, rawText: string): string => {
 
 async function apiRequest(endpoint: string, options: any = {}) {
   const token = getToken();
-  const headers: any = {
-    ...options.headers,
-  };
+  const headers: any = { ...options.headers };
 
-  // Only set Content-Type if not explicitly skipped (for FormData uploads)
   if (!options.skipContentType) {
     headers['Content-Type'] = 'application/json';
   }
-
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -51,8 +47,7 @@ async function apiRequest(endpoint: string, options: any = {}) {
         : rawText
           ? { data: rawText }
           : null;
-    } catch (parseError) {
-      console.error('JSON Parse Error:', parseError, rawText);
+    } catch {
       data = { data: rawText };
     }
 
@@ -84,59 +79,30 @@ async function apiRequest(endpoint: string, options: any = {}) {
 
 export const authAPI = {
   verifyStudent: (studentData: any) =>
-    apiRequest('/auth/verify-student', {
-      method: 'POST',
-      body: JSON.stringify(studentData),
-    }),
-
+    apiRequest('/auth/verify-student', { method: 'POST', body: JSON.stringify(studentData) }),
   signup: (credentials: any) =>
-    apiRequest('/auth/signup', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    }),
-
+    apiRequest('/auth/signup', { method: 'POST', body: JSON.stringify(credentials) }),
   login: (credentials: any) =>
-    apiRequest('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    }),
-
+    apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
   logout: () =>
-    apiRequest('/auth/logout', {
-      method: 'POST',
-    }),
-
+    apiRequest('/auth/logout', { method: 'POST' }),
   getCurrentUser: () =>
-    apiRequest('/auth/me', {
-      method: 'GET',
-    }),
+    apiRequest('/auth/me', { method: 'GET' }),
 };
 
 export const usersAPI = {
   getUserProfile: (userId: string) =>
-    apiRequest(`/users/${userId}`, {
-      method: 'GET',
-    }),
-
+    apiRequest(`/users/${userId}`, { method: 'GET' }),
   getVendorStats: (userId: string) =>
-    apiRequest(`/users/${userId}/vendor-stats`, {
-      method: 'GET',
-    }),
-
+    apiRequest(`/users/${userId}/vendor-stats`, { method: 'GET' }),
   updateProfile: (userId: string, data: any) =>
-    apiRequest(`/users/${userId}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
-
+    apiRequest(`/users/${userId}`, { method: 'PUT', body: JSON.stringify(data) }),
   getVendorProducts: (userId: string, options: any = {}) => {
     const params = new URLSearchParams();
     if (options.page) params.append('page', options.page);
     if (options.limit) params.append('limit', options.limit);
-    const queryString = params.toString();
-    return apiRequest(`/users/${userId}/products${queryString ? '?' + queryString : ''}`, {
-      method: 'GET',
-    });
+    const qs = params.toString();
+    return apiRequest(`/users/${userId}/products${qs ? '?' + qs : ''}`, { method: 'GET' });
   },
 };
 
@@ -148,9 +114,8 @@ export const productsAPI = {
     if (options.category) params.append('category', options.category);
     if (options.condition) params.append('condition', options.condition);
     if (typeof options.minPrice === 'number') params.append('minPrice', String(options.minPrice));
-    if (typeof options.maxPrice === 'number' && Number.isFinite(options.maxPrice)) {
+    if (typeof options.maxPrice === 'number' && Number.isFinite(options.maxPrice))
       params.append('maxPrice', String(options.maxPrice));
-    }
     if (typeof options.rating === 'number') params.append('rating', String(options.rating));
     if (options.search) params.append('search', options.search);
     if (options.gradeLevel) params.append('gradeLevel', String(options.gradeLevel));
@@ -158,31 +123,25 @@ export const productsAPI = {
     if (options.productType) params.append('productType', options.productType);
     if (options.location) params.append('location', options.location);
     if (options.sort) params.append('sort', options.sort);
-
-    const queryString = params.toString();
-    return apiRequest(`/products${queryString ? '?' + queryString : ''}`, {
-      method: 'GET',
-    }) as Promise<ProductSearchResponse>;
+    const qs = params.toString();
+    return apiRequest(`/products${qs ? '?' + qs : ''}`, { method: 'GET' }) as Promise<ProductSearchResponse>;
   },
 
   suggest: (query: string, options: ProductSuggestionOptions & { signal?: AbortSignal } = {}) => {
     const params = new URLSearchParams();
     if (query) params.append('q', query);
     if (options.limit) params.append('limit', String(options.limit));
-    const queryString = params.toString();
-    return apiRequest(`/products/suggest${queryString ? '?' + queryString : ''}`, {
+    const qs = params.toString();
+    return apiRequest(`/products/suggest${qs ? '?' + qs : ''}`, {
       method: 'GET',
       signal: options.signal,
     }) as Promise<{ suggestions: ProductSuggestion[] }>;
   },
 
   getProduct: (productId: string) =>
-    apiRequest(`/products/${productId}`, {
-      method: 'GET',
-    }),
+    apiRequest(`/products/${productId}`, { method: 'GET' }),
 
   createProduct: (productData: any) => {
-    // Check if productData is FormData (for multipart uploads with files)
     if (productData instanceof FormData) {
       return apiRequest('/products', {
         method: 'POST',
@@ -198,43 +157,25 @@ export const productsAPI = {
   },
 
   updateProduct: (productId: string, data: any) =>
-    apiRequest(`/products/${productId}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
+    apiRequest(`/products/${productId}`, { method: 'PUT', body: JSON.stringify(data) }),
 
   deleteProduct: (productId: string) =>
-    apiRequest(`/products/${productId}`, {
-      method: 'DELETE',
-    }),
+    apiRequest(`/products/${productId}`, { method: 'DELETE' }),
 };
 
 export const messagesAPI = {
-  listConversations: () =>
-    apiRequest('/messages', {
-      method: 'GET',
-    }),
-
+  listConversations: () => apiRequest('/messages', { method: 'GET' }),
   getConversation: (userId: string, options: any = {}) => {
     const params = new URLSearchParams();
     if (options.page) params.append('page', options.page);
     if (options.limit) params.append('limit', options.limit);
-    const queryString = params.toString();
-    return apiRequest(`/messages/${userId}${queryString ? '?' + queryString : ''}`, {
-      method: 'GET',
-    });
+    const qs = params.toString();
+    return apiRequest(`/messages/${userId}${qs ? '?' + qs : ''}`, { method: 'GET' });
   },
-
   sendMessage: (messageData: any) =>
-    apiRequest('/messages', {
-      method: 'POST',
-      body: JSON.stringify(messageData),
-    }),
-
+    apiRequest('/messages', { method: 'POST', body: JSON.stringify(messageData) }),
   markAsRead: (messageId: string) =>
-    apiRequest(`/messages/${messageId}/read`, {
-      method: 'PUT',
-    }),
+    apiRequest(`/messages/${messageId}/read`, { method: 'PUT' }),
 };
 
 export const reviewsAPI = {
@@ -242,17 +183,11 @@ export const reviewsAPI = {
     const params = new URLSearchParams();
     if (options.page) params.append('page', options.page);
     if (options.limit) params.append('limit', options.limit);
-    const queryString = params.toString();
-    return apiRequest(`/reviews/product/${productId}${queryString ? '?' + queryString : ''}`, {
-      method: 'GET',
-    });
+    const qs = params.toString();
+    return apiRequest(`/reviews/product/${productId}${qs ? '?' + qs : ''}`, { method: 'GET' });
   },
-
   createReview: (productId: string, reviewData: any) =>
-    apiRequest(`/reviews/product/${productId}`, {
-      method: 'POST',
-      body: JSON.stringify(reviewData),
-    }),
+    apiRequest(`/reviews/product/${productId}`, { method: 'POST', body: JSON.stringify(reviewData) }),
 };
 
 export const favoritesAPI = {
@@ -260,45 +195,23 @@ export const favoritesAPI = {
     const params = new URLSearchParams();
     if (options.page) params.append('page', options.page);
     if (options.limit) params.append('limit', options.limit);
-    const queryString = params.toString();
-    return apiRequest(`/favorites${queryString ? '?' + queryString : ''}`, {
-      method: 'GET',
-    });
+    const qs = params.toString();
+    return apiRequest(`/favorites${qs ? '?' + qs : ''}`, { method: 'GET' });
   },
-
   addFavorite: (productId: string) =>
-    apiRequest(`/favorites/${productId}`, {
-      method: 'POST',
-    }),
-
+    apiRequest(`/favorites/${productId}`, { method: 'POST' }),
   removeFavorite: (productId: string) =>
-    apiRequest(`/favorites/${productId}`, {
-      method: 'DELETE',
-    }),
+    apiRequest(`/favorites/${productId}`, { method: 'DELETE' }),
 };
 
 export const cartAPI = {
-  getCart: () =>
-    apiRequest('/cart', {
-      method: 'GET',
-    }),
-
+  getCart: () => apiRequest('/cart', { method: 'GET' }),
   addToCart: (itemData: any) =>
-    apiRequest('/cart', {
-      method: 'POST',
-      body: JSON.stringify(itemData),
-    }),
-
+    apiRequest('/cart', { method: 'POST', body: JSON.stringify(itemData) }),
   updateCartItem: (itemId: string, quantity: number) =>
-    apiRequest(`/cart/${itemId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ quantity }),
-    }),
-
+    apiRequest(`/cart/${itemId}`, { method: 'PUT', body: JSON.stringify({ quantity }) }),
   removeFromCart: (itemId: string) =>
-    apiRequest(`/cart/${itemId}`, {
-      method: 'DELETE',
-    }),
+    apiRequest(`/cart/${itemId}`, { method: 'DELETE' }),
 };
 
 export const createSampleProducts = async () => {

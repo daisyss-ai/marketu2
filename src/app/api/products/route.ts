@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+import { NextResponse, type NextRequest } from 'next/server';
+import { getProducts } from '@/lib/products/getProducts';
+
+function getParam(params: URLSearchParams, key: string): string {
+  return (params.get(key) ?? '').trim();
+=======
 ﻿import { NextResponse, type NextRequest } from 'next/server';
 import { getProducts } from '@/lib/products/getProducts';
 import { createClient } from '@/lib/supabase/server';
@@ -32,31 +39,24 @@ function toNumber(v: string | null, fallback: number) {
 
 function isSupabaseConfigured() {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+>>>>>>> main
 }
 
-function buildLegacyPayload(products: unknown[], meta: ReturnType<typeof buildSearchMeta>) {
-  return {
-    products,
-    total: meta.pagination.total,
-    page: meta.pagination.page,
-    limit: meta.pagination.limit,
-    totalPages: meta.pagination.totalPages,
-    hasNextPage: meta.pagination.hasNextPage,
-    hasPrevPage: meta.pagination.hasPrevPage,
-    sort: meta.sort,
-    appliedFilters: meta.appliedFilters,
-    search: meta.search,
-    meta,
-  };
+function getNumParam(params: URLSearchParams, key: string): number | undefined {
+  const v = Number(params.get(key));
+  return Number.isFinite(v) && v > 0 ? v : undefined;
 }
 
 export async function GET(request: NextRequest) {
-  const query = parseProductQuery(request.nextUrl.searchParams);
+  const p = request.nextUrl.searchParams;
 
-  if (!isSupabaseConfigured()) {
-    const result = searchProductsInMemory(mockProducts, query);
-    return NextResponse.json({ data: buildLegacyPayload(result.products, result.meta) }, { status: 200 });
-  }
+  const page = Math.max(1, Number(p.get('page') ?? 1));
+  const limit = Math.min(48, Math.max(1, Number(p.get('limit') ?? 12)));
+  const search = getParam(p, 'search');
+  const category = getParam(p, 'category');
+  const minPrice = getNumParam(p, 'minPrice');
+  const maxPrice = getNumParam(p, 'maxPrice');
+  const minRating = getNumParam(p, 'rating');
 
   const supabase = await createClient();
 
@@ -112,8 +112,8 @@ export async function GET(request: NextRequest) {
       page,
       limit,
       sort,
-      search,
-      categorySlug: category,
+      search: search || undefined,
+      categorySlug: category || undefined,
       minPrice,
       maxPrice,
       minRating,
@@ -121,23 +121,18 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: {
-        products,
-        total,
-        page,
-        limit,
+        products: result.products,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: Math.max(1, Math.ceil(result.total / result.limit)),
+        hasNextPage: result.page * result.limit < result.total,
+        hasPrevPage: result.page > 1,
       },
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro interno ao pesquisar produtos';
 
-    if (message.toLowerCase().includes('does not exist') || message.toLowerCase().includes('relation')) {
-      const result = searchProductsInMemory(mockProducts, query);
-      return NextResponse.json({ data: buildLegacyPayload(result.products, result.meta) }, { status: 200 });
-    }
-
-    console.error('[API /products] Erro não tratado:', error);
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
 }
 
 export async function POST(req: Request) {
