@@ -13,12 +13,12 @@ function getInitialFilters(searchParams: SearchParamsLike): FilterState {
  
   return {
     condition: searchParams.get('condition') || null,
-    priceMin: searchParams.get('priceMin') ? parseInt(searchParams.get('priceMin')!, 10) : 0,
-    priceMax: searchParams.get('priceMax') ? parseInt(searchParams.get('priceMax')!, 10) : Infinity,
+    priceMin: searchParams.get('priceMin') ? parseInt(searchParams.get('priceMin') || '0', 10) : 0,
+    priceMax: searchParams.get('priceMax') ? parseInt(searchParams.get('priceMax') || '0', 10) : Infinity,
     category: searchParams.get('category') || null,
-    rating: searchParams.get('rating') ? parseInt(searchParams.get('rating')!, 10) : null,
+    rating: searchParams.get('rating') ? parseInt(searchParams.get('rating') || '0', 10) : null,
     search: searchParams.get('search') || '',
-    gradeLevel: searchParams.get('gradeLevel') ? parseInt(searchParams.get('gradeLevel')!, 10) : null,
+    gradeLevel: searchParams.get('gradeLevel') ? parseInt(searchParams.get('gradeLevel') || '0', 10) : null,
     subject: searchParams.get('subject') || null,
     productType:
       productTypeRaw === 'material' || productTypeRaw === 'servico' ? productTypeRaw : null,
@@ -187,13 +187,9 @@ export const useFilters = () => {
   }, []);
  
   const handleToggleFavorite = useCallback((productId: string | number) => {
-    setFavorites((prev) => {
-      const updated = prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('marketu_favorites', JSON.stringify(updated));
-      }
-      return updated;
-    });
+    setFavorites((prev) =>
+      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
+    );
   }, []);
  
   const hasActiveFilters = useCallback(() => {
@@ -249,3 +245,4 @@ export const useFilters = () => {
     getActiveFilterCount,
   };
 };
+

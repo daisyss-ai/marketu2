@@ -85,7 +85,7 @@ export interface ProductCardItem {
   id: string;
   title: string;
   category: string;
-  price: number;
+  price: number | string;
   seller: string;
   img: string;
   statusColor?: string;
@@ -194,3 +194,4 @@ export interface FormOption {
   label: string;
   value: string | number;
 }
+

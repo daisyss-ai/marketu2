@@ -1,196 +1,209 @@
 'use client';
 
-import Image from 'next/image';
-import { useState } from 'react';
-import { Heart, Star } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { Loader, Package } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Header from '../components/layout/Header';
-import InterestButton from '@/components/produtos/InterestButton';
-import type { ProductDetail } from '@/lib/products/getProductDetail';
-import { cn } from '@/lib/utils';
 
-interface ProductPageProps {
-  product: ProductDetail;
-  currentUserId: string | null;
+interface Product {
+  id: string;
+  title: string;
+  description: string;
+  price: number | null;
+  is_free: boolean;
+  type: 'physical_product' | 'digital_material' | 'service';
+  created_at: string;
+  categories: { name: string } | null;
+  product_media: Array<{ url: string; is_preview: boolean; position: number }>;
+  product_stock: { quantity: number } | null;
+  users: { id: string; full_name: string; username: string; avatar_url: string | null; created_at: string } | null;
 }
 
-const placeholderImage = 'https://via.placeholder.com/640x480?text=Produto';
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-AO', {
-    style: 'currency',
-    currency: 'AOA',
-    maximumFractionDigits: 0,
-  }).format(value);
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Hoje';
+  if (days === 1) return 'Há 1 dia';
+  if (days < 30) return `Há ${days} dias`;
+  const months = Math.floor(days / 30);
+  if (months === 1) return 'Há 1 mês';
+  return `Há ${months} meses`;
 }
 
-function formatProductType(type: ProductDetail['type']): string {
-  if (type === 'digital_material') return 'Material digital';
-  if (type === 'physical_product') return 'Produto fisico';
-  return 'Servico';
+function getProductTypeLabel(type: string): string {
+  const typeMap: Record<string, string> = {
+    physical_product: 'Físico',
+    digital_material: 'Digital',
+    service: 'Serviço',
+  };
+  return typeMap[type] || 'Físico';
 }
 
-function formatCreatedAt(value: string | null): string {
-  if (!value) return 'Recentemente';
+const ProductPage = () => {
+  const params = useParams();
+  const router = useRouter();
+  const productId = params?.id as string;
 
-  return new Intl.DateTimeFormat('pt-PT', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(value));
-}
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeImage, setActiveImage] = useState<string>('');
 
-export default function ProductPage({ product, currentUserId }: ProductPageProps) {
-  const galleryImages =
-    product.images.length > 0 ? product.images : [product.previewImage ?? placeholderImage];
-  const [activeImage, setActiveImage] = useState(galleryImages[0] ?? placeholderImage);
+  useEffect(() => {
+    if (!productId) return;
+
+    const fetchProduct = async () => {
+      setLoading(true);
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          id, title, description, price, is_free, type, created_at, seller_id,
+          categories(name, slug),
+          product_media(url, is_preview, position),
+          product_stock(quantity)
+        `)
+        .eq('id', productId)
+        .maybeSingle();
+
+      if (error) console.error('Erro ao buscar produto:', error);
+
+      if (data) {
+        setProduct(data as unknown as Product);
+        const images = (data.product_media as Array<any>) || [];
+        const sortedImages = images.sort((a, b) => (a.position || 0) - (b.position || 0));
+        const mainImage = sortedImages.find((m) => m.is_preview) || sortedImages[0];
+        setActiveImage(mainImage?.url || '');
+      }
+
+      setLoading(false);
+    };
+
+    fetchProduct();
+  }, [productId]);
+
+  if (loading) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Header />
+        <main className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-center h-96">
+          <div className="text-center">
+            <Loader className="w-12 h-12 text-[#4B187C] animate-spin mx-auto mb-4" />
+            <p className="text-gray-600 font-medium">Carregando produto...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Header />
+        <main className="max-w-6xl mx-auto px-6 py-8">
+          <div className="text-center py-20">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Produto não encontrado</h2>
+            <p className="text-gray-500 mb-6">Este produto não está disponível ou foi removido.</p>
+            <button
+              onClick={() => router.push('/home')}
+              className="bg-[#4B187C] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#3E1367] transition-colors"
+            >
+              Voltar para Home
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const images = (product.product_media || []).sort((a, b) => (a.position || 0) - (b.position || 0));
+  const quantity = product.product_stock?.quantity ?? 0;
+  const seller = product.users;
+  const categoryName = product.categories?.name || 'Geral';
+
+  let stockStatus = { text: 'Em stock', color: 'text-green-600' };
+  if (quantity === 0) stockStatus = { text: 'Esgotado', color: 'text-red-600' };
+  else if (quantity <= 3) stockStatus = { text: `Apenas ${quantity} itens em stock`, color: 'text-orange-500' };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen overflow-hidden bg-gray-50 flex flex-col">
       <Header />
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <div className="mb-4 text-xs text-gray-500">
-          Marketplace / Produto / <span className="font-medium text-gray-700">{product.title}</span>
+      <main className="flex-1 overflow-hidden max-w-6xl w-full mx-auto px-6 py-4 flex flex-col">
+        <div className="text-xs text-gray-500 mb-3">
+          {categoryName} / <span className="text-gray-700 font-medium">{product.title}</span>
         </div>
 
-        <div className="grid gap-10 md:grid-cols-2">
-          <div>
-            <div className="group flex items-center justify-center overflow-hidden rounded-2xl bg-white p-4 shadow-md">
-              <Image
-                src={activeImage}
-                alt={product.title}
-                width={640}
-                height={480}
-                className="h-auto w-full rounded-xl object-contain transition-transform duration-300 group-hover:scale-105"
-              />
+        <div className="grid md:grid-cols-2 gap-8 flex-1 min-h-0">
+          <div className="flex flex-col gap-3 min-h-0">
+            <div className="bg-white rounded-2xl shadow-sm flex items-center justify-center overflow-hidden flex-1 min-h-0">
+              {activeImage ? (
+                <img src={activeImage} alt={product.title} className="w-full h-full object-contain p-4" />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-gray-400">
+                  <Package className="w-12 h-12 mb-2" />
+                  <span className="text-sm">Sem imagem</span>
+                </div>
+              )}
             </div>
-
-            <div className="mt-4 grid grid-cols-4 gap-3">
-              {galleryImages.map((src, index) => {
-                const isActive = src === activeImage;
-
-                return (
+            {images.length > 1 && (
+              <div className="grid grid-cols-4 gap-2 flex-shrink-0">
+                {images.map((media) => (
                   <button
-                    type="button"
-                    key={`${src}-${index}`}
-                    onClick={() => setActiveImage(src)}
-                    className={cn(
-                      'h-20 overflow-hidden rounded-xl border-2 bg-white transition-colors hover:border-[#4B187C]',
-                      isActive ? 'border-[#4B187C]' : 'border-gray-200'
-                    )}
+                    key={media.url}
+                    onClick={() => setActiveImage(media.url)}
+                    className={`h-16 rounded-xl border-2 bg-white overflow-hidden hover:border-[#4B187C] transition-colors ${activeImage === media.url ? 'border-[#4B187C]' : 'border-gray-200'}`}
                   >
-                    <Image
-                      src={src}
-                      alt={`${product.title} ${index + 1}`}
-                      width={160}
-                      height={160}
-                      className="h-full w-full object-cover"
-                    />
+                    <img src={media.url} alt="Miniatura" className="w-full h-full object-cover" />
                   </button>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="space-y-5">
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold uppercase text-[#4B187C]">
-                {formatProductType(product.type)}
-              </span>
-              <button
-                aria-label="Favoritar"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:border-red-300 hover:text-red-500"
-              >
-                <Heart className="h-5 w-5" />
-              </button>
-            </div>
-
+          <div className="flex flex-col gap-3 min-h-0 overflow-y-auto">
+            <span className="inline-flex items-center rounded-full bg-purple-100 text-[#4B187C] px-3 py-1 text-xs font-semibold uppercase w-fit">
+              {categoryName}
+            </span>
             <div>
-              <div className="mb-1 flex items-baseline gap-2">
-                <div className="text-3xl font-extrabold text-[#4B187C]">
-                  {formatCurrency(product.price)}
-                </div>
-              </div>
-              <h1 className="text-2xl font-semibold text-gray-900">{product.title}</h1>
-
-              <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
-                <div className="flex items-center gap-0.5 text-yellow-400">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Star key={index} className="h-3 w-3 fill-current" />
-                  ))}
-                </div>
-                <span className="font-medium text-gray-800">{product.rating?.toFixed(1) ?? 'Novo'}</span>
-                <span>({product.totalReviews} avaliacoes)</span>
+              <h1 className="text-xl font-bold text-gray-900 mb-1">{product.title}</h1>
+              <div className="text-2xl font-extrabold text-[#4B187C]">
+                {product.is_free ? 'Gratuito' : `${(product.price ?? 0).toLocaleString('pt-AO')} Kz`}
               </div>
             </div>
-
-            <div className="rounded-2xl border border-purple-100 bg-white p-5 shadow-sm">
-              <div className="text-sm font-medium text-gray-900">Interesse na compra</div>
-              <p className="mt-1 text-sm leading-6 text-gray-600">
-                Manifesta interesse e o vendedor recebe um pedido para confirmar disponibilidade.
-              </p>
-              <InterestButton
-                productId={product.id}
-                sellerId={product.sellerId}
-                currentUserId={currentUserId}
-                className="mt-4"
-              />
-            </div>
-
-            <p className="text-sm leading-relaxed text-gray-600">{product.description}</p>
-
-            <div className="grid gap-4 text-sm md:grid-cols-2">
-              <div className="space-y-2 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-                <div className="flex justify-between gap-4">
-                  <span className="text-gray-500">Tipo</span>
-                  <span className="text-right font-medium text-gray-900">
-                    {formatProductType(product.type)}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span className="text-gray-500">Preco</span>
-                  <span className="text-right font-medium text-gray-900">
-                    {formatCurrency(product.price)}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span className="text-gray-500">Publicado</span>
-                  <span className="text-right font-medium text-gray-900">
-                    {formatCreatedAt(product.createdAt)}
-                  </span>
-                </div>
+            {product.description && (
+              <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{product.description}</p>
+            )}
+            <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm space-y-2 text-sm flex-shrink-0">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Tipo</span>
+                <span className="font-medium text-gray-900">{getProductTypeLabel(product.type)}</span>
               </div>
-
-              <div className="flex flex-col justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  {product.sellerAvatarUrl ? (
-                    <Image
-                      src={product.sellerAvatarUrl}
-                      alt={product.sellerName}
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-10 w-10 rounded-full bg-pink-200" />
-                  )}
-                  <div>
-                    <div className="text-sm font-semibold text-gray-900">{product.sellerName}</div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <Star className="h-3 w-3 text-yellow-400" />
-                      <span>{product.rating?.toFixed(1) ?? 'Sem avaliacoes'} ({product.totalReviews})</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-3 text-xs text-gray-500">Vendedor activo no MarketU</div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Publicado</span>
+                <span className="font-medium text-gray-900">{timeAgo(product.created_at)}</span>
               </div>
             </div>
-
-            <button className="mt-2 w-full rounded-full bg-[#4B187C] py-3 text-sm font-semibold text-white shadow-md transition-colors hover:bg-[#3E1367]">
-              Contatar vendedor
+            <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm flex items-center gap-3 flex-shrink-0">
+              {seller?.avatar_url ? (
+                <img src={seller.avatar_url} alt={seller?.full_name || 'Vendedor'} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-[#EDE7FF] text-[#4B187C] flex items-center justify-center font-bold flex-shrink-0">
+                  {(seller?.username || seller?.full_name || 'V')?.[0]?.toUpperCase()}
+                </div>
+              )}
+              <div>
+                <div className="text-sm font-semibold text-gray-900">{seller?.username || seller?.full_name || 'Vendedor'}</div>
+                <div className="text-xs text-gray-500">Membro desde {seller?.created_at ? new Date(seller.created_at).getFullYear() : '2025'}</div>
+              </div>
+            </div>
+            <button className="w-full bg-[#4B187C] hover:bg-[#3E1367] text-white py-3 rounded-full text-sm font-semibold shadow-md transition-colors flex-shrink-0 mt-auto">
+              Contatar Vendedor
             </button>
           </div>
         </div>
       </main>
     </div>
   );
-}
+};
+
+export default ProductPage;

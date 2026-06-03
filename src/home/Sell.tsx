@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useRouter } from 'next/navigation';
 import { startTransition, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
@@ -214,7 +214,7 @@ const Sell = () => {
         files: uploadedFiles,
       });
 
-      setSuccessMessage('âœ… Produto publicado com sucesso! Redirecionando para a home...');
+      setSuccessMessage('✅ Produto publicado com sucesso! Redirecionando para a home...');
 
       setFormData({
         title: '',
@@ -271,16 +271,16 @@ const Sell = () => {
               error={validationErrors.images || undefined}
               required
             />
-            <p className="text-xs text-gray-500 mt-2">Máximo 5 imagens. Use alta qualidade para melhor visualização.</p>
+            <p className="text-xs text-gray-500 mt-2">MÃ¡ximo 5 imagens. Use alta qualidade para melhor visualizaÃ§Ã£o.</p>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Informações do Produto</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">InformaÃ§Ãµes do Produto</h2>
 
             <FormInput
-              label="Título do Produto"
+              label="TÃ­tulo do Produto"
               name="title"
-              placeholder="Ex: Livro de Cálculo - 1ª Edição"
+              placeholder="Ex: Livro de CÃ¡lculo - 1Âª EdiÃ§Ã£o"
               value={formData.title}
               onChange={handleInputChange}
               error={validationErrors.title || undefined}
@@ -289,16 +289,16 @@ const Sell = () => {
             />
 
             <FormTextarea
-              label="Descrição Detalhada"
+              label="DescriÃ§Ã£o Detalhada"
               name="description"
-              placeholder="Descreva seu produto em detalhes: estado, características, motivo da venda, defeitos (se houver), etc."
+              placeholder="Descreva seu produto em detalhes: estado, caracterÃ­sticas, motivo da venda, defeitos (se houver), etc."
               value={formData.description}
               onChange={handleInputChange}
               error={validationErrors.description || undefined}
               required
               maxLength={500}
               rows={5}
-              hint="Mínimo 20 caracteres, máximo 500"
+              hint="MÃ­nimo 20 caracteres, mÃ¡ximo 500"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -315,20 +315,20 @@ const Sell = () => {
               />
 
               <FormSelect
-                label="Condição"
+                label="CondiÃ§Ã£o"
                 name="condition"
                 value={formData.condition}
                 onChange={handleInputChange}
                 options={conditions}
                 error={validationErrors.condition || undefined}
                 required
-                placeholder="Selecione a condição"
+                placeholder="Selecione a condiÃ§Ã£o"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormInput
-                label="Preço (em Kz)"
+                label="PreÃ§o (em Kz)"
                 name="price"
                 type="number"
                 placeholder="Ex: 5000"
@@ -386,3 +386,4 @@ const Sell = () => {
 };
 
 export default Sell;
+

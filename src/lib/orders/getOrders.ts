@@ -1,4 +1,4 @@
-﻿import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 export type OrderStatus = 'pending' | 'confirmed' | 'delivered' | 'cancelled';
 export type OrderProductType = 'digital_material' | 'service' | 'physical_product';
@@ -58,7 +58,6 @@ export interface OrderParty {
   fullName: string | null;
   avatarUrl: string | null;
 }
-
 export interface BuyerReputation {
   avgRating: number;
   total: number;
@@ -77,7 +76,7 @@ export interface Order {
   items: OrderItem[];
   hasReviewedBuyer: boolean;
   hasReviewedProduct: boolean;
-   buyerReputation: BuyerReputation | null;
+  buyerReputation: BuyerReputation | null;
 }
 
 type RoleField = 'buyer_id' | 'seller_id';
@@ -129,7 +128,6 @@ function mapOrders(
       totalPrice: item.total_price,
       imageUrl: pickPreviewUrl(item.products),
     })),
-    buyerReputation: null,
   }));
 }
 

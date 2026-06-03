@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -25,8 +25,8 @@ interface OrderCardProps {
 
 const productTypeLabels: Record<OrderProductType, string> = {
   digital_material: 'Material digital',
-  service: 'Servico',
-  physical_product: 'Produto fisico',
+  service: 'Serviço',
+  physical_product: 'Produto físico',
 };
 
 const dateFormatter = new Intl.DateTimeFormat('pt-PT', {
@@ -40,15 +40,15 @@ const currencyFormatter = new Intl.NumberFormat('pt-AO', {
   currency: 'AOA',
   maximumFractionDigits: 2,
 });
+
 const BADGE_LABELS: Record<string, string> = {
   paid_fast: '⚡ Pagou rapidamente',
   good_communication: '💬 Boa comunicação',
   punctual: '⏰ Pontual',
   polite: '😊 Educado',
-  trustworthy: '🤝 Confiável',
-  slow_response: '🐢 Lento a responder',
+  trustworthy: '🤝 Lento a responder',
   no_show: '👻 Não apareceu',
-  bad_communication: '📵 Difícil contactar',
+  bad_communication: '🔵 Difícil contactar',
   late: '⌛ Chegou atrasado',
 };
 
@@ -68,6 +68,7 @@ function BuyerReputationBadge({ reputation }: { reputation: { avgRating: number;
     </div>
   );
 }
+
 function formatCurrency(value: number) {
   return currencyFormatter.format(value);
 }
@@ -116,7 +117,7 @@ export default function OrderCard({
       setActionError(null);
       const result = await updateOrderStatusAction(order.id, nextStatus);
       if (!result.success) {
-        setActionError(result.error || 'Nao foi possivel actualizar o pedido.');
+        setActionError(result.error || 'Não foi possível actualizar o pedido.');
         return;
       }
       onStatusUpdated(mode, order.id, nextStatus);
@@ -149,10 +150,10 @@ export default function OrderCard({
               <h2 className="truncate text-base font-semibold text-gray-900 md:text-lg">
                 {firstItem.productTitle}
               </h2>
-             <p className="mt-1 text-sm text-gray-500">{counterpartyName}</p>
-{mode === 'seller' && order.status === 'pending' && order.buyerReputation ? (
-  <BuyerReputationBadge reputation={order.buyerReputation} />
-) : null}
+              <p className="mt-1 text-sm text-gray-500">{counterpartyName}</p>
+              {mode === 'seller' && order.status === 'pending' && order.buyerReputation ? (
+                <BuyerReputationBadge reputation={order.buyerReputation} />
+              ) : null}
               <p className="mt-1 text-sm text-gray-500">
                 Quantidade: {firstItem.quantity} - {formatCurrency(firstItem.unitPrice)}
               </p>
@@ -203,55 +204,36 @@ export default function OrderCard({
                       ✅ Produto avaliado
                     </span>
                   ) : (
-                    <Link
-                      href={`/product/${firstItem.productId}#write-review`}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100"
-                    >
-                      ⭐ Avaliar produto
-                    </Link>
+                    <BuyerReviewForm
+                      orderId={order.id}
+                      productId={firstItem.productId}
+                      sellerId={order.sellerId}
+                    />
                   )
                 ) : null}
 
-                {availableActions.map((nextStatus) => (
+                {availableActions.map((action) => (
                   <button
-                    key={nextStatus}
+                    key={action}
                     type="button"
-                    onClick={() => handleStatusAction(nextStatus)}
                     disabled={isPending}
+                    onClick={() => handleStatusAction(action)}
                     className={cn(
-                      'inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-                      getActionClassName(nextStatus)
+                      'inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50',
+                      getActionClassName(action)
                     )}
                   >
-                    {isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        A actualizar...
-                      </>
-                    ) : (
-                      getActionLabel(nextStatus)
-                    )}
+                    {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                    {getActionLabel(action)}
                   </button>
                 ))}
               </div>
 
               {actionError ? (
-                <p className="text-sm text-red-500">{actionError}</p>
+                <p className="text-sm text-red-600">{actionError}</p>
               ) : null}
             </div>
           </div>
-
-          {mode === 'seller' && order.status === 'delivered' ? (
-            order.hasReviewedBuyer ? (
-              <p className="mt-4 text-xs text-emerald-600 font-medium">✅ Comprador já avaliado</p>
-            ) : (
-              <BuyerReviewForm
-                orderId={order.id}
-                buyerId={order.buyerId}
-                buyerName={order.buyer?.fullName ?? 'Comprador'}
-              />
-            )
-          ) : null}
         </div>
       </div>
     </article>

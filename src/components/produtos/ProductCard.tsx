@@ -1,9 +1,10 @@
 'use client';
-import { useState } from 'react';
-import type { MouseEvent } from 'react';
+
+import { Bookmark, Heart } from 'lucide-react';
 import Image from 'next/image';
-import { Heart, Bookmark } from 'lucide-react';
-import { ReviewStats } from '@/components/reviews/ReviewStats';
+import { useRouter } from 'next/navigation';
+import type { MouseEvent } from 'react';
+import { useState } from 'react';
 import type { ProductCardItem } from '../../types';
 import AddToCartButton from './AddToCartButton';
 
@@ -14,6 +15,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false }: ProductCardProps) => {
+  const router = useRouter();
   const [showToast, setShowToast] = useState(false);
   const isGreen = product.statusColor === 'bg-green-400';
   const ratingValue = typeof product.rating === 'number' ? product.rating : 0;
@@ -29,19 +31,23 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
   const handleFavoriteClick = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     onToggleFavorite(product.id);
     setShowToast(true);
-
-    // Hide toast after 2 seconds
     setTimeout(() => setShowToast(false), 2000);
+  };
+
+  const handleCardClick = () => {
+    router.push(`/product/${product.id}`);
   };
 
   return (
     <>
-      <div className="group bg-surface rounded-2xl border border-muted/10 p-4 relative flex flex-col h-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer focus-within:ring-4 focus-within:ring-primary/10">
-        {/* image + favorite */}
-        <div className="relative mb-4 overflow-hidden rounded-xl bg-muted/5 aspect-[4/3]">
+      <div
+        onClick={handleCardClick}
+        className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex flex-col h-full"
+      >
+        {/* Image area */}
+        <div className="relative aspect-[3/2] bg-gray-100 overflow-hidden">
           <AddToCartButton
             productId={String(product.id)}
             sellerId={typeof product.userId === 'string' ? product.userId : null}
@@ -50,87 +56,67 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
           <button
             aria-label={isFavorited ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
             onClick={handleFavoriteClick}
-            className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-surface/90 backdrop-blur-sm border border-muted/10 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-sm focus:outline-none focus:ring-4 focus:ring-primary/20"
+            className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 shadow-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
           >
             <Heart
               className={`w-5 h-5 transition-all duration-300 ${
-                isFavorited ? 'fill-error text-error scale-110' : 'text-muted hover:text-error'
+                isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500'
               }`}
             />
           </button>
-
           <Image
             src={product.img || '/assets/placeholder-product.png'}
             alt={product.title}
             fill
             sizes="(max-width: 768px) 100vw, 25vw"
-            className="rounded-xl object-cover transition-transform duration-500 group-hover:scale-110"
+            className="w-full h-full object-cover"
           />
         </div>
 
-        {/* meta */}
-        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-widest mb-2">
-          <Bookmark className="w-3 h-3 text-primary" />
-          <span>{product.category}</span>
-        </div>
-        <h3 className="font-bold text-foreground text-sm mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
-          {product.title}
-        </h3>
-
-        {product.description && (
-          <p className="text-xs text-muted line-clamp-2 leading-relaxed mb-3">{product.description}</p>
-        )}
-
-        <div className="flex items-baseline gap-1 mb-3">
-          <span className="text-xl font-black text-foreground tracking-tight">
-            {typeof product.price === 'number' ? product.price.toLocaleString('pt-AO') : product.price}
-          </span>
-          <span className="text-[10px] font-black text-muted uppercase">kzs</span>
-        </div>
-
-        {totalReviews > 0 ? (
-          <ReviewStats
-            size="sm"
-            stats={{
-              average: ratingValue,
-              total: totalReviews,
-              distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-            }}
-            className="mb-3"
-          />
-        ) : null}
-
-        <div className="mt-auto pt-4 flex items-center justify-between border-t border-muted/5">
-          <div className="flex items-center text-xs text-muted font-medium">
-            <span
-              className={`w-2.5 h-2.5 rounded-full mr-2 shadow-sm ${product.statusColor || 'bg-error'}`}
-            />
-            <span className="truncate max-w-[80px]">{product.seller || 'MarketU'}</span>
+        {/* Card body */}
+        <div className="p-4 flex flex-col flex-1">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Bookmark className="w-3 h-3 text-[#4B187C]" />
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              {product.category}
+            </span>
           </div>
-          <span
-            className={`text-[10px] font-bold px-3 py-1 rounded-full shadow-sm ${
-              isGreen ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
-            }`}
-          >
-            {isGreen ? 'Em stock' : 'Poucas unidades'}
-          </span>
+
+          <h3 className="font-bold text-sm text-gray-900 line-clamp-2 mb-2 hover:text-[#4B187C] transition-colors">
+            {product.title}
+          </h3>
+
+          <div className="flex items-baseline gap-1 mb-3">
+            <span className="text-xl font-black text-gray-900">
+              {typeof product.price === 'number' ? product.price.toLocaleString('pt-AO') : product.price}
+            </span>
+            <span className="text-[10px] font-black text-gray-400 uppercase">KZS</span>
+          </div>
+
+          {totalReviews > 0 && (
+            <div className="flex items-center gap-1 mb-3">
+              <span className="text-yellow-400 text-xs">{'★'.repeat(Math.round(ratingValue))}</span>
+              <span className="text-xs text-gray-400">({totalReviews})</span>
+            </div>
+          )}
+
+          <div className="border-t border-gray-100 mt-auto pt-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className={`w-2.5 h-2.5 rounded-full ${isGreen ? 'bg-green-400' : 'bg-orange-400'}`} />
+              <span className="text-xs text-gray-500 font-medium truncate max-w-[80px]">
+                {product.seller || 'MarketU'}
+              </span>
+            </div>
+            <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${isGreen ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-500'}`}>
+              {isGreen ? 'Em stock' : 'Poucas unidades'}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Toast notification */}
       {showToast && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-foreground text-surface px-6 py-3 rounded-full text-sm font-bold shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-4 flex items-center gap-3">
-          {isFavorited ? (
-            <>
-              <span className="text-error">❤️</span> 
-              Adicionado aos favoritos!
-            </>
-          ) : (
-            <>
-              <span>💔</span> 
-              Removido dos favoritos
-            </>
-          )}
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full text-sm font-bold shadow-2xl z-50 flex items-center gap-3">
+          {isFavorited ? '✓ Adicionado aos favoritos!' : '💔 Removido dos favoritos'}
         </div>
       )}
     </>
