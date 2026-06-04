@@ -118,6 +118,7 @@ function mapOrders(
     createdAt: row.created_at,
     hasReviewedBuyer: false,
     hasReviewedProduct: false,
+    buyerReputation: null,
     items: (row.order_items ?? []).map((item) => ({
       id: item.id,
       productId: item.product_id,

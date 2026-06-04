@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 function normalizeAvatarUrl(value: unknown): { url: string | null; error?: string } {
@@ -28,11 +28,7 @@ function getErrorMeta(error: unknown): { name?: string; code?: string } {
 }
 
 export async function GET(
-<<<<<<< HEAD
   _request: Request,
-=======
-  request: Request,
->>>>>>> main
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -40,8 +36,8 @@ export async function GET(
     const supabase = await createClient();
 
     const { data: user, error: userError } = await supabase
-      .from('students')
-      .select(`id, full_name, avatar_url, rating, total_reviews, is_seller`)
+      .from('profiles')
+      .select('id, full_name, avatar_url')
       .eq('id', userId)
       .single();
 
@@ -49,11 +45,10 @@ export async function GET(
       return NextResponse.json({
         data: {
           id: userId,
-          full_name: 'Usuário',
+          full_name: 'Utilizador',
           avatar_url: null,
           rating: 0,
           total_reviews: 0,
-          is_seller: false,
         },
       });
     }
@@ -63,19 +58,10 @@ export async function GET(
         id: user.id,
         full_name: user.full_name,
         avatar_url: user.avatar_url,
-        rating: user.rating,
-        total_reviews: user.total_reviews,
-        is_seller: user.is_seller,
       },
     });
   } catch (error) {
     console.error('Error fetching user profile:', error);
-<<<<<<< HEAD
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-=======
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -116,7 +102,7 @@ export async function PUT(
     }
 
     const { data: user, error } = await supabase
-      .from('users')
+      .from('profiles')
       .update(updates)
       .eq('id', userId)
       .select()
@@ -124,13 +110,12 @@ export async function PUT(
 
     if (error) {
       console.error('Error updating user profile', getErrorMeta(error));
-      return NextResponse.json({ error: 'Erro ao atualizar perfil no banco de dados' }, { status: 500 });
+      return NextResponse.json({ error: 'Erro ao atualizar perfil' }, { status: 500 });
     }
 
     return NextResponse.json(user);
   } catch (error) {
     console.error('Unexpected error updating user profile', getErrorMeta(error));
     return NextResponse.json({ error: 'Erro ao atualizar perfil' }, { status: 500 });
->>>>>>> main
   }
 }
