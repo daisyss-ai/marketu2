@@ -1,25 +1,6 @@
-<<<<<<< HEAD
-import { NextResponse, type NextRequest } from 'next/server';
-import { getProducts } from '@/lib/products/getProducts';
-
-function getParam(params: URLSearchParams, key: string): string {
-  return (params.get(key) ?? '').trim();
-=======
 ﻿import { NextResponse, type NextRequest } from 'next/server';
 import { getProducts } from '@/lib/products/getProducts';
 import { createClient } from '@/lib/supabase/server';
-import { mockProducts } from './_mock';
-import {
-  applyDatabaseFilters,
-  applyDatabaseSorting,
-  buildSearchMeta,
-  mapProductRow,
-  parseProductQuery,
-  searchProductsInMemory,
-  searchProductsWithRpc,
-} from './_search';
-
-export const runtime = 'nodejs';
 
 type CreateProductBody = {
   title?: unknown;
@@ -31,15 +12,8 @@ type CreateProductBody = {
   quantity?: unknown;
 };
 
-function toNumber(v: string | null, fallback: number) {
-  if (!v) return fallback;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function isSupabaseConfigured() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
->>>>>>> main
+function getParam(params: URLSearchParams, key: string): string {
+  return (params.get(key) ?? '').trim();
 }
 
 function getNumParam(params: URLSearchParams, key: string): number | undefined {
@@ -58,57 +32,14 @@ export async function GET(request: NextRequest) {
   const maxPrice = getNumParam(p, 'maxPrice');
   const minRating = getNumParam(p, 'rating');
 
-  const supabase = await createClient();
+  const sortRaw = getParam(p, 'sort');
+  const sort =
+    sortRaw === 'price_asc' || sortRaw === 'price_desc' || sortRaw === 'rating'
+      ? sortRaw
+      : 'newest';
 
   try {
-    if (query.search || query.gradeLevel || query.subject || query.productType || query.location) {
-      try {
-        const result = await searchProductsWithRpc(supabase, query);
-        return NextResponse.json({ data: buildLegacyPayload(result.products, result.meta) }, { status: 200 });
-      } catch {
-        let fallbackQuery = supabase
-          .from('products_search_view')
-          .select('*', { count: 'exact' });
-
-        fallbackQuery = applyDatabaseFilters(fallbackQuery, query, { includeSearch: false });
-
-        if (query.search) {
-          fallbackQuery = fallbackQuery.ilike('title', `%${query.search}%`);
-        }
-
-        fallbackQuery = applyDatabaseSorting(fallbackQuery, query);
-
-        const initialMeta = buildSearchMeta(query, 0);
-        fallbackQuery = fallbackQuery.range(initialMeta.pagination.offset, initialMeta.pagination.to - 1);
-
-        const { data, error, count } = await fallbackQuery;
-
-        if (error) {
-          throw error;
-        }
-
-        const products = (data || []).map(mapProductRow);
-        const resolvedMeta = buildSearchMeta(query, count || 0);
-        return NextResponse.json({ data: buildLegacyPayload(products, resolvedMeta) }, { status: 200 });
-      }
-    }
-
-    const legacySearchParams = request.nextUrl.searchParams;
-    const page = Math.max(1, toNumber(legacySearchParams.get('page'), 1));
-    const limit = Math.min(48, Math.max(1, toNumber(legacySearchParams.get('limit'), 12)));
-    const sortParam = legacySearchParams.get('sort') || 'newest';
-    const sort =
-      sortParam === 'price_asc' || sortParam === 'price_desc' || sortParam === 'rating' || sortParam === 'newest'
-        ? sortParam
-        : 'newest';
-    const search = (legacySearchParams.get('search') || '').trim();
-    const category = (legacySearchParams.get('category') || '').trim();
-    const minRating = Math.max(0, toNumber(legacySearchParams.get('rating'), 0));
-    const minPrice = toNumber(legacySearchParams.get('minPrice'), 0);
-    const maxPriceRaw = legacySearchParams.get('maxPrice');
-    const maxPrice = maxPriceRaw ? toNumber(maxPriceRaw, Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY;
-
-    const { products, total } = await getProducts({
+    const result = await getProducts({
       page,
       limit,
       sort,
@@ -130,9 +61,11 @@ export async function GET(request: NextRequest) {
         hasPrevPage: result.page > 1,
       },
     });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erro interno ao pesquisar produtos';
-
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erro interno';
+    console.error('[API /products]', message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
@@ -211,4 +144,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

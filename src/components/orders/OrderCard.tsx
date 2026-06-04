@@ -198,17 +198,18 @@ export default function OrderCard({
 
             <div className="flex flex-col items-start gap-2 sm:items-end">
               <div className="flex flex-wrap items-center gap-2">
-                {mode === 'buyer' && order.status === 'delivered' ? (
+                 {mode === 'buyer' && order.status === 'delivered' ? (
                   order.hasReviewedProduct ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
                       ✅ Produto avaliado
                     </span>
                   ) : (
-                    <BuyerReviewForm
-                      orderId={order.id}
-                      productId={firstItem.productId}
-                      sellerId={order.sellerId}
-                    />
+                    <Link
+                      href={`/product/${firstItem.productId}#write-review`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100"
+                    >
+                      ⭐ Avaliar produto
+                    </Link>
                   )
                 ) : null}
 
@@ -229,11 +230,23 @@ export default function OrderCard({
                 ))}
               </div>
 
-              {actionError ? (
+            {actionError ? (
                 <p className="text-sm text-red-600">{actionError}</p>
               ) : null}
             </div>
           </div>
+
+          {mode === 'seller' && order.status === 'delivered' ? (
+            order.hasReviewedBuyer ? (
+              <p className="mt-4 text-xs text-emerald-600 font-medium">✅ Comprador já avaliado</p>
+            ) : (
+              <BuyerReviewForm
+                orderId={order.id}
+                buyerId={order.buyerId}
+                buyerName={order.buyer?.fullName ?? 'Comprador'}
+              />
+            )
+          ) : null}
         </div>
       </div>
     </article>

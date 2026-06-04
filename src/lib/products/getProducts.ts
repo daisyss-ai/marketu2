@@ -116,7 +116,7 @@ export async function getProducts({
     category: pickCategoryName(p.categories),
     price: Number(p.price ?? 0),
     seller: 'MarketU',
-    img: pickCoverUrl(p.product_media),
+   img: pickCoverUrl(p.product_media) ?? '',
     statusColor: 'bg-green-400',
     description: p.description ?? undefined,
     createdAt: p.created_at ?? undefined,
