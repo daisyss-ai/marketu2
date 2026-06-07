@@ -4,16 +4,16 @@
 const Footer = () => {
   return (
     <div>
-        <div className="bg-[#4b2a8c] text-white py-24">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+        <div className="bg-[#4b2a8c] text-white py-24 px-20">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="text-left">
-                    <h3 className=" text-white text-xl font-bold mb-4 border-b-2 border-white pb-2">MARKETU</h3>
-                    <p className="text-sm leading-relaxed">O melhor marketplace para os estudantes angolanos comprarem e venderem com confiança.</p>
+                    <h3 className=" text-white text-base font-bold mb-4 border-b border-white pb-2 w-16">MARKETU</h3>
+                    <p className="text-base leading-relaxed">O melhor marketplace para os estudantes angolanos comprarem e venderem com confiança.</p>
                 </div>
 
                  <div className="text-left">
-                        <h3 className=" text-white text-xl font-bold mb-4 border-b-2 border-white pb-2">Links Rápidos</h3>
-                        <ul className="space-y-2  text-sm">
+                        <h3 className=" text-white text-base font-bold mb-4 border-b border-white pb-2 w-16">Links Rápidos</h3>
+                        <ul className="space-y-2  text-base">
                         <li><a href="#">Guia do Vendedor</a></li>
                         <li><a href="#">Como Funciona</a></li>
                         <li><a href="#">Categorias</a></li>
@@ -21,9 +21,9 @@ const Footer = () => {
                     </ul>
                  </div>
                  <div className="text-left">
-                     <h3 className=" text-white text-xl font-bold mb-4 border-b-2 border-white pb-2">Suporte</h3>
+                     <h3 className=" text-white text-base font-bold mb-4 border-b border-white pb-2 w-16">Suporte</h3>
 
-                    <ul className="space-y-2  text-sm">
+                    <ul className="space-y-2  text-base">
                         <li><a href="#">Central de Ajuda</a></li>
                         <li><a href="#">Segurança</a></li>
                         <li><a href="#">Contatos</a></li>
@@ -31,8 +31,8 @@ const Footer = () => {
                     </ul>
                  </div>
                 <div className="text-left">
-                    <h3 className=" text-white text-xl font-bold mb-4 border-b-2 border-white pb-2">Legal</h3>
-                    <ul className="space-y-2  text-sm">
+                    <h3 className=" text-white text-base font-bold mb-4 border-b border-white pb-2 w-16">Legal</h3>
+                    <ul className="space-y-2  text-base">
                         <li><a href="#">Termos de Serviço</a></li>
                         <li><a href="#">Política de Privacidade</a></li>
                         <li><a href="#">Política de Cookies</a></li>

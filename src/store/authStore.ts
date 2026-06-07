@@ -7,6 +7,7 @@ export interface User {
   enrollment_code?: string;
   full_name?: string;
   username?: string | null;
+  course?: string | null;
   phone?: string;
   role?: string;
   status?: string;

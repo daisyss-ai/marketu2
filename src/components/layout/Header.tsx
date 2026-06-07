@@ -69,10 +69,10 @@ function SavedProductsLink() {
   return (
     <Link
       href="/orders"
-      className="relative group focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-full p-2"
+      className="relative group focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-full p-2 hover:bg-[#EDE7FF] transition-all duration-200"
       aria-label="Ver carrinho"
     >
-      <ShoppingCart className="w-6 h-6 text-muted group-hover:text-primary transition-colors" />
+      <ShoppingCart className="w-6 h-6 text-gray-900 transition-colors" />
       <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-error text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
         {count}
       </span>
@@ -114,10 +114,10 @@ const Header = () => {
   }, [currentSearch, debouncedSearch]);
 
   return (
-    <div>
+    <div className="sticky top-0 z-50">
       <div className="w-full h-1 bg-primary" />
-      <header className="w-full bg-surface border-b border-muted/10 shadow-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-row items-center justify-between gap-4 text-foreground">
+      <header className="w-full bg-surface border-b border-muted/10 shadow-sm">
+        <div className="w-full px-20 py-4 flex flex-row items-center justify-between gap-4 text-foreground">
           <Link href="/home" className="flex items-center gap-2 min-w-fit group focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-lg p-1">
             <Image
               src="/assets/marketu-logo.png"
@@ -126,16 +126,10 @@ const Header = () => {
               height={32}
               className="h-8 w-auto transition-transform group-hover:scale-105"
             />
-            <span className="font-black text-2xl text-primary tracking-tight">marketU</span>
+            <span className="font-black text-2xl text-primary tracking-tight">MARKETU</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6 font-semibold">
-            <button className="flex items-center gap-1 text-muted hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-lg px-2 py-1">
-              Categorias <ChevronDown className="w-4 h-4" />
-            </button>
-          </nav>
-
-          <div className="w-full max-w-xl">
+          <div className="flex-1 max-w-4xl">
             <ProductSearchBar
               value={searchValue}
               onChange={setSearchValue}
@@ -145,13 +139,13 @@ const Header = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <Link href="/profile" className="text-sm font-semibold text-muted hover:text-primary transition-colors focus:ring-2 focus:ring-primary/20 rounded-lg px-2 py-1">
+            <Link href="/profile" className="text-base font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all duration-200 focus:ring-2 focus:ring-primary/20 rounded-full px-3 py-1.5">
               Perfil
             </Link>
             <form action={logout}>
               <button
                 type="submit"
-                className="text-sm font-semibold text-muted hover:text-primary transition-colors focus:ring-2 focus:ring-primary/20 rounded-lg px-2 py-1"
+                className="text-base font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all duration-200 focus:ring-2 focus:ring-primary/20 rounded-full px-3 py-1.5"
               >
                 Sair
               </button>
@@ -159,7 +153,7 @@ const Header = () => {
             {pathname !== '/profile' && (
               <Link
                 href="/sell"
-                className="bg-primary text-white px-5 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-all shadow-md active:scale-[0.98] focus:ring-4 focus:ring-primary/30"
+                className="text-base font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all duration-200 focus:ring-2 focus:ring-primary/20 rounded-full px-3 py-1.5"
               >
                 Vender
               </Link>

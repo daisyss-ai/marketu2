@@ -189,6 +189,10 @@ export default function ProductPage({ product, currentUserId }: ProductPageProps
           </div>
         </div>
       </main>
+
+      <ProductSection title="Produtos Relacionados" products={relatedProducts} />
+      <ProductSection title="Mais deste Vendedor" products={sellerProducts} />
+      <Footer />
     </div>
   );
 }

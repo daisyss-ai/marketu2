@@ -44,7 +44,7 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
     <>
       <div
         onClick={handleCardClick}
-        className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex flex-col h-full"
+        className="group overflow-hidden cursor-pointer flex flex-col h-full"
       >
         {/* Image area */}
         <div className="relative aspect-[3/2] bg-gray-100 overflow-hidden">
@@ -87,7 +87,7 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
           </h3>
 
           <div className="flex items-baseline gap-1 mb-3">
-            <span className="text-xl font-black text-gray-900">
+            <span className="text-base font-bold text-gray-900">
               {typeof product.price === 'number' ? product.price.toLocaleString('pt-AO') : product.price}
             </span>
             <span className="text-[10px] font-black text-gray-400 uppercase">KZS</span>
