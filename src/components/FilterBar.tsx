@@ -249,7 +249,7 @@ const FilterBar = ({
 
   return (
     <div className="bg-surface border-b border-muted/10 sticky top-[73px] z-40 backdrop-blur-md bg-surface/80">
-      <div className="max-w-6xl mx-auto px-6 py-4">
+      <div className="w-full px-20 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <div className="md:hidden w-full flex items-center justify-between gap-3">
             <button

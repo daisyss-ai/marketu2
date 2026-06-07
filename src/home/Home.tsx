@@ -1,20 +1,39 @@
 'use client';
 import ProductsFeed from '@/app/home/ProductsFeed';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import ProductCard from '@/components/produtos/ProductCard';
 import { createClient } from '@/lib/supabase/client';
+import type { ProductCardItem } from '@/types';
 import { useRouter } from 'next/navigation';
-import { Suspense, useEffect } from 'react';
-import FilterBar from '../components/FilterBar';
+import { Suspense, useEffect, useState } from 'react';
 import Footer from '../components/layout/Footer';
+import CategoriesNav from '../components/layout/CategoriesNav';
 import Header from '../components/layout/Header';
 import ProductGrid from '../components/produtos/ProductGrid';
 import { useFilters } from '../hooks/useFilters';
 import { useAuthStore } from '../store/authStore';
 
+const CATEGORIES = [
+  { name: 'Material Escolar', color: '#C4B5FD' },
+  { name: 'Tecnologia', color: '#93C5FD' },
+  { name: 'Livros & Apontamentos', color: '#6EE7B7' },
+  { name: 'Roupas & Calçados', color: '#FCA5A5' },
+  { name: 'Saúde & Beleza', color: '#FCD34D' },
+  { name: 'Desporto & Fitness', color: '#A5B4FC' },
+  { name: 'Electrónica', color: '#67E8F9' },
+  { name: 'Serviços', color: '#86EFAC' },
+  { name: 'Outros', color: '#E9D5FF' },
+];
 
 const Home = () => {
-  useRouter();
+  const router = useRouter();
   const login = useAuthStore((state) => state.login);
+  const authUser = useAuthStore((state) => state.user);
+  const [areaProducts, setAreaProducts] = useState<ProductCardItem[]>([]);
+  const [areaLoading, setAreaLoading] = useState(false);
+  const [topSellers, setTopSellers] = useState<any[]>([]);
+  const [followingProducts, setFollowingProducts] = useState<ProductCardItem[]>([]);
+  const [followingLoading, setFollowingLoading] = useState(false);
   
   const {
     filters,
@@ -61,6 +80,12 @@ const Home = () => {
             console.error('Error fetching user data:', userError);
           }
 
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('course')
+            .eq('id', authUser.id)
+            .maybeSingle();
+
           const enrollmentCode =
             userData?.enrollment_code ??
             (authUser.user_metadata as any)?.enrollment_code ??
@@ -79,6 +104,7 @@ const Home = () => {
             role: userData?.role ?? (authUser.user_metadata as any)?.role,
             status: userData?.status ?? undefined,
             institution: (userData as any)?.institution ?? undefined,
+            course: profileData?.course ?? null,
           });
         }
       } catch (err) {
@@ -92,6 +118,102 @@ const Home = () => {
   useEffect(() => {
     console.log('Home component rendered with filters:', filters);
   }, [filters]);
+
+  useEffect(() => {
+    const fetchTopSellers = async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('users')
+        .select('id, full_name, username, avatar_url, banner_url')
+        .not('username', 'is', null)
+        .limit(8);
+      
+      if (data) setTopSellers(data);
+    };
+    fetchTopSellers();
+  }, []);
+
+  useEffect(() => {
+    if (!authUser?.course) return;
+    const fetchAreaProducts = async () => {
+      setAreaLoading(true);
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('products')
+        .select(`
+          id, title, price, is_free, seller_id,
+          categories(name),
+          product_media(url, is_preview, position)
+        `)
+        .eq('is_active', true)
+        .limit(10);
+      
+      if (data) {
+        setAreaProducts(data.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          price: Number(p.price ?? 0),
+          seller: 'MarketU',
+          img: (p.product_media as any[])?.find((m: any) => m.is_preview)?.url 
+            || (p.product_media as any[])?.[0]?.url,
+          category: (Array.isArray(p.categories) 
+            ? p.categories[0]?.name 
+            : (p.categories as any)?.name) || 'Geral',
+          statusColor: 'bg-green-400',
+        })));
+      }
+      setAreaLoading(false);
+    };
+    fetchAreaProducts();
+  }, [authUser?.course]);
+
+  useEffect(() => {
+    if (!authUser?.id) return;
+    const fetchFollowingProducts = async () => {
+      setFollowingLoading(true);
+      const supabase = createClient();
+      
+      const { data: followsData } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', authUser.id);
+      
+      if (!followsData || followsData.length === 0) {
+        setFollowingLoading(false);
+        return;
+      }
+
+      const followingIds = followsData.map((f: any) => f.following_id);
+
+      const { data } = await supabase
+        .from('products')
+        .select(`
+          id, title, price, is_free, seller_id,
+          categories(name),
+          product_media(url, is_preview, position)
+        `)
+        .in('seller_id', followingIds)
+        .eq('is_active', true)
+        .limit(10);
+
+      if (data) {
+        setFollowingProducts(data.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          price: Number(p.price ?? 0),
+          seller: 'MarketU',
+          img: (p.product_media as any[])?.find((m: any) => m.is_preview)?.url
+            || (p.product_media as any[])?.[0]?.url,
+          category: (Array.isArray(p.categories)
+            ? p.categories[0]?.name
+            : (p.categories as any)?.name) || 'Geral',
+          statusColor: 'bg-green-400',
+        })));
+      }
+      setFollowingLoading(false);
+    };
+    fetchFollowingProducts();
+  }, [authUser?.id]);
 
   // Scroll to products when filters change
   useEffect(() => {
@@ -118,42 +240,59 @@ const Home = () => {
     <div className="bg-gray-50 min-h-screen">
       <Header />
 
+      {/* Categories Navigation Section */}
+      <CategoriesNav onCategoryClick={(slug) => handleFilterChange('category', slug)} />
+
       {/* Hero section */}
       <section className="pt-7 pb-6">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="bg-[#EDE7FF] rounded-2xl px-7 py-8 md:py-9 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
-            <div className="text-left max-w-md">
-              <h1 className="text-2xl md:text-3xl font-extrabold text-[#2C1A4A] leading-tight">
-                Faça Parte Do Primeiro Marketplace Para Estudantes
+        <div className="w-full px-10">
+          <div className="bg-[#EDE7FF] px-[32px] py-[80px] flex flex-col items-center justify-center gap-8 shadow-sm h-[424px]">
+            <div className="text-center max-w-md">
+              <h1 className="text-2xl md:text-[50px] font-extrabold text-[#2C1A4A] leading-tight">
+                De Estudante Para Estudante
               </h1>
-              <p className="text-sm text-gray-600 mt-3 mb-5">
-                Compre e venda com segurança entre estudantes — rápido, simples e
-                confiável.
+              <p className="text-2xl text-gray-600 mt-3 mb-5">
+                Encontre tudo o que você precisa para o seu dia a dia no IPIL com preços que cabem no seu bolso.
               </p>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-3">
                 <button
                   onClick={handleCompraJaClick}
-                  className="bg-[#4B187C] hover:bg-[#3E1367] text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm no-underline transition-all duration-200 hover:shadow-lg"
+                  className="bg-[#4B187C] hover:bg-[#3E1367] text-white px-5 py-2.5 rounded-full text-2xl font-semibold shadow-sm no-underline transition-all duration-200 hover:shadow-lg"
                 >
-                  Compra Já
+                  Explorar Produtos
                 </button>
               </div>
-            </div>
-
-            <div className="w-full md:w-auto flex justify-center">
-              <img
-                src="/assets/hero-section-image.png"
-                alt="Estudantes felizes fazendo compras"
-                className="w-full max-w-sm md:max-w-md object-contain"
-              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Filter bar */}
-      <FilterBar
+      <section className="max-w-7xl mx-auto px-4 py-8">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">
+          Explorar Categorias
+        </h2>
+        <div className="grid grid-cols-3 gap-4">
+          {CATEGORIES.map((cat) => (
+            <div key={cat.name} className="relative overflow-hidden cursor-pointer group w-full h-[400px]">
+              {/* Color placeholder instead of image */}
+              <div 
+                className="w-full h-full transition-transform duration-300 group-hover:scale-105"
+                style={{ backgroundColor: cat.color }}
+              />
+              {/* Category button at bottom center */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                <button className="bg-white text-gray-900 font-semibold text-sm px-5 py-2 rounded-full shadow-md hover:bg-[#EDE7FF] hover:text-[#4B187C] transition-colors whitespace-nowrap">
+                  {cat.name}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Filter bar - COMMENTED OUT FOR LATER USE */}
+      {/* <FilterBar
         filters={filters}
         onFilterChange={handleFilterChange}
         onPriceChange={handlePriceChange}
@@ -162,10 +301,10 @@ const Home = () => {
         sorting={sorting}
         hasActiveFilters={hasActiveFilters()}
         activeFilterCount={getActiveFilterCount()}
-      />
+      /> */}
 
       {/* Products section */}
-      <section id="products-section" className="max-w-6xl mx-auto px-6 pb-12 pt-6">
+      <section id="products-section" className="max-w-7xl mx-auto px-4 pb-12 pt-6">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900">
             Produtos em Destaque
@@ -218,6 +357,134 @@ const Home = () => {
           </Suspense>
         </ErrorBoundary>
       </section>
+
+      {authUser?.course && (
+        <section className="max-w-7xl mx-auto px-4 pb-12 pt-6">
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-6">
+            Produtos da sua área
+          </h2>
+          {areaLoading ? (
+            <div className="text-gray-500 text-sm">Carregando...</div>
+          ) : areaProducts.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {areaProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onToggleFavorite={handleToggleFavorite}
+                  isFavorited={favorites.includes(product.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">
+              Nenhum produto encontrado para a tua área.
+            </p>
+          )}
+        </section>
+      )}
+
+      {topSellers.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 pb-12 pt-6">
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-6">
+            Melhores Lojas
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {topSellers.map((seller) => (
+              <div key={seller.id} 
+                className="bg-white border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                
+                {/* Banner */}
+                <div className="h-28 bg-[#EDE7FF] overflow-hidden">
+                  {seller.banner_url ? (
+                    <img 
+                      src={seller.banner_url} 
+                      alt="banner"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-r from-[#4B187C] to-[#6d28b0]" />
+                  )}
+                </div>
+
+                {/* Avatar overlapping banner */}
+                <div className="flex flex-col items-center -mt-8 px-4 pb-4">
+                  <div className="w-16 h-16 rounded-full border-4 border-white overflow-hidden bg-[#EDE7FF] flex items-center justify-center shadow-md">
+                    {seller.avatar_url ? (
+                      <img 
+                        src={seller.avatar_url} 
+                        alt={seller.username}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xl font-bold text-[#4B187C]">
+                        {(seller.username || seller.full_name || 'V')[0].toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="mt-2 font-semibold text-gray-900 text-sm text-center">
+                    {seller.username || seller.full_name}
+                  </p>
+                  
+                  <button
+                    onClick={() => router.push(`/store/${seller.id}`)}
+                    className="mt-3 w-full border border-gray-300 text-gray-700 text-xs font-semibold py-1.5 rounded-full hover:bg-[#EDE7FF] hover:border-[#4B187C] hover:text-[#4B187C] transition-colors"
+                  >
+                    Ver Loja
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {authUser && (
+        <section className="max-w-7xl mx-auto px-4 pb-12 pt-6">
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-6">
+            De quem segues
+          </h2>
+          {followingLoading ? (
+            <div className="text-gray-500 text-sm">Carregando...</div>
+          ) : followingProducts.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {followingProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onToggleFavorite={handleToggleFavorite}
+                  isFavorited={favorites.includes(product.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">
+              Ainda não segues nenhum vendedor. 
+              Explora as lojas e começa a seguir!
+            </p>
+          )}
+        </section>
+      )}
+
+      <section className="w-full bg-[#EDE7FF] py-16 mt-12">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-[#4B187C] font-semibold text-lg mb-2">
+            A tua opinião importa!
+          </p>
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            Ajuda-nos a melhorar o MarketU
+          </h3>
+          <p className="text-gray-600 text-base mb-8 max-w-md mx-auto">
+            Partilha a tua experiência e ajuda outros estudantes a 
+            comprar e vender com mais confiança.
+          </p>
+          <button className="bg-[#4B187C] hover:bg-[#3E1367] text-white font-semibold text-base px-8 py-3 rounded-full transition-colors shadow-md">
+            Dar Feedback
+          </button>
+        </div>
+      </section>
+
       <Footer />
     </div>
   );

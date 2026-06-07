@@ -12,7 +12,7 @@ const Navbar = () => {
   };
 
   return (
-    <div>
+    <div className="sticky top-0 z-50">
       <div className="flex flex-row justify-between p-5 md:px-32 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
         <div>
           <Link href="/" className="font-semibold text-2xl p-1 cursor-pointer">
@@ -50,7 +50,7 @@ const Navbar = () => {
       <div
         className={`${
           menu ? 'translate-x-0 ' : 'translate-x-full'
-        } md:hidden flex flex-col absolute bg-white left-0 top-20 font-medium text-2xl text-center pt-8 pb-4 gap-8 w-full h-fit transition-transform duration-300`}
+        } md:hidden flex flex-col absolute bg-white left-0 top-[80px] font-medium text-2xl text-center pt-8 pb-4 gap-8 w-full h-fit transition-transform duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.2)]`}
       >
         <ScrollLink to="home" spy={true} smooth={true} duration={500} onClick={handleNav} className="hover:text-purple-700">
           Home
