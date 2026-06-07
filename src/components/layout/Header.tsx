@@ -1,15 +1,15 @@
 'use client';
 
-import { logout } from '@/app/auth/actions';
-import { createClient as createBrowserClient } from '@/lib/supabase/client';
-import { ShoppingCart } from 'lucide-react';
-import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Route } from 'next';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useEffectEvent, useState } from 'react';
-import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { ChevronDown, ShoppingCart } from 'lucide-react';
+import { logout } from '@/app/auth/actions';
 import ProductSearchBar from '../search/ProductSearchBar';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
 
 function SavedProductsLink() {
   const [count, setCount] = useState(0);

@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { mockProducts } from '../_mock';
 
@@ -35,12 +35,12 @@ function isSupabaseConfigured() {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
 
-export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
 
   if (!isSupabaseConfigured()) {
     const product = mockProducts.find((item) => String(item.id) === String(id));
-    if (!product) return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 });
+    if (!product) return NextResponse.json({ error: 'Produto nÃ£o encontrado' }, { status: 404 });
     return NextResponse.json({ data: product }, { status: 200 });
   }
 
@@ -85,7 +85,7 @@ export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: st
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!data) return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 });
+  if (!data) return NextResponse.json({ error: 'Produto nÃ£o encontrado' }, { status: 404 });
 
   return NextResponse.json(
     {
@@ -110,14 +110,14 @@ export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: st
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: productId } = await params;
-    if (!productId) return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+    if (!productId) return NextResponse.json({ error: 'ID invÃ¡lido' }, { status: 400 });
 
     const body = (await req.json().catch(() => null)) as PatchBody | null;
 
     const supabase = await createClient();
     const { data: auth, error: authError } = await supabase.auth.getUser();
     if (authError) return NextResponse.json({ error: authError.message }, { status: 401 });
-    if (!auth?.user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    if (!auth?.user) return NextResponse.json({ error: 'NÃ£o autenticado' }, { status: 401 });
 
     const userId = auth.user.id;
 
@@ -128,22 +128,22 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       .maybeSingle();
 
     if (existingError) return NextResponse.json({ error: existingError.message }, { status: 400 });
-    if (!existing?.id) return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 });
-    if (existing.seller_id !== userId) return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
+    if (!existing?.id) return NextResponse.json({ error: 'Produto nÃ£o encontrado' }, { status: 404 });
+    if (existing.seller_id !== userId) return NextResponse.json({ error: 'Sem permissÃ£o' }, { status: 403 });
 
     const updates: Record<string, unknown> = {};
 
     if (body && 'title' in body) {
       const title = String(body.title ?? '').trim();
-      if (!title) return NextResponse.json({ error: 'Título é obrigatório' }, { status: 400 });
-      if (title.length > 100) return NextResponse.json({ error: 'Título deve ter no máximo 100 caracteres' }, { status: 400 });
+      if (!title) return NextResponse.json({ error: 'TÃ­tulo Ã© obrigatÃ³rio' }, { status: 400 });
+      if (title.length > 100) return NextResponse.json({ error: 'TÃ­tulo deve ter no mÃ¡ximo 100 caracteres' }, { status: 400 });
       updates.title = title;
     }
 
     if (body && 'description' in body) {
       const description = String(body.description ?? '').trim();
       if (description.length < 20 || description.length > 500) {
-        return NextResponse.json({ error: 'Descrição deve ter entre 20 e 500 caracteres' }, { status: 400 });
+        return NextResponse.json({ error: 'DescriÃ§Ã£o deve ter entre 20 e 500 caracteres' }, { status: 400 });
       }
       updates.description = description;
     }
@@ -157,7 +157,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       const conditionRaw = body.condition;
       const condition =
         conditionRaw === 'digital' || conditionRaw === 'new' || conditionRaw === 'used' ? conditionRaw : null;
-      if (!condition) return NextResponse.json({ error: 'Condição inválida' }, { status: 400 });
+      if (!condition) return NextResponse.json({ error: 'CondiÃ§Ã£o invÃ¡lida' }, { status: 400 });
       updates.type = condition === 'digital' ? 'digital_material' : 'physical_product';
     }
 
@@ -167,14 +167,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       if (typeof value === 'boolean') is_free = value;
       else if (value === 'true') is_free = true;
       else if (value === 'false') is_free = false;
-      if (is_free === null) return NextResponse.json({ error: 'Campo is_free inválido' }, { status: 400 });
+      if (is_free === null) return NextResponse.json({ error: 'Campo is_free invÃ¡lido' }, { status: 400 });
       updates.is_free = is_free;
     }
 
     if (body && 'price' in body) {
       const priceRaw = body.price;
       const priceNum = typeof priceRaw === 'number' ? priceRaw : Number(priceRaw ?? NaN);
-      if (!Number.isFinite(priceNum) || priceNum < 0) return NextResponse.json({ error: 'Preço inválido' }, { status: 400 });
+      if (!Number.isFinite(priceNum) || priceNum < 0) return NextResponse.json({ error: 'PreÃ§o invÃ¡lido' }, { status: 400 });
       updates.price = is_free === true ? 0 : priceNum;
     } else if (is_free === true) {
       updates.price = 0;
@@ -182,7 +182,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     if (body && 'is_active' in body) {
       const value = body.is_active;
-      if (typeof value !== 'boolean') return NextResponse.json({ error: 'Campo is_active inválido' }, { status: 400 });
+      if (typeof value !== 'boolean') return NextResponse.json({ error: 'Campo is_active invÃ¡lido' }, { status: 400 });
       updates.is_active = value;
     }
 
@@ -199,7 +199,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (body && 'quantity' in body) {
       const quantityRaw = body.quantity;
       const quantityNum = typeof quantityRaw === 'number' ? quantityRaw : Number(quantityRaw ?? NaN);
-      if (!Number.isFinite(quantityNum) || quantityNum < 0) return NextResponse.json({ error: 'Quantidade inválida' }, { status: 400 });
+      if (!Number.isFinite(quantityNum) || quantityNum < 0) return NextResponse.json({ error: 'Quantidade invÃ¡lida' }, { status: 400 });
       const quantity = Math.floor(quantityNum);
       const { error: stockError } = await supabase
         .from('product_stock')
@@ -241,7 +241,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
       const rows = mediaAdd.map((media, index) => {
         const url = asString(media?.url);
-        if (!url) throw new Error('URL de mídia inválida');
+        if (!url) throw new Error('URL de mÃ­dia invÃ¡lida');
 
         const filename = typeof media.filename === 'string' ? media.filename : null;
         const sizeBytesRaw = media.size_bytes;
@@ -304,12 +304,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: productId } = await params;
-    if (!productId) return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+    if (!productId) return NextResponse.json({ error: 'ID invÃ¡lido' }, { status: 400 });
 
     const supabase = await createClient();
     const { data: auth, error: authError } = await supabase.auth.getUser();
     if (authError) return NextResponse.json({ error: authError.message }, { status: 401 });
-    if (!auth?.user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    if (!auth?.user) return NextResponse.json({ error: 'NÃ£o autenticado' }, { status: 401 });
 
     const userId = auth.user.id;
 
@@ -326,3 +326,4 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

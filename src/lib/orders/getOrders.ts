@@ -58,7 +58,11 @@ export interface OrderParty {
   fullName: string | null;
   avatarUrl: string | null;
 }
-
+export interface BuyerReputation {
+  avgRating: number;
+  total: number;
+  topBadges: string[];
+}
 export interface Order {
   id: string;
   buyerId: string;
@@ -70,17 +74,18 @@ export interface Order {
   notes: string | null;
   createdAt: string;
   items: OrderItem[];
+  hasReviewedBuyer: boolean;
+  hasReviewedProduct: boolean;
+  buyerReputation: BuyerReputation | null;
 }
 
 type RoleField = 'buyer_id' | 'seller_id';
 
 function pickPreviewUrl(value: ProductRow | ProductRow[] | null): string | null {
   if (!value) return null;
-
   const product = Array.isArray(value) ? value[0] : value;
   const media = Array.isArray(product?.product_media) ? product.product_media.filter(Boolean) : [];
   const preview = media.find((item) => item?.is_preview) ?? media[0];
-
   return preview?.url ?? null;
 }
 
@@ -111,6 +116,9 @@ function mapOrders(
     pickupLocation: row.pickup_location,
     notes: row.notes,
     createdAt: row.created_at,
+    hasReviewedBuyer: false,
+    hasReviewedProduct: false,
+    buyerReputation: null,
     items: (row.order_items ?? []).map((item) => ({
       id: item.id,
       productId: item.product_id,
@@ -125,9 +133,7 @@ function mapOrders(
 }
 
 async function getProfilesMap(ids: string[]): Promise<Map<string, ProfileRow>> {
-  if (ids.length === 0) {
-    return new Map<string, ProfileRow>();
-  }
+  if (ids.length === 0) return new Map<string, ProfileRow>();
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -135,10 +141,7 @@ async function getProfilesMap(ids: string[]): Promise<Map<string, ProfileRow>> {
     .select('id, full_name, avatar_url')
     .in('id', ids);
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return new Map(((data ?? []) as ProfileRow[]).map((profile) => [profile.id, profile]));
 }
 
@@ -176,9 +179,7 @@ async function getOrdersByRole(userId: string, field: RoleField): Promise<Order[
     .eq(field, userId)
     .order('created_at', { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
 
   const rows = (data ?? []) as OrderRow[];
   const buyerIds = [...new Set(rows.map((row) => row.buyer_id).filter(Boolean))];
@@ -189,7 +190,47 @@ async function getOrdersByRole(userId: string, field: RoleField): Promise<Order[
     getProfilesMap(sellerIds),
   ]);
 
-  return mapOrders(rows, buyerMap, sellerMap);
+  const orders = mapOrders(rows, buyerMap, sellerMap);
+  const orderIds = orders.map((o) => o.id);
+
+  if (orderIds.length === 0) return orders;
+
+  if (field === 'seller_id') {
+    const { data: userReviews } = await supabase
+      .from('user_reviews')
+      .select('order_id')
+      .in('order_id', orderIds);
+
+    const reviewedOrderIds = new Set((userReviews ?? []).map((r) => r.order_id));
+
+    return orders.map((o) => ({
+      ...o,
+      hasReviewedBuyer: reviewedOrderIds.has(o.id),
+    }));
+  }
+
+  if (field === 'buyer_id') {
+    const productIds = orders.flatMap((o) => o.items.map((i) => i.productId));
+
+    const { data: productReviews } = await supabase
+      .from('reviews')
+      .select('order_id, product_id')
+      .eq('reviewer_id', userId)
+      .in('order_id', orderIds);
+
+    const reviewedKeys = new Set(
+      (productReviews ?? []).map((r) => `${r.order_id}:${r.product_id}`)
+    );
+
+    return orders.map((o) => ({
+      ...o,
+      hasReviewedProduct: o.items.some((i) =>
+        reviewedKeys.has(`${o.id}:${i.productId}`)
+      ),
+    }));
+  }
+
+  return orders;
 }
 
 export async function getBuyerOrders(userId: string): Promise<Order[]> {

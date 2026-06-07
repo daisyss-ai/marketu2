@@ -1,5 +1,4 @@
-'use client';
-
+﻿'use client';
 import { ChevronDown, LucideIcon, SlidersHorizontal, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { FilterOption, FilterState } from '../types';
@@ -135,8 +134,8 @@ const PriceRangeDropdown = ({ value, onChange }: PriceRangeDropdownProps) => {
         }`}
         aria-expanded={isOpen}
       >
-        <span className="hidden xs:inline">{isActive ? `Preço: ${displayValue}` : 'Preço'}</span>
-        <span className="xs:hidden">Preço</span>
+        <span className="hidden xs:inline">{isActive ? `PreÃ§o: ${displayValue}` : 'PreÃ§o'}</span>
+        <span className="xs:hidden">PreÃ§o</span>
         <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -183,27 +182,27 @@ interface FilterBarProps {
 }
 
 const gradeOptions: FilterOption[] = [
-  { label: '10ª Classe', value: 10 },
-  { label: '11ª Classe', value: 11 },
-  { label: '12ª Classe', value: 12 },
-  { label: '13ª Classe', value: 13 },
+  { label: '10Âª Classe', value: 10 },
+  { label: '11Âª Classe', value: 11 },
+  { label: '12Âª Classe', value: 12 },
+  { label: '13Âª Classe', value: 13 },
 ];
 
 const typeOptions: FilterOption[] = [
   { label: 'Material', value: 'material' },
-  { label: 'Serviço', value: 'servico' },
+  { label: 'ServiÃ§o', value: 'servico' },
 ];
 
 const subjectOptions: FilterOption[] = [
-  { label: 'Matemática', value: 'Matemática' },
-  { label: 'Física', value: 'Física' },
-  { label: 'Química', value: 'Química' },
+  { label: 'MatemÃ¡tica', value: 'MatemÃ¡tica' },
+  { label: 'FÃ­sica', value: 'FÃ­sica' },
+  { label: 'QuÃ­mica', value: 'QuÃ­mica' },
   { label: 'Biologia', value: 'Biologia' },
-  { label: 'Português', value: 'Português' },
-  { label: 'Inglês', value: 'Inglês' },
-  { label: 'História', value: 'História' },
+  { label: 'PortuguÃªs', value: 'PortuguÃªs' },
+  { label: 'InglÃªs', value: 'InglÃªs' },
+  { label: 'HistÃ³ria', value: 'HistÃ³ria' },
   { label: 'Geografia', value: 'Geografia' },
-  { label: 'Informática', value: 'Informática' },
+  { label: 'InformÃ¡tica', value: 'InformÃ¡tica' },
 ];
 
 const conditionOptions: FilterOption[] = [
@@ -216,8 +215,8 @@ const categoryOptions: FilterOption[] = [
   { label: 'Material Escolar', value: 'material_escolar' },
   { label: 'Tecnologia', value: 'tecnologia' },
   { label: 'Livros', value: 'livros' },
-  { label: 'Roupas e Acessórios', value: 'roupas' },
-  { label: 'Serviços', value: 'servicos' },
+  { label: 'Roupas e AcessÃ³rios', value: 'roupas' },
+  { label: 'ServiÃ§os', value: 'servicos' },
   { label: 'Outros', value: 'outros' },
 ];
 
@@ -228,11 +227,11 @@ const ratingOptions: FilterOption[] = [
 ];
 
 const sortOptions: FilterOption[] = [
-  { label: 'Relevância', value: 'relevance' },
+  { label: 'RelevÃ¢ncia', value: 'relevance' },
   { label: 'Mais Recentes', value: 'newest' },
-  { label: 'Menor Preço', value: 'price_asc' },
-  { label: 'Maior Preço', value: 'price_desc' },
-  { label: 'Melhores Avaliações', value: 'rating' },
+  { label: 'Menor PreÃ§o', value: 'price_asc' },
+  { label: 'Maior PreÃ§o', value: 'price_desc' },
+  { label: 'Melhores AvaliaÃ§Ãµes', value: 'rating' },
 ];
 
 const FilterBar = ({
@@ -275,7 +274,7 @@ const FilterBar = ({
 
           <div className="hidden md:flex flex-wrap gap-2">
             <FilterDropdown
-              label="Condição"
+              label="CondiÃ§Ã£o"
               options={conditionOptions}
               value={filters.condition}
               onChange={(value) => onFilterChange('condition', value)}
@@ -288,7 +287,7 @@ const FilterBar = ({
               onChange={(value) => onFilterChange('category', value)}
             />
             <FilterDropdown
-              label="Avaliações"
+              label="AvaliaÃ§Ãµes"
               options={ratingOptions}
               value={filters.rating}
               onChange={(value) => onFilterChange('rating', value)}
@@ -345,16 +344,16 @@ const FilterBar = ({
             <span className="text-muted font-bold uppercase tracking-widest text-[10px]">Filtros ativos:</span>
             {filters.condition && (
               <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
-                Condição: {conditionOptions.find((option) => option.value === filters.condition)?.label}
-                <button type="button" onClick={() => onFilterChange('condition', null)} className="hover:scale-110 transition-transform p-0.5" aria-label="Remover filtro de condição">
+                CondiÃ§Ã£o: {conditionOptions.find((option) => option.value === filters.condition)?.label}
+                <button type="button" onClick={() => onFilterChange('condition', null)} className="hover:scale-110 transition-transform p-0.5" aria-label="Remover filtro de condiÃ§Ã£o">
                   <X className="w-3 h-3" />
                 </button>
               </span>
             )}
             {(filters.priceMin > 0 || filters.priceMax !== Infinity) && (
               <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
-                Preço: {filters.priceMin} - {filters.priceMax === Infinity ? '+' : filters.priceMax} Kz
-                <button type="button" onClick={() => onPriceChange(0, Infinity)} className="hover:scale-110 transition-transform p-0.5" aria-label="Remover filtro de preço">
+                PreÃ§o: {filters.priceMin} - {filters.priceMax === Infinity ? '+' : filters.priceMax} Kz
+                <button type="button" onClick={() => onPriceChange(0, Infinity)} className="hover:scale-110 transition-transform p-0.5" aria-label="Remover filtro de preÃ§o">
                   <X className="w-3 h-3" />
                 </button>
               </span>
@@ -369,15 +368,15 @@ const FilterBar = ({
             )}
             {filters.rating && (
               <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
-                Avaliação: {filters.rating}+ Estrelas
-                <button type="button" onClick={() => onFilterChange('rating', null)} className="hover:scale-110 transition-transform p-0.5" aria-label="Remover filtro de avaliação">
+                AvaliaÃ§Ã£o: {filters.rating}+ Estrelas
+                <button type="button" onClick={() => onFilterChange('rating', null)} className="hover:scale-110 transition-transform p-0.5" aria-label="Remover filtro de avaliaÃ§Ã£o">
                   <X className="w-3 h-3" />
                 </button>
               </span>
             )}
             {filters.gradeLevel && (
               <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
-                Classe: {filters.gradeLevel}ª
+                Classe: {filters.gradeLevel}Âª
                 <button type="button" onClick={() => onFilterChange('gradeLevel', null)} className="hover:scale-110 transition-transform p-0.5" aria-label="Remover filtro de classe">
                   <X className="w-3 h-3" />
                 </button>
@@ -393,7 +392,7 @@ const FilterBar = ({
             )}
             {filters.productType && (
               <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full flex items-center gap-2 font-semibold">
-                Tipo: {filters.productType === 'servico' ? 'Serviço' : 'Material'}
+                Tipo: {filters.productType === 'servico' ? 'ServiÃ§o' : 'Material'}
                 <button type="button" onClick={() => onFilterChange('productType', null)} className="hover:scale-110 transition-transform p-0.5" aria-label="Remover filtro de tipo">
                   <X className="w-3 h-3" />
                 </button>
@@ -424,7 +423,7 @@ const FilterBar = ({
                 onChange={(e) => onFilterChange('condition', e.target.value || null)}
                 className="bg-surface border border-muted/10 rounded-2xl px-4 py-3 text-sm"
               >
-                <option value="">Condição</option>
+                <option value="">CondiÃ§Ã£o</option>
                 {conditionOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -492,7 +491,7 @@ const FilterBar = ({
                 value={filters.priceMin || 0}
                 onChange={(e) => onPriceChange(Number(e.target.value || 0), filters.priceMax)}
                 className="bg-surface border border-muted/10 rounded-2xl px-4 py-3 text-sm"
-                placeholder="Preço mín."
+                placeholder="PreÃ§o mÃ­n."
               />
               <input
                 type="number"
@@ -500,7 +499,7 @@ const FilterBar = ({
                 value={filters.priceMax === Infinity ? '' : filters.priceMax}
                 onChange={(e) => onPriceChange(filters.priceMin, e.target.value ? Number(e.target.value) : Infinity)}
                 className="bg-surface border border-muted/10 rounded-2xl px-4 py-3 text-sm"
-                placeholder="Preço máx."
+                placeholder="PreÃ§o mÃ¡x."
               />
             </div>
 

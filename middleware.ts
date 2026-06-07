@@ -34,9 +34,13 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Token inválido ou expirado — ignora silenciosamente
+  }
 
   const path = request.nextUrl.pathname;
   const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) => path.startsWith(prefix));
@@ -64,4 +68,3 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
-
