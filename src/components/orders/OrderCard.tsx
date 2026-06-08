@@ -104,6 +104,7 @@ export default function OrderCard({
   const [isPending, startTransition] = useTransition();
   const [actionError, setActionError] = useState<string | null>(null);
   const firstItem = order.items[0];
+  const counterpartyId = mode === 'buyer' ? order.seller?.id : order.buyer?.id;
   const counterpartyName =
     mode === 'buyer'
       ? order.seller?.fullName || 'Vendedor MarketU'
@@ -150,7 +151,12 @@ export default function OrderCard({
               <h2 className="truncate text-base font-semibold text-gray-900 md:text-lg">
                 {firstItem.productTitle}
               </h2>
-              <p className="mt-1 text-sm text-gray-500">{counterpartyName}</p>
+              <Link
+                href={`/profile/user/${counterpartyId}`}
+                className="mt-1 text-sm text-gray-500 hover:underline"
+              >
+                {counterpartyName}
+              </Link>
               {mode === 'seller' && order.status === 'pending' && order.buyerReputation ? (
                 <BuyerReputationBadge reputation={order.buyerReputation} />
               ) : null}
@@ -198,7 +204,7 @@ export default function OrderCard({
 
             <div className="flex flex-col items-start gap-2 sm:items-end">
               <div className="flex flex-wrap items-center gap-2">
-                 {mode === 'buyer' && order.status === 'delivered' ? (
+                {mode === 'buyer' && order.status === 'delivered' ? (
                   order.hasReviewedProduct ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
                       ✅ Produto avaliado
@@ -230,7 +236,7 @@ export default function OrderCard({
                 ))}
               </div>
 
-            {actionError ? (
+              {actionError ? (
                 <p className="text-sm text-red-600">{actionError}</p>
               ) : null}
             </div>
