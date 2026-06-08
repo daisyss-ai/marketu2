@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { memo, useState } from 'react';
 import { Pencil, UserCircle2 } from 'lucide-react';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
@@ -59,7 +60,12 @@ function ReviewCardComponent({ review, currentUserId }: ReviewCardProps) {
           )}
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h4 className="text-sm font-semibold text-slate-900">{review.reviewer.full_name}</h4>
+              <Link
+                href={`/profile/user/${review.reviewer_id}`}
+                className="text-sm font-semibold text-slate-900 hover:underline"
+              >
+                {review.reviewer.full_name}
+              </Link>
               <span className="text-xs text-slate-500">{formatRelativeDate(review.created_at)}</span>
             </div>
             <div className="mt-2 flex items-center gap-3">

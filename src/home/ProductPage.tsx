@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useState } from 'react';
 import { Heart, Star } from 'lucide-react';
 import Header from '../components/layout/Header';
@@ -172,7 +173,12 @@ export default function ProductPage({ product, currentUserId }: ProductPageProps
                     <div className="h-10 w-10 rounded-full bg-pink-200" />
                   )}
                   <div>
-                    <div className="text-sm font-semibold text-gray-900">{product.sellerName}</div>
+                    <Link
+                      href={`/profile/user/${product.sellerId}`}
+                      className="text-sm font-semibold text-gray-900 hover:underline"
+                    >
+                      {product.sellerName}
+                    </Link>
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                       <Star className="h-3 w-3 text-yellow-400" />
                       <span>{product.rating?.toFixed(1) ?? 'Sem avaliacoes'} ({product.totalReviews})</span>
