@@ -19,7 +19,7 @@
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "useDefineForClassFields": true,
-    "baseUrl": ".",
+    //"baseUrl": ".",
     "plugins": [
       {
         "name": "next"
