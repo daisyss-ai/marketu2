@@ -41,10 +41,7 @@ const Home = () => {
     page,
     favorites,
     handleFilterChange,
-    handlePriceChange,
-    handleSortChange,
     handlePageChange,
-    handleClearAllFilters,
     handleToggleFavorite,
     hasActiveFilters,
     getActiveFilterCount,
@@ -160,6 +157,8 @@ const Home = () => {
             ? p.categories[0]?.name 
             : (p.categories as any)?.name) || 'Geral',
           statusColor: 'bg-green-400',
+          rating: null,
+          total_reviews: 0,
         })));
       }
       setAreaLoading(false);
@@ -208,6 +207,8 @@ const Home = () => {
             ? p.categories[0]?.name
             : (p.categories as any)?.name) || 'Geral',
           statusColor: 'bg-green-400',
+          rating: null,
+          total_reviews: 0,
         })));
       }
       setFollowingLoading(false);

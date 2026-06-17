@@ -1,3 +1,4 @@
+import { Suspense, type ComponentProps } from 'react';
 import { notFound } from 'next/navigation';
 import ProductPage from '../../../home/ProductPage';
 import { ProductReviews } from '@/components/reviews/ProductReviews';
@@ -7,6 +8,10 @@ import { getProductDetail } from '@/lib/products/getProductDetail';
 type ProductPageRouteProps = {
   params: Promise<{ id: string }>;
 };
+
+function ProductContent(props: ComponentProps<typeof ProductPage>) {
+  return <ProductPage {...props} />;
+}
 
 export default async function Page({ params }: ProductPageRouteProps) {
   const { id } = await params;
@@ -22,7 +27,9 @@ export default async function Page({ params }: ProductPageRouteProps) {
 
   return (
     <>
-      <ProductPage product={product} currentUserId={user?.id ?? null} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <ProductContent product={product} currentUserId={user?.id ?? null} />
+      </Suspense>
       <ProductReviews productId={product.id} />
     </>
   );

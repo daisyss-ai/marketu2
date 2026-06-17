@@ -100,6 +100,8 @@ export default function ProductPage({ product, currentUserId }: ProductPageProps
             || null,
           category: (p.categories as any)?.name || 'Geral',
           statusColor: 'bg-green-400',
+          rating: null,
+          total_reviews: 0,
         })));
       }
     };
@@ -128,6 +130,8 @@ export default function ProductPage({ product, currentUserId }: ProductPageProps
             || null,
           category: (p.categories as any)?.name || 'Geral',
           statusColor: 'bg-green-400',
+          rating: null,
+          total_reviews: 0,
         })));
       }
     };

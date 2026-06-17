@@ -1,10 +1,10 @@
 'use client';
 
-import Image from 'next/image';
+// import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ClipboardList, Loader2, Package2 } from 'lucide-react';
+import { ClipboardList, /* Loader2, Package2 */ } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import CartItem from '@/components/orders/CartItem';
 import OrderCard from '@/components/orders/OrderCard';
@@ -48,16 +48,6 @@ const filterTabs: FilterTab[] = [
   { key: 'delivered', label: 'Entregues' },
   { key: 'cancelled', label: 'Cancelados' },
 ];
-
-const currencyFormatter = new Intl.NumberFormat('pt-AO', {
-  style: 'currency',
-  currency: 'AOA',
-  maximumFractionDigits: 2,
-});
-
-function formatCurrency(value: number) {
-  return currencyFormatter.format(value);
-}
 
 function normalizeMode(value: string | null): OrdersViewMode {
   if (value === 'buyer' || value === 'seller' || value === 'cart') {
