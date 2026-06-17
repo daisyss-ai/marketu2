@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-     "dev": "set NODE_OPTIONS=--max-old-space-size=4096 && next dev",
-     "build": "set NODE_OPTIONS=--max-old-space-size=4096 && next build",
+    "dev": "set NODE_OPTIONS=--max-old-space-size=4096 && next dev",
+    "build": "set NODE_OPTIONS=--max-old-space-size=4096 && next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@base-ui/react": "^1.4.1",
+    "@base-ui/react": "^1.5.0",
     "@hookform/resolvers": "^5.2.2",
     "@phosphor-icons/react": "^2.1.10",
     "@supabase/ssr": "^0.10.0",
