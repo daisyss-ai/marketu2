@@ -18,7 +18,6 @@ export function mapProductRow(row: ProductRow): Product {
     gradeLevel: row.grade_level ?? undefined,
     productType: row.product_type ?? undefined,
     rating: row.rating ?? undefined,
-    total_reviews: row.total_reviews ?? row.reviews ?? 0,
     reviewCount: row.total_reviews ?? row.reviews ?? undefined,
     reviews: row.reviews ?? undefined,
     createdAt: row.created_at ?? undefined,
