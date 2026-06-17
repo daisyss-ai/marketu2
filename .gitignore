@@ -10,21 +10,13 @@
 !.yarn/releases
 !.yarn/versions
 /.specify
-<<<<<<< HEAD
-/dist/
-/dist/dev/cache/turbopack/2275bd85/CURRENT
-/dist/dev/cache/turbopack/2275bd85/LOG
-
-
-=======
->>>>>>> ff11d56e553d74f50fbb214921fd55f055035864
-/dist
+dist/
 
 # testing
 /coverage
 
 # next.js
-/.next/
+.next/
 /out/
 
 # production
