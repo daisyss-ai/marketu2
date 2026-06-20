@@ -247,7 +247,7 @@ const Home = () => {
       {/* Hero section */}
       <section className="pt-7 pb-6">
         <div className="w-full px-10">
-          <div className="bg-[#EDE7FF] px-[32px] py-[80px] flex flex-col items-center justify-center gap-8 shadow-sm h-[424px]">
+          <div className="bg-[#EDE7FF] px-8 py-20 flex flex-col items-center justify-center gap-8 shadow-sm h-106">
             <div className="text-center max-w-md">
               <h1 className="text-2xl md:text-[50px] font-extrabold text-[#2C1A4A] leading-tight">
                 De Estudante Para Estudante
@@ -275,7 +275,7 @@ const Home = () => {
         </h2>
         <div className="grid grid-cols-3 gap-4">
           {CATEGORIES.map((cat) => (
-            <div key={cat.name} className="relative overflow-hidden cursor-pointer group w-full h-[400px]">
+            <div key={cat.name} className="relative overflow-hidden cursor-pointer group w-full h-100">
               {/* Color placeholder instead of image */}
               <div 
                 className="w-full h-full transition-transform duration-300 group-hover:scale-105"
@@ -404,7 +404,7 @@ const Home = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-[#4B187C] to-[#6d28b0]" />
+                    <div className="w-full h-full bg-linearto-r from-[#4B187C] to-[#6d28b0]" />
                   )}
                 </div>
 

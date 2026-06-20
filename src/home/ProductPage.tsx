@@ -5,12 +5,14 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { Heart, Star } from 'lucide-react';
 import Header from '../components/layout/Header';
+import ContactSellerButton from '@/components/produtos/ContactSellerButton'
 import CategoriesNav from '../components/layout/CategoriesNav';
 import Footer from '../components/layout/Footer';
 import ProductCard from '../components/produtos/ProductCard';
 import InterestButton from '@/components/produtos/InterestButton';
 import { createClient } from '@/lib/supabase/client';
 import type { ProductDetail } from '@/lib/products/getProductDetail';
+import Footer from '../components/layout/Footer';
 import type { ProductCardItem } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -284,16 +286,18 @@ export default function ProductPage({ product, currentUserId }: ProductPageProps
               </div>
             </div>
 
-            <button className="mt-2 w-full rounded-full bg-[#4B187C] py-3 text-sm font-semibold text-white shadow-md transition-colors hover:bg-[#3E1367]">
-              Contatar vendedor
-            </button>
+           <ContactSellerButton
+            productId={product.id}
+            sellerId={product.sellerId}
+            currentUserId={currentUserId}
+              />
           </div>
         </div>
       </main>
-
-      <ProductSection title="Produtos Relacionados" products={relatedProducts} />
-      <ProductSection title="Mais deste Vendedor" products={sellerProducts} />
-      <Footer />
+     DEPOIS (temporário)
+{/* <ProductSection title="Produtos Relacionados" products={relatedProducts} /> */}
+{/* <ProductSection title="Mais deste Vendedor" products={sellerProducts} /> */}
+{/* <Footer /> */}
     </div>
   );
 }
