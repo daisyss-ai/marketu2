@@ -1,14 +1,19 @@
 ﻿'use client';
 
+import Link from "next/link";
 import Image from 'next/image';
-import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Heart, Star } from 'lucide-react';
 import Header from '../components/layout/Header';
 import ContactSellerButton from '@/components/produtos/ContactSellerButton'
+import CategoriesNav from '../components/layout/CategoriesNav';
+import Footer from '../components/layout/Footer';
+import ProductCard from '../components/produtos/ProductCard';
 import InterestButton from '@/components/produtos/InterestButton';
+import { createClient } from '@/lib/supabase/client';
 import type { ProductDetail } from '@/lib/products/getProductDetail';
 import Footer from '../components/layout/Footer';
+import type { ProductCardItem } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface ProductPageProps {
@@ -41,14 +46,104 @@ function formatCreatedAt(value: string | null): string {
   }).format(new Date(value));
 }
 
+function ProductSection({ title, products }: { title: string; products: ProductCardItem[] }) {
+  if (products.length === 0) return null;
+  return (
+    <section className="max-w-7xl mx-auto px-4 pb-12 pt-6">
+      <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-6">{title}</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {products.map((p) => (
+          <ProductCard
+            key={p.id}
+            product={p}
+            onToggleFavorite={() => {}}
+            isFavorited={false}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function ProductPage({ product, currentUserId }: ProductPageProps) {
   const galleryImages =
     product.images.length > 0 ? product.images : [product.previewImage ?? placeholderImage];
   const [activeImage, setActiveImage] = useState(galleryImages[0] ?? placeholderImage);
+  const [relatedProducts, setRelatedProducts] = useState<ProductCardItem[]>([]);
+  const [sellerProducts, setSellerProducts] = useState<ProductCardItem[]>([]);
+
+  useEffect(() => {
+    const fetchRelated = async () => {
+      const supabase = createClient();
+      const { data: productRow } = await supabase
+        .from('products')
+        .select('category_id')
+        .eq('id', product.id)
+        .maybeSingle();
+
+      if (!productRow?.category_id) return;
+
+      const { data } = await supabase
+        .from('products')
+        .select('id, title, price, is_free, seller_id, categories(name), product_media(url, is_preview, position)')
+        .eq('is_active', true)
+        .eq('category_id', productRow.category_id)
+        .neq('id', product.id)
+        .limit(5);
+
+      if (data) {
+        setRelatedProducts(data.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          price: Number(p.price ?? 0),
+          seller: 'MarketU',
+          img: (p.product_media as any[])?.find((m: any) => m.is_preview)?.url
+            || (p.product_media as any[])?.[0]?.url
+            || null,
+          category: (p.categories as any)?.name || 'Geral',
+          statusColor: 'bg-green-400',
+          rating: null,
+          total_reviews: 0,
+        })));
+      }
+    };
+    fetchRelated();
+  }, [product.id]);
+
+  useEffect(() => {
+    const fetchSellerProducts = async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('products')
+        .select('id, title, price, is_free, seller_id, categories(name), product_media(url, is_preview, position)')
+        .eq('is_active', true)
+        .eq('seller_id', product.sellerId)
+        .neq('id', product.id)
+        .limit(5);
+
+      if (data) {
+        setSellerProducts(data.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          price: Number(p.price ?? 0),
+          seller: 'MarketU',
+          img: (p.product_media as any[])?.find((m: any) => m.is_preview)?.url
+            || (p.product_media as any[])?.[0]?.url
+            || null,
+          category: (p.categories as any)?.name || 'Geral',
+          statusColor: 'bg-green-400',
+          rating: null,
+          total_reviews: 0,
+        })));
+      }
+    };
+    fetchSellerProducts();
+  }, [product.sellerId]);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      <CategoriesNav />
       <main className="mx-auto max-w-6xl px-6 py-8">
         <div className="mb-4 text-xs text-gray-500">
           Marketplace / Produto / <span className="font-medium text-gray-700">{product.title}</span>

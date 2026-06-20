@@ -12,6 +12,8 @@ const sampleProducts = [
     seller: 'Maria Candido',
     img: 'https://via.placeholder.com/250x200?text=Calculo+1',
     statusColor: 'bg-red-400',
+    rating: null,
+    total_reviews: 0,
   },
   {
     id: '2',
@@ -21,6 +23,8 @@ const sampleProducts = [
     seller: 'Paulo Combo',
     img: 'https://via.placeholder.com/250x200?text=iPhone+8',
     statusColor: 'bg-green-400',
+    rating: null,
+    total_reviews: 0,
   },
   {
     id: '3',
@@ -30,6 +34,8 @@ const sampleProducts = [
     seller: 'Maria Candido',
     img: 'https://via.placeholder.com/250x200?text=Livro+1',
     statusColor: 'bg-red-400',
+    rating: null,
+    total_reviews: 0,
   },
   {
     id: '4',
@@ -39,6 +45,8 @@ const sampleProducts = [
     seller: 'Maria Candido',
     img: 'https://via.placeholder.com/250x200?text=Livro+2',
     statusColor: 'bg-red-400',
+    rating: null,
+    total_reviews: 0,
   },
 ];
 
