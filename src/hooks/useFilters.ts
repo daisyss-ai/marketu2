@@ -53,7 +53,6 @@ export const useFilters = () => {
   const [sorting, setSorting] = useState<ProductSort>((searchParams.get('sort') as ProductSort) || 'newest');
   const [page, setPage] = useState(searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1);
  
-  // FIX: these were declared but never returned — components using useFilters had no access to them
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +67,7 @@ export const useFilters = () => {
     return [];
   });
  
+  // Sincroniza estado com searchParams (navegação back/forward) — nunca chama updateURL
   useEffect(() => {
     const nextFilters = getInitialFilters(searchParams);
     setFilters((prev) => (JSON.stringify(prev) === JSON.stringify(nextFilters) ? prev : nextFilters));
@@ -124,67 +124,74 @@ export const useFilters = () => {
     }
   }, []);
  
+  // Apenas fetch — separado do updateURL para evitar loop
   useEffect(() => {
     fetchProducts(filters, sorting, page);
-    updateURL(filters, sorting, page);
-  }, [fetchProducts, filters, sorting, page, updateURL]);
+  }, [fetchProducts, filters, sorting, page]);
  
   const handleFilterChange = useCallback((filterType: keyof FilterState, value: FilterState[keyof FilterState]) => {
-    setFilters((prev) => ({ ...prev, [filterType]: value }));
+    const next = { ...filters, [filterType]: value };
+    setFilters(next);
     setPage(1);
-  }, []);
+    updateURL(next, sorting, 1);
+  }, [filters, sorting, updateURL]);
  
   const handlePriceChange = useCallback((min: number, max: number) => {
-    updateURL({ ...filters, priceMin: min, priceMax: max }, sorting, 1);
+    const next = { ...filters, priceMin: min, priceMax: max };
+    setFilters(next);
+    setPage(1);
+    updateURL(next, sorting, 1);
   }, [filters, sorting, updateURL]);
  
   const handleSortChange = useCallback((newSort: string) => {
     setSorting(newSort as ProductSort);
     setPage(1);
-  }, []);
+    updateURL(filters, newSort as ProductSort, 1);
+  }, [filters, updateURL]);
  
   const handlePageChange = useCallback((newPage: number) => {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    setPage(newPage);
     updateURL(filters, sorting, newPage);
   }, [filters, sorting, updateURL]);
  
   const handleClearAllFilters = useCallback(() => {
-    updateURL(
-      {
-        condition: null,
-        priceMin: 0,
-        priceMax: Infinity,
-        category: null,
-        rating: null,
-        search: '',
-        gradeLevel: null,
-        subject: null,
-        productType: null,
-        location: null,
-      },
-      'newest',
-      1
-    );
+    const clean: FilterState = {
+      condition: null,
+      priceMin: 0,
+      priceMax: Infinity,
+      category: null,
+      rating: null,
+      search: '',
+      gradeLevel: null,
+      subject: null,
+      productType: null,
+      location: null,
+    };
+    setFilters(clean);
     setSorting('newest');
     setPage(1);
+    updateURL(clean, 'newest', 1);
   }, [updateURL]);
  
   const handleClearFilter = useCallback((filterType: keyof FilterState) => {
-    setFilters((prev) => ({
-      ...prev,
+    const next = {
+      ...filters,
       [filterType]:
-        filterType === 'priceMin' || filterType === 'priceMax'
-          ? filterType === 'priceMin'
-            ? 0
-            : Infinity
+        filterType === 'priceMin'
+          ? 0
+          : filterType === 'priceMax'
+          ? Infinity
           : filterType === 'search'
-            ? ''
-            : null,
-    }));
+          ? ''
+          : null,
+    };
+    setFilters(next);
     setPage(1);
-  }, []);
+    updateURL(next, sorting, 1);
+  }, [filters, sorting, updateURL]);
  
   const handleToggleFavorite = useCallback((productId: string | number) => {
     setFavorites((prev) =>
@@ -222,18 +229,15 @@ export const useFilters = () => {
   }, [filters]);
  
   return {
-    // State — FIX: previously missing from return object
     products,
     loading,
     error,
     totalProducts,
     totalPages,
-    // Filter state
     filters,
     sorting,
     page,
     favorites,
-    // Handlers
     handleFilterChange,
     handlePriceChange,
     handleSortChange,
@@ -245,4 +249,3 @@ export const useFilters = () => {
     getActiveFilterCount,
   };
 };
-

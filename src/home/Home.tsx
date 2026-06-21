@@ -29,6 +29,7 @@ const Home = () => {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
   const authUser = useAuthStore((state) => state.user);
+  const [mounted, setMounted] = useState(false);
   const [areaProducts, setAreaProducts] = useState<ProductCardItem[]>([]);
   const [areaLoading, setAreaLoading] = useState(false);
   const [topSellers, setTopSellers] = useState<any[]>([]);
@@ -41,11 +42,19 @@ const Home = () => {
     page,
     favorites,
     handleFilterChange,
+    handlePriceChange,
+    handleSortChange,
     handlePageChange,
+    handleClearAllFilters,
     handleToggleFavorite,
     hasActiveFilters,
     getActiveFilterCount,
   } = useFilters();
+
+  // Evita hydration mismatch — authUser só é lido após mount no cliente
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -59,7 +68,6 @@ const Home = () => {
         }
 
         if (authUser) {
-          // Fetch additional user data from users table
           const { data: userData, error: userError } = await supabase
             .from('users')
             .select(`
@@ -138,7 +146,7 @@ const Home = () => {
       const { data } = await supabase
         .from('products')
         .select(`
-          id, title, price, is_free, seller_id,
+          id, title, price, is_free, seller_id, rating, total_reviews,
           categories(name),
           product_media(url, is_preview, position)
         `)
@@ -146,19 +154,19 @@ const Home = () => {
         .limit(10);
       
       if (data) {
-        setAreaProducts(data.map((p: any) => ({
-          id: p.id,
-          title: p.title,
+        setAreaProducts(data.map((p: any): ProductCardItem => ({
+          id: String(p.id),
+          title: String(p.title),
           price: Number(p.price ?? 0),
           seller: 'MarketU',
-          img: (p.product_media as any[])?.find((m: any) => m.is_preview)?.url 
-            || (p.product_media as any[])?.[0]?.url,
-          category: (Array.isArray(p.categories) 
-            ? p.categories[0]?.name 
+          img: ((p.product_media as any[])?.find((m: any) => m.is_preview)?.url
+            || (p.product_media as any[])?.[0]?.url) ?? '',
+          category: (Array.isArray(p.categories)
+            ? p.categories[0]?.name
             : (p.categories as any)?.name) || 'Geral',
           statusColor: 'bg-green-400',
-          rating: null,
-          total_reviews: 0,
+          rating: typeof p.rating === 'number' ? p.rating : null,
+          total_reviews: typeof p.total_reviews === 'number' ? p.total_reviews : 0,
         })));
       }
       setAreaLoading(false);
@@ -187,7 +195,7 @@ const Home = () => {
       const { data } = await supabase
         .from('products')
         .select(`
-          id, title, price, is_free, seller_id,
+          id, title, price, is_free, seller_id, rating, total_reviews,
           categories(name),
           product_media(url, is_preview, position)
         `)
@@ -196,19 +204,19 @@ const Home = () => {
         .limit(10);
 
       if (data) {
-        setFollowingProducts(data.map((p: any) => ({
-          id: p.id,
-          title: p.title,
+        setFollowingProducts(data.map((p: any): ProductCardItem => ({
+          id: String(p.id),
+          title: String(p.title),
           price: Number(p.price ?? 0),
           seller: 'MarketU',
-          img: (p.product_media as any[])?.find((m: any) => m.is_preview)?.url
-            || (p.product_media as any[])?.[0]?.url,
+          img: ((p.product_media as any[])?.find((m: any) => m.is_preview)?.url
+            || (p.product_media as any[])?.[0]?.url) ?? '',
           category: (Array.isArray(p.categories)
             ? p.categories[0]?.name
             : (p.categories as any)?.name) || 'Geral',
           statusColor: 'bg-green-400',
-          rating: null,
-          total_reviews: 0,
+          rating: typeof p.rating === 'number' ? p.rating : null,
+          total_reviews: typeof p.total_reviews === 'number' ? p.total_reviews : 0,
         })));
       }
       setFollowingLoading(false);
@@ -216,7 +224,6 @@ const Home = () => {
     fetchFollowingProducts();
   }, [authUser?.id]);
 
-  // Scroll to products when filters change
   useEffect(() => {
     if (hasActiveFilters()) {
       const productsSection = document.getElementById('products-section');
@@ -235,13 +242,10 @@ const Home = () => {
     }
   };
 
-
-
   return (
     <div className="bg-gray-50 min-h-screen">
       <Header />
 
-      {/* Categories Navigation Section */}
       <CategoriesNav onCategoryClick={(slug) => handleFilterChange('category', slug)} />
 
       {/* Hero section */}
@@ -255,7 +259,6 @@ const Home = () => {
               <p className="text-2xl text-gray-600 mt-3 mb-5">
                 Encontre tudo o que você precisa para o seu dia a dia no IPIL com preços que cabem no seu bolso.
               </p>
-
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <button
                   onClick={handleCompraJaClick}
@@ -276,12 +279,10 @@ const Home = () => {
         <div className="grid grid-cols-3 gap-4">
           {CATEGORIES.map((cat) => (
             <div key={cat.name} className="relative overflow-hidden cursor-pointer group w-full h-100">
-              {/* Color placeholder instead of image */}
               <div 
                 className="w-full h-full transition-transform duration-300 group-hover:scale-105"
                 style={{ backgroundColor: cat.color }}
               />
-              {/* Category button at bottom center */}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
                 <button className="bg-white text-gray-900 font-semibold text-sm px-5 py-2 rounded-full shadow-md hover:bg-[#EDE7FF] hover:text-[#4B187C] transition-colors whitespace-nowrap">
                   {cat.name}
@@ -291,18 +292,6 @@ const Home = () => {
           ))}
         </div>
       </section>
-
-      {/* Filter bar - COMMENTED OUT FOR LATER USE */}
-      {/* <FilterBar
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onPriceChange={handlePriceChange}
-        onSortChange={handleSortChange}
-        onClearAll={handleClearAllFilters}
-        sorting={sorting}
-        hasActiveFilters={hasActiveFilters()}
-        activeFilterCount={getActiveFilterCount()}
-      /> */}
 
       {/* Products section */}
       <section id="products-section" className="max-w-7xl mx-auto px-4 pb-12 pt-6">
@@ -359,7 +348,8 @@ const Home = () => {
         </ErrorBoundary>
       </section>
 
-      {authUser?.course && (
+      {/* Produtos da área — só renderiza após mount para evitar hydration mismatch */}
+      {mounted && authUser?.course && (
         <section className="max-w-7xl mx-auto px-4 pb-12 pt-6">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-6">
             Produtos da sua área
@@ -395,7 +385,6 @@ const Home = () => {
               <div key={seller.id} 
                 className="bg-white border border-gray-100 shadow-sm overflow-hidden flex flex-col">
                 
-                {/* Banner */}
                 <div className="h-28 bg-[#EDE7FF] overflow-hidden">
                   {seller.banner_url ? (
                     <img 
@@ -408,7 +397,6 @@ const Home = () => {
                   )}
                 </div>
 
-                {/* Avatar overlapping banner */}
                 <div className="flex flex-col items-center -mt-8 px-4 pb-4">
                   <div className="w-16 h-16 rounded-full border-4 border-white overflow-hidden bg-[#EDE7FF] flex items-center justify-center shadow-md">
                     {seller.avatar_url ? (
@@ -441,7 +429,8 @@ const Home = () => {
         </section>
       )}
 
-      {authUser && (
+      {/* De quem segues — só renderiza após mount para evitar hydration mismatch */}
+      {mounted && authUser && (
         <section className="max-w-7xl mx-auto px-4 pb-12 pt-6">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-6">
             De quem segues
