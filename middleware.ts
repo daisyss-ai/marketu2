@@ -1,5 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import type { Database } from "@/types/supabase";
+
+function isAdminRoute(path: string): boolean {
+  return path === "/admin" || path.startsWith("/admin/");
+}
+
+function redirectToHome(request: NextRequest): NextResponse {
+  const url = request.nextUrl.clone();
+  url.pathname = "/";
+  url.search = "";
+  return NextResponse.redirect(url);
+}
 
 const PROTECTED_PREFIXES = [
   "/home",
@@ -17,7 +29,7 @@ const AUTH_ROUTES = ["/login", "/signup"] as const;
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -43,6 +55,30 @@ export async function middleware(request: NextRequest) {
   }
 
   const path = request.nextUrl.pathname;
+
+  if (isAdminRoute(path)) {
+    if (!user) {
+      return redirectToHome(request);
+    }
+
+    const { data: dbUser, error } = await supabase
+      .from("users")
+      .select("role, status")
+      .eq("id", user.id)
+      .single();
+
+    if (
+      error ||
+      !dbUser ||
+      dbUser.role !== "admin" ||
+      dbUser.status === "suspended"
+    ) {
+      return redirectToHome(request);
+    }
+
+    return response;
+  }
+
   const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) => path.startsWith(prefix));
   const isAuthRoute = AUTH_ROUTES.includes(path as (typeof AUTH_ROUTES)[number]);
 
@@ -65,6 +101,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/admin",
+    "/admin/:path*",
     "/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
