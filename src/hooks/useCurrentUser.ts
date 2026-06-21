@@ -5,9 +5,25 @@ const supabase = createClient()
 
 let cachedUserId: string | null = null
 let cachedUserPromise: Promise<string | null> | null = null
+let listenerRegistered = false
 
-// Garante que getUser() só é chamado uma vez, depois reutiliza o resultado
+// Garante que o listener de auth state só é registado uma vez,
+// mesmo que getCachedUserId() seja chamado antes de qualquer componente usar o hook.
+function ensureAuthListener() {
+  if (listenerRegistered) return
+  listenerRegistered = true
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    cachedUserId = session?.user?.id ?? null
+    cachedUserPromise = null
+  })
+}
+
+// Garante que getUser() só é chamado uma vez, depois reutiliza o resultado.
+// Invalida automaticamente quando a sessão muda (login/logout/troca de conta).
 export async function getCachedUserId(): Promise<string | null> {
+  ensureAuthListener()
+
   if (cachedUserId) return cachedUserId
   if (cachedUserPromise) return cachedUserPromise
 
@@ -20,7 +36,7 @@ export async function getCachedUserId(): Promise<string | null> {
   return cachedUserPromise
 }
 
-// Invalidar cache no logout
+// Invalidar cache manualmente — útil para chamar logo após o login
 export function clearCachedUserId() {
   cachedUserId = null
   cachedUserPromise = null
@@ -31,6 +47,8 @@ export function useCurrentUserId() {
 
   useEffect(() => {
     let mounted = true
+    ensureAuthListener()
+
     getCachedUserId().then((id) => {
       if (mounted) setUserId(id)
     })

@@ -593,23 +593,17 @@ export function useChat(conversationId: string) {
 
   // ── Apagar conversa (só para o utilizador atual) ─────────────────────────
 
-  const deleteConversation = useCallback(async () => {
-    const userId = await getCachedUserId()
-    if (!userId || !state.conversation) return { error: 'Não autenticado' }
+ const deleteConversation = useCallback(async () => {
+  const userId = await getCachedUserId()
+  if (!userId || !state.conversation) return { error: 'Não autenticado' }
 
-    const isBuyer = state.conversation.buyer_id === userId
-    const update = isBuyer
-      ? { deleted_by_buyer: true }
-      : { deleted_by_seller: true }
+  const { error } = await supabase.rpc('delete_conversation_for_user', {
+    p_conversation_id: conversationId,
+  })
 
-    const { error } = await supabase
-      .from('conversations')
-      .update(update)
-      .eq('id', conversationId)
-
-    if (error) return { error: error.message }
-    return { error: null }
-  }, [conversationId, state.conversation])
+  if (error) return { error: error.message }
+  return { error: null }
+}, [conversationId, state.conversation])
 
   // ── Bloquear o outro utilizador desta conversa ───────────────────────────
 
