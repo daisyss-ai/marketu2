@@ -1,5 +1,15 @@
 'use client';
+import { Suspense } from 'react';
 import EditProfile from '../../home/EditProfile';
-export default function Page() {
+
+function EditProfileContent() {
   return <EditProfile />;
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EditProfileContent />
+    </Suspense>
+  );
 }

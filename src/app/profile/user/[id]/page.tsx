@@ -1,3 +1,4 @@
+import { Suspense, type ComponentProps } from 'react'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PublicProfile } from '@/components/profile/PublicProfile'
@@ -12,6 +13,10 @@ import type { Product } from '@/lib/profile/types'
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+function UserProfileContent(props: ComponentProps<typeof PublicProfile>) {
+  return <PublicProfile {...props} />
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -54,13 +59,15 @@ export default async function UserProfilePage({ params }: Props) {
   const isOwn = user?.id === profile.id
 
   return (
-    <PublicProfile
-      profile={profile}
-      isOwn={isOwn}
-      sellerReputation={sellerReputation}
-      buyerReputation={buyerReputation}
-      sellerStats={sellerStats}
-      products={products}
-    />
+    <Suspense fallback={<div>Loading...</div>}>
+      <UserProfileContent
+        profile={profile}
+        isOwn={isOwn}
+        sellerReputation={sellerReputation}
+        buyerReputation={buyerReputation}
+        sellerStats={sellerStats}
+        products={products}
+      />
+    </Suspense>
   )
 }

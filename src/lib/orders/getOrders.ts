@@ -210,8 +210,6 @@ async function getOrdersByRole(userId: string, field: RoleField): Promise<Order[
   }
 
   if (field === 'buyer_id') {
-    const productIds = orders.flatMap((o) => o.items.map((i) => i.productId));
-
     const { data: productReviews } = await supabase
       .from('reviews')
       .select('order_id, product_id')

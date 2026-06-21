@@ -2,12 +2,12 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { GraduationCap, MessageCircle, Package, Star } from 'lucide-react'
+import { GraduationCap, MessageCircle, Package,  /*Star*/ } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import { ReputationBadge } from './ReputationBadge'
 import { SellerReputation } from './SellerReputation'
 import { BuyerReputation } from './BuyerReputation'
-import { SellerStats } from './SellerStats'
+{/*import { SellerStats } from './SellerStats'*/}
 import { computeSeal } from '@/lib/profile/types'
 import type {
   PublicProfile,
