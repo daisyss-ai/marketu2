@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { Route } from 'next';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, MessageCircle, Bell, X, Search, Menu } from 'lucide-react';
 import { logout } from '@/app/auth/actions';
 import ProductSearchBar from '../search/ProductSearchBar';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
@@ -160,16 +160,14 @@ const Header = ({ searchValue: controlledSearchValue, onSearchChange, onSearchSu
             <span className="font-black text-xl md:text-2xl text-primary tracking-tight">MARKETU</span>
           </Link>
 
-          <div className="flex-1 max-w-4xl">
+          {/* Pesquisa desktop */}
+          <div className="hidden md:flex flex-1 max-w-4xl">
             <ProductSearchBar
               value={searchValue}
               onChange={handleSearchChange}
               enableAutocomplete
               onSubmit={handleSearchSubmit}
             />
-          {/* Pesquisa desktop */}
-          <div className="hidden md:flex flex-1 max-w-4xl">
-            <ProductSearchBar value={searchValue} onChange={setSearchValue} enableAutocomplete onSubmit={() => navigateToSearch(searchValue)} />
           </div>
 
           {/* Acções direita */}
@@ -217,7 +215,12 @@ const Header = ({ searchValue: controlledSearchValue, onSearchChange, onSearchSu
         {/* Pesquisa mobile expandida */}
         {mobileSearchOpen && (
           <div className="md:hidden px-4 pb-3">
-            <ProductSearchBar value={searchValue} onChange={setSearchValue} enableAutocomplete onSubmit={() => navigateToSearch(searchValue)} />
+            <ProductSearchBar
+              value={searchValue}
+              onChange={handleSearchChange}
+              enableAutocomplete
+              onSubmit={handleSearchSubmit}
+            />
           </div>
         )}
 
