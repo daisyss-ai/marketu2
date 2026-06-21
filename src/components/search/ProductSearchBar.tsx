@@ -1,7 +1,7 @@
 'use client';
 
 import { Search } from 'lucide-react';
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { productsAPI } from '../../services/api';
 import type { ProductSuggestion } from '../../types';
@@ -82,10 +82,10 @@ export default function ProductSearchBar({
     };
   }, [isFocused, value]);
 
-  const applySuggestions = useEffectEvent((nextSuggestions: ProductSuggestion[]) => {
+  const applySuggestions = useCallback((nextSuggestions: ProductSuggestion[]) => {
     setSuggestions(nextSuggestions);
     setOpen(nextSuggestions.length > 0);
-  });
+  }, []);
 
   useEffect(() => {
     if (!enableAutocomplete) return;
@@ -119,7 +119,7 @@ export default function ProductSearchBar({
     return () => {
       abortController.abort();
     };
-  }, [debouncedSearch, enableAutocomplete]);
+  }, [applySuggestions, debouncedSearch, enableAutocomplete]);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -151,8 +151,8 @@ export default function ProductSearchBar({
           }}
         >
           {/* Inner container with actual input */}
-          <div className="relative bg-white w-full" style={{ borderRadius: 5 }}>
-            <div className={`w-full flex items-center gap-3 py-2.5 px-6 transition-all duration-300 ${
+          <div className="relative bg-white w-full outline-none" style={{ borderRadius: 5 }}>
+            <div className={`w-full flex items-center gap-3 py-2.5 px-6 outline-none transition-all duration-300 ${
               isFocused ? 'shadow-lg shadow-[#4B187C]/30' : ''
             }`}>
               <Search className={`w-5 h-5 transition-colors ${
@@ -172,7 +172,7 @@ export default function ProductSearchBar({
                   if (e.key === 'Escape') setOpen(false);
                 }}
                 placeholder={animatedPlaceholder || placeholder}
-                className="w-full bg-transparent outline-none text-sm text-gray-900 placeholder:text-gray-400 border-0"
+                className="w-full bg-transparent outline-none focus:outline-none focus:ring-0 text-sm text-gray-900 placeholder:text-gray-400 border-0"
                 style={{ borderRadius: 5 }}
                 aria-label="Buscar produtos no marketplace"
                 autoComplete="off"

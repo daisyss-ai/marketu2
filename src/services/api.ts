@@ -71,6 +71,13 @@ async function apiRequest(endpoint: string, options: any = {}) {
 
     return data;
   } catch (error: any) {
+    if (
+      error?.name === 'AbortError' ||
+      error?.message === 'signal is aborted without reason' ||
+      error?.message === 'The user aborted a request.'
+    ) {
+      throw error;
+    }
     const errorMessage = error?.message || error?.error || 'Erro desconhecido';
     console.error('API Error:', errorMessage, error);
     throw error;

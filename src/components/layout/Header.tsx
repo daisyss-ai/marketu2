@@ -4,12 +4,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useEffectEvent, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { logout } from '@/app/auth/actions';
 import ProductSearchBar from '../search/ProductSearchBar';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
+
+type HeaderProps = {
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  onSearchSubmit?: () => void;
+};
 
 function SavedProductsLink() {
   const [count, setCount] = useState(0);
@@ -80,20 +86,18 @@ function SavedProductsLink() {
   );
 }
 
-const Header = () => {
+const Header = ({ searchValue: controlledSearchValue, onSearchChange, onSearchSubmit }: HeaderProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const currentSearch = searchParams.get('search') || '';
-  const [searchValue, setSearchValue] = useState(currentSearch);
+  const isSearchControlled = controlledSearchValue !== undefined;
+  const [internalSearchValue, setInternalSearchValue] = useState(currentSearch);
+  const searchValue = controlledSearchValue ?? internalSearchValue;
   const debouncedSearch = useDebouncedValue(searchValue, 320);
 
-  useEffect(() => {
-    setSearchValue(currentSearch);
-  }, [currentSearch]);
-
-  const navigateToSearch = (nextValue: string) => {
+  const navigateToSearch = useCallback((nextValue: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (nextValue.trim()) params.set('search', nextValue.trim());
     else params.delete('search');
@@ -102,16 +106,35 @@ const Header = () => {
     const targetPath = ((pathname || '/') === '/' ? '/home' : pathname) as Route;
     const qs = params.toString();
     router.push((qs ? `${targetPath}?${qs}` : targetPath) as Route, { scroll: false });
-  };
+  }, [pathname, router, searchParams]);
 
-  const pushSearchEffect = useEffectEvent((nextValue: string) => {
+  const pushSearchEffect = useCallback((nextValue: string) => {
     navigateToSearch(nextValue);
-  });
+  }, [navigateToSearch]);
 
   useEffect(() => {
+    if (isSearchControlled) return;
     if (debouncedSearch.trim() === currentSearch.trim()) return;
     pushSearchEffect(debouncedSearch);
-  }, [currentSearch, debouncedSearch]);
+  }, [currentSearch, debouncedSearch, isSearchControlled, pushSearchEffect]);
+
+  const handleSearchChange = useCallback((nextValue: string) => {
+    if (isSearchControlled) {
+      onSearchChange?.(nextValue);
+      return;
+    }
+
+    setInternalSearchValue(nextValue);
+  }, [isSearchControlled, onSearchChange]);
+
+  const handleSearchSubmit = useCallback(() => {
+    if (isSearchControlled) {
+      onSearchSubmit?.();
+      return;
+    }
+
+    navigateToSearch(searchValue);
+  }, [isSearchControlled, navigateToSearch, onSearchSubmit, searchValue]);
 
   return (
     <div className="sticky top-0 z-50">
@@ -132,9 +155,9 @@ const Header = () => {
           <div className="flex-1 max-w-4xl">
             <ProductSearchBar
               value={searchValue}
-              onChange={setSearchValue}
+              onChange={handleSearchChange}
               enableAutocomplete
-              onSubmit={() => navigateToSearch(searchValue)}
+              onSubmit={handleSearchSubmit}
             />
           </div>
 
