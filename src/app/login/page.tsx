@@ -7,12 +7,10 @@ function LoginContent() {
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24 ">
-
+    <main className="min-h-screen">
       <Suspense fallback={<div>Loading...</div>}>
         <LoginContent />
       </Suspense>
-        
     </main>
   );
 }

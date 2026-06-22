@@ -13,12 +13,13 @@ export interface InstitutionSelectProps {
   name?: string
   value: string
   onChange: (value: string) => void
+  onOptionChange?: (option: InstitutionOption | undefined) => void
   error?: string
   label?: string
 }
 
 const InstitutionSelect = React.forwardRef<HTMLSelectElement, InstitutionSelectProps>(
-  ({ id = 'institution', name, value, onChange, error, label = 'InstituiÃ§Ã£o' }, ref) => {
+  ({ id = 'institution', name, value, onChange, onOptionChange, error, label = 'Instituição' }, ref) => {
     const [options, setOptions] = useState<InstitutionOption[]>([])
     const [loading, setLoading] = useState(true)
 
@@ -49,6 +50,12 @@ const InstitutionSelect = React.forwardRef<HTMLSelectElement, InstitutionSelectP
       fetchInstitutions()
     }, [])
 
+    const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const selected = event.target.value
+      onChange(selected)
+      onOptionChange?.(options.find((opt) => opt.value === selected))
+    }
+
     return (
       <div>
         <label htmlFor={id} className="block text-sm font-semibold text-foreground mb-1.5 ml-1">
@@ -59,13 +66,13 @@ const InstitutionSelect = React.forwardRef<HTMLSelectElement, InstitutionSelectP
           name={name ?? id}
           ref={ref}
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={handleChange}
           disabled={loading}
           className="w-full px-4 py-3 rounded-xl border border-muted/20 focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all bg-surface text-foreground placeholder:text-muted/50 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-invalid={!!error}
         >
           <option value="">
-            {loading ? 'Carregando instituiÃ§Ãµes...' : 'Seleciona a tua instituiÃ§Ã£o'}
+            {loading ? 'Carregando instituições...' : 'Seleciona a tua instituição'}
           </option>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
@@ -81,4 +88,3 @@ const InstitutionSelect = React.forwardRef<HTMLSelectElement, InstitutionSelectP
 
 InstitutionSelect.displayName = 'InstitutionSelect'
 export default InstitutionSelect
-
