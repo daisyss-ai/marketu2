@@ -35,6 +35,10 @@ const Home = () => {
   const [topSellers, setTopSellers] = useState<any[]>([]);
   const [followingProducts, setFollowingProducts] = useState<ProductCardItem[]>([]);
   const [followingLoading, setFollowingLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return new URLSearchParams(window.location.search).get('search') || '';
+  });
   
   const {
     filters,
@@ -51,10 +55,7 @@ const Home = () => {
     getActiveFilterCount,
   } = useFilters();
 
-  // Evita hydration mismatch — authUser só é lido após mount no cliente
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const isSearching = searchQuery.trim().length > 0;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -242,14 +243,27 @@ const Home = () => {
     }
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    handleFilterChange('search', value);
+  };
+
+
+
   return (
     <div className="bg-gray-50 min-h-screen">
-      <Header />
+         <Header
+        searchValue={searchQuery}
+        onSearchChange={handleSearchChange}
+        onSearchSubmit={handleCompraJaClick}
+      />
 
+      {/* Categories Navigation Section */}
       <CategoriesNav onCategoryClick={(slug) => handleFilterChange('category', slug)} />
 
       {/* Hero section */}
-      <section className="pt-7 pb-6">
+      {!isSearching && (
+        <section className="pt-7 pb-6">
         <div className="w-full px-10">
           <div className="bg-[#EDE7FF] px-8 py-20 flex flex-col items-center justify-center gap-8 shadow-sm h-106">
             <div className="text-center max-w-md">
@@ -264,15 +278,17 @@ const Home = () => {
                   onClick={handleCompraJaClick}
                   className="bg-[#4B187C] hover:bg-[#3E1367] text-white px-5 py-2.5 rounded-full text-2xl font-semibold shadow-sm no-underline transition-all duration-200 hover:shadow-lg"
                 >
-                  Explorar Produtos
+                  Explorar
                 </button>
               </div>
             </div>
           </div>
         </div>
-      </section>
+        </section>
+      )}
 
-      <section className="max-w-7xl mx-auto px-4 py-8">
+      {!isSearching && (
+        <section className="max-w-7xl mx-auto px-4 py-8">
         <h2 className="text-xl font-bold text-gray-900 mb-6">
           Explorar Categorias
         </h2>
@@ -291,13 +307,71 @@ const Home = () => {
             </div>
           ))}
         </div>
-      </section>
+        </section>
+      )}
 
       {/* Products section */}
+      {isSearching && (
+        <section className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            <span className="text-sm text-gray-500">Filtrar por:</span>
+            <select
+              className="text-sm border border-gray-200 rounded-full px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#4B187C]"
+              onChange={(e) => handleFilterChange('category', e.target.value || null)}
+              value={filters.category || ''}
+            >
+              <option value="">Categoria</option>
+              <option value="Material Escolar">Material Escolar</option>
+              <option value="Tecnologia">Tecnologia</option>
+              <option value="Livros & Apontamentos">Livros & Apontamentos</option>
+              <option value="Roupas & Calçados">Roupas & Calçados</option>
+              <option value="Electrónica">Electrónica</option>
+              <option value="Desporto">Desporto</option>
+              <option value="Outros">Outros</option>
+            </select>
+            <select
+              className="text-sm border border-gray-200 rounded-full px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#4B187C]"
+              onChange={(e) => handleFilterChange('condition', e.target.value || null)}
+              value={filters.condition || ''}
+            >
+              <option value="">Estado</option>
+              <option value="new">Novo</option>
+              <option value="like_new">Como Novo</option>
+              <option value="good">Bom</option>
+              <option value="fair">Razoável</option>
+            </select>
+            <select
+              className="text-sm border border-gray-200 rounded-full px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#4B187C]"
+              onChange={(e) => handleSortChange(e.target.value || 'newest')}
+              value={sorting || ''}
+            >
+              <option value="">Ordenar por</option>
+              <option value="price_asc">Preço: menor primeiro</option>
+              <option value="price_desc">Preço: maior primeiro</option>
+              <option value="newest">Mais recentes</option>
+            </select>
+            <span className="flex items-center gap-1 bg-[#EDE7FF] text-[#4B187C] text-sm font-medium px-3 py-1 rounded-full">
+              {searchQuery}
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  handleFilterChange('search', '');
+                }}
+                className="ml-1 text-[#4B187C] hover:text-[#2C1A4A] font-bold"
+              >
+                &times;
+              </button>
+            </span>
+          </div>
+        </section>
+      )}
+
       <section id="products-section" className="max-w-7xl mx-auto px-4 pb-12 pt-6">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900">
-            Produtos em Destaque
+            {isSearching
+              ? `Resultados para "${searchQuery}"`
+              : 'Produtos em Destaque'}
             {hasActiveFilters() && (
               <span className="ml-2 text-sm font-normal text-gray-600">
                 ({getActiveFilterCount()} filtro{getActiveFilterCount() > 1 ? 's' : ''})
@@ -348,8 +422,7 @@ const Home = () => {
         </ErrorBoundary>
       </section>
 
-      {/* Produtos da área — só renderiza após mount para evitar hydration mismatch */}
-      {mounted && authUser?.course && (
+      {!isSearching && authUser?.course && (
         <section className="max-w-7xl mx-auto px-4 pb-12 pt-6">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-6">
             Produtos da sua área
@@ -375,7 +448,7 @@ const Home = () => {
         </section>
       )}
 
-      {topSellers.length > 0 && (
+      {!isSearching && topSellers.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 pb-12 pt-6">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-6">
             Melhores Lojas
@@ -429,8 +502,7 @@ const Home = () => {
         </section>
       )}
 
-      {/* De quem segues — só renderiza após mount para evitar hydration mismatch */}
-      {mounted && authUser && (
+      {!isSearching && authUser && (
         <section className="max-w-7xl mx-auto px-4 pb-12 pt-6">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-6">
             De quem segues
@@ -457,7 +529,8 @@ const Home = () => {
         </section>
       )}
 
-      <section className="w-full bg-[#EDE7FF] py-16 mt-12">
+      {!isSearching && (
+        <section className="w-full bg-[#EDE7FF] py-16 mt-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-[#4B187C] font-semibold text-lg mb-2">
             A tua opinião importa!
@@ -473,7 +546,8 @@ const Home = () => {
             Dar Feedback
           </button>
         </div>
-      </section>
+        </section>
+      )}
 
       <Footer />
     </div>

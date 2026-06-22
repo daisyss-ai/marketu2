@@ -4,12 +4,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useEffectEvent, useState } from 'react';
-import { ShoppingCart, MessageCircle, Bell, Search, X, Menu } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { ShoppingCart, MessageCircle, Bell, X, Search, Menu } from 'lucide-react';
 import { logout } from '@/app/auth/actions';
 import ProductSearchBar from '../search/ProductSearchBar';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
+
+type HeaderProps = {
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  onSearchSubmit?: () => void;
+};
 
 function SavedProductsLink() {
   const [count, setCount] = useState(0);
@@ -89,7 +95,7 @@ function NotificationsLink() {
   );
 }
 
-const Header = () => {
+const Header = ({ searchValue: controlledSearchValue, onSearchChange, onSearchSubmit }: HeaderProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -97,12 +103,12 @@ const Header = () => {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const currentSearch = searchParams.get('search') || '';
-  const [searchValue, setSearchValue] = useState(currentSearch);
+  const isSearchControlled = controlledSearchValue !== undefined;
+  const [internalSearchValue, setInternalSearchValue] = useState(currentSearch);
+  const searchValue = controlledSearchValue ?? internalSearchValue;
   const debouncedSearch = useDebouncedValue(searchValue, 320);
 
-  useEffect(() => { setSearchValue(currentSearch); }, [currentSearch]);
-
-  const navigateToSearch = (nextValue: string) => {
+  const navigateToSearch = useCallback((nextValue: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (nextValue.trim()) params.set('search', nextValue.trim());
     else params.delete('search');
@@ -110,15 +116,35 @@ const Header = () => {
     const targetPath = ((pathname || '/') === '/' ? '/home' : pathname) as Route;
     const qs = params.toString();
     router.push((qs ? `${targetPath}?${qs}` : targetPath) as Route, { scroll: false });
-    setMobileSearchOpen(false);
-  };
+  }, [pathname, router, searchParams]);
 
-  const pushSearchEffect = useEffectEvent((nextValue: string) => { navigateToSearch(nextValue); });
+  const pushSearchEffect = useCallback((nextValue: string) => {
+    navigateToSearch(nextValue);
+  }, [navigateToSearch]);
 
   useEffect(() => {
+    if (isSearchControlled) return;
     if (debouncedSearch.trim() === currentSearch.trim()) return;
     pushSearchEffect(debouncedSearch);
-  }, [currentSearch, debouncedSearch]);
+  }, [currentSearch, debouncedSearch, isSearchControlled, pushSearchEffect]);
+
+  const handleSearchChange = useCallback((nextValue: string) => {
+    if (isSearchControlled) {
+      onSearchChange?.(nextValue);
+      return;
+    }
+
+    setInternalSearchValue(nextValue);
+  }, [isSearchControlled, onSearchChange]);
+
+  const handleSearchSubmit = useCallback(() => {
+    if (isSearchControlled) {
+      onSearchSubmit?.();
+      return;
+    }
+
+    navigateToSearch(searchValue);
+  }, [isSearchControlled, navigateToSearch, onSearchSubmit, searchValue]);
 
   return (
     <div className="sticky top-0 z-50">
@@ -136,7 +162,12 @@ const Header = () => {
 
           {/* Pesquisa desktop */}
           <div className="hidden md:flex flex-1 max-w-4xl">
-            <ProductSearchBar value={searchValue} onChange={setSearchValue} enableAutocomplete onSubmit={() => navigateToSearch(searchValue)} />
+            <ProductSearchBar
+              value={searchValue}
+              onChange={handleSearchChange}
+              enableAutocomplete
+              onSubmit={handleSearchSubmit}
+            />
           </div>
 
           {/* Acções direita */}
@@ -184,7 +215,12 @@ const Header = () => {
         {/* Pesquisa mobile expandida */}
         {mobileSearchOpen && (
           <div className="md:hidden px-4 pb-3">
-            <ProductSearchBar value={searchValue} onChange={setSearchValue} enableAutocomplete onSubmit={() => navigateToSearch(searchValue)} />
+            <ProductSearchBar
+              value={searchValue}
+              onChange={handleSearchChange}
+              enableAutocomplete
+              onSubmit={handleSearchSubmit}
+            />
           </div>
         )}
 
