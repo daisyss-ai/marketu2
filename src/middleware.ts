@@ -1,6 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { Database } from "@/types/supabase";
 
 function isAdminRoute(path: string): boolean {
   return path === "/admin" || path.startsWith("/admin/");
@@ -29,7 +28,7 @@ const AUTH_ROUTES = ["/login", "/signup"] as const;
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient<Database>(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -38,28 +37,30 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
           response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
         },
       },
-    },
+    }
   );
 
-  let user = null;
+  let user: import('@supabase/supabase-js').User | null = null;
   try {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    // Token inválido ou expirado — ignora silenciosamente
+    // Token inválido ou expirado
   }
 
   const path = request.nextUrl.pathname;
 
   if (isAdminRoute(path)) {
-    if (!user) {
-      return redirectToHome(request);
-    }
+    if (!user) return redirectToHome(request);
 
     const { data: dbUser, error } = await supabase
       .from("users")
@@ -79,8 +80,12 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) => path.startsWith(prefix));
-  const isAuthRoute = AUTH_ROUTES.includes(path as (typeof AUTH_ROUTES)[number]);
+  const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) =>
+    path.startsWith(prefix)
+  );
+  const isAuthRoute = AUTH_ROUTES.includes(
+    path as (typeof AUTH_ROUTES)[number]
+  );
 
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();

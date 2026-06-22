@@ -1,0 +1,6 @@
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS admin_notes TEXT,
+  ADD COLUMN IF NOT EXISTS ban_reason TEXT;
+
+ALTER TABLE students
+  ADD COLUMN IF NOT EXISTS is_verified_seller BOOLEAN DEFAULT false;

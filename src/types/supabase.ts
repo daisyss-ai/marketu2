@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          reason: string | null
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       academic_years: {
         Row: {
           created_at: string | null
@@ -483,6 +524,7 @@ export type Database = {
           address: string | null
           created_at: string | null
           id: string
+          is_active: boolean | null
           logo_url: string | null
           name: string
         }
@@ -490,6 +532,7 @@ export type Database = {
           address?: string | null
           created_at?: string | null
           id?: string
+          is_active?: boolean | null
           logo_url?: string | null
           name: string
         }
@@ -497,6 +540,7 @@ export type Database = {
           address?: string | null
           created_at?: string | null
           id?: string
+          is_active?: boolean | null
           logo_url?: string | null
           name?: string
         }
@@ -1268,6 +1312,7 @@ export type Database = {
           enrollment_year: number | null
           id: string
           is_seller: boolean | null
+          is_verified_seller: boolean | null
           rating: number | null
           total_reviews: number | null
         }
@@ -1277,6 +1322,7 @@ export type Database = {
           enrollment_year?: number | null
           id: string
           is_seller?: boolean | null
+          is_verified_seller?: boolean | null
           rating?: number | null
           total_reviews?: number | null
         }
@@ -1286,6 +1332,7 @@ export type Database = {
           enrollment_year?: number | null
           id?: string
           is_seller?: boolean | null
+          is_verified_seller?: boolean | null
           rating?: number | null
           total_reviews?: number | null
         }
@@ -1390,7 +1437,9 @@ export type Database = {
       }
       users: {
         Row: {
+          admin_notes: string | null
           avatar_url: string | null
+          ban_reason: string | null
           banner_url: string | null
           bio: string | null
           created_at: string | null
@@ -1409,7 +1458,9 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          admin_notes?: string | null
           avatar_url?: string | null
+          ban_reason?: string | null
           banner_url?: string | null
           bio?: string | null
           created_at?: string | null
@@ -1428,7 +1479,9 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          admin_notes?: string | null
           avatar_url?: string | null
+          ban_reason?: string | null
           banner_url?: string | null
           bio?: string | null
           created_at?: string | null

@@ -1,19 +1,14 @@
-﻿'use client';
+'use client';
 
 import Link from "next/link";
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Heart, Star } from 'lucide-react';
 import Header from '../components/layout/Header';
 import ContactSellerButton from '@/components/produtos/ContactSellerButton'
 import CategoriesNav from '../components/layout/CategoriesNav';
-import Footer from '../components/layout/Footer';
-import ProductCard from '../components/produtos/ProductCard';
 import InterestButton from '@/components/produtos/InterestButton';
-import { createClient } from '@/lib/supabase/client';
 import type { ProductDetail } from '@/lib/products/getProductDetail';
-import Footer from '../components/layout/Footer';
-import type { ProductCardItem } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface ProductPageProps {
@@ -46,6 +41,7 @@ function formatCreatedAt(value: string | null): string {
   }).format(new Date(value));
 }
 
+/*
 function ProductSection({ title, products }: { title: string; products: ProductCardItem[] }) {
   if (products.length === 0) return null;
   return (
@@ -64,11 +60,13 @@ function ProductSection({ title, products }: { title: string; products: ProductC
     </section>
   );
 }
+*/
 
 export default function ProductPage({ product, currentUserId }: ProductPageProps) {
   const galleryImages =
     product.images.length > 0 ? product.images : [product.previewImage ?? placeholderImage];
   const [activeImage, setActiveImage] = useState(galleryImages[0] ?? placeholderImage);
+  /*
   const [relatedProducts, setRelatedProducts] = useState<ProductCardItem[]>([]);
   const [sellerProducts, setSellerProducts] = useState<ProductCardItem[]>([]);
 
@@ -139,6 +137,7 @@ export default function ProductPage({ product, currentUserId }: ProductPageProps
     };
     fetchSellerProducts();
   }, [product.sellerId]);
+  */
 
   return (
     <div className="min-h-screen bg-gray-50">

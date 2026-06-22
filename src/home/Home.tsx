@@ -29,7 +29,6 @@ const Home = () => {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
   const authUser = useAuthStore((state) => state.user);
-  const [mounted, setMounted] = useState(false);
   const [areaProducts, setAreaProducts] = useState<ProductCardItem[]>([]);
   const [areaLoading, setAreaLoading] = useState(false);
   const [topSellers, setTopSellers] = useState<any[]>([]);
@@ -46,10 +45,8 @@ const Home = () => {
     page,
     favorites,
     handleFilterChange,
-    handlePriceChange,
     handleSortChange,
     handlePageChange,
-    handleClearAllFilters,
     handleToggleFavorite,
     hasActiveFilters,
     getActiveFilterCount,
