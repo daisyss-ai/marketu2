@@ -45,6 +45,9 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) => path.startsWith(prefix));
   const isAuthRoute = AUTH_ROUTES.includes(path as (typeof AUTH_ROUTES)[number]);
+  // Pedidos de Server Action (ex: sendVerificationCode, verifyVerificationCode, signup)
+  // chegam como POST com este cabeçalho — não são navegação normal do utilizador.
+  const isServerAction = request.headers.get("next-action") !== null;
 
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
@@ -53,7 +56,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (isAuthRoute && user) {
+  if (isAuthRoute && user && !isServerAction) {
     const url = request.nextUrl.clone();
     url.pathname = "/home";
     url.search = "";
@@ -62,9 +65,3 @@ export async function middleware(request: NextRequest) {
 
   return response;
 }
-
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-};
