@@ -1,9 +1,11 @@
 'use client';
 import { login } from '@/app/auth/actions';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface LoginProps {
   onFlipToSignup?: () => void;
@@ -19,7 +21,7 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   const goToSignup = () => {
@@ -28,22 +30,17 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
   };
 
   const validateForm = () => {
-    const newErrors: any = {};
-
-    // Email validation (Supabase Auth uses email/password)
+    const newErrors: Record<string, string> = {};
     if (!email.trim()) {
       newErrors.email = 'Email é obrigatório';
     } else if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      newErrors.email = 'Por favor, introduza um email válido';
+      newErrors.email = 'Introduz um email válido';
     }
-
-    // Password validation
     if (!password.trim()) {
       newErrors.password = 'Palavra-passe é obrigatória';
     } else if (password.length < 6) {
-      newErrors.password = 'Palavra-passe deve ter no mínimo 6 caracteres';
+      newErrors.password = 'Mínimo de 6 caracteres';
     }
-
     return newErrors;
   };
 
@@ -55,134 +52,194 @@ const Login = ({ onFlipToSignup, onSlideToSignup }: LoginProps) => {
       toast.error('Verifique os campos e tente novamente');
       return;
     }
-
     setLoading(true);
+    // Reset de segurança: desbloqueia o botão após 8s caso o servidor não responda
+    setTimeout(() => setLoading(false), 8000);
   };
 
   return (
-    <div className="flex bg-surface rounded-2xl overflow-hidden shadow-xl w-full max-w-4xl min-h-125">
-      {/* Left Side - Light Gray */}
-      <div className="hidden md:flex md:w-1/2 bg-background items-center justify-center relative">
-        <div className="text-center p-8">
-          <div className="w-24 h-24 bg-primary rounded-full mx-auto mb-6 flex items-center justify-center text-white text-4xl font-extrabold shadow-lg">mU</div>
-          <h2 className="text-2xl font-bold text-foreground mb-3">Bem-vindo de volta!</h2>
-          <p className="text-muted leading-relaxed">Para te manteres ligado a nós, por favor faz login com os teus dados pessoais</p>
-        </div>
-      </div>
+    <div className="flex flex-col md:flex-row w-full min-h-screen">
 
-      {/* Right Side - Primary Action Color */}
-      <div className="w-full md:w-1/2 bg-primary flex items-center justify-center px-8 py-12">
-        <div className="w-full">
-          <h1 className="text-3xl font-bold text-primary-foreground mb-2">Entrar</h1>
-          <p className="text-primary-foreground/80 mb-8 text-sm">Acede à tua conta Marketu</p>
+      {/* ── Painel esquerdo ── */}
+      {/* ── Painel esquerdo ── */}
+<div className="
+  bg-[#4b2a8c]
+  flex flex-col items-center justify-center
+  py-8 px-6 gap-4
+  md:w-2/5 md:py-12 md:px-10 md:gap-6
+  md:m-3 md:rounded-3xl
+  shadow-2xl
+  overflow-hidden
+">
+  {/* Logo + nome — visível em mobile e desktop */}
+  <div className="flex items-center gap-2 self-start md:self-center">
+    <div className="w-7 h-7 rounded-md bg-white/20 flex items-center justify-center">
+      <span className="text-white font-bold text-xs">M</span>
+    </div>
+    <span className="text-white font-semibold text-base tracking-wide">MarketU</span>
+  </div>
+
+  <Image
+    src="/assets/Ecommerce web page-amico (1).png"
+    alt="Ilustração de marketplace estudantil"
+    width={399}
+    height={399}
+    className="w-[168px] md:w-full max-w-[336px] object-contain"
+    priority
+  />
+
+  {/* Tagline — agora visível também no mobile */}
+  <p className="text-white/80 text-sm text-center leading-relaxed max-w-[220px]">
+    Vende o que tens.<br />
+    Compra o que precisas.
+  </p>
+
+  {/* Elemento de confiança — agora visível também no mobile */}
+  <span className="text-white/70 text-xs font-medium bg-white/10 px-3 py-1.5 rounded-full">
+    +500 estudantes já usam o MarketU
+  </span>
+</div>
+      {/* ── Painel direito — formulário ── */}
+      <div className="w-full md:w-1/2 bg-white flex items-center justify-center px-6 py-8 md:px-10 md:py-12">
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Entrar</h1>
+          <p className="text-gray-500 text-sm mb-8">Acede à tua conta MarketU</p>
 
           {errors.submit && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm" role="alert">
               {errors.submit}
             </div>
           )}
 
           <form className="space-y-5" action={login} onSubmit={handleSubmit}>
             <input type="hidden" name="redirectTo" value={redirectTo} readOnly />
+
+            {/* Email */}
             <div>
-              <label htmlFor="studentId" className="block text-white text-sm font-semibold mb-2">
+              <label htmlFor="email" className="block text-gray-700 text-sm font-medium mb-1.5">
                 Email
               </label>
               <input
-                id="studentId"
+                id="email"
                 name="email"
                 type="email"
                 value={email}
+                autoComplete="email"
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (errors.email) setErrors({ ...errors, email: '' });
                 }}
-                className={`w-full px-4 py-3 rounded-xl border-0 focus:outline-none focus:ring-4 transition-all text-sm ${
+                className={`w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-2 transition-all ${
                   errors.email
-                    ? 'bg-error/5 text-error focus:ring-error/30'
-                    : 'bg-surface text-foreground focus:ring-primary/40'
+                    ? 'border-red-400 bg-red-50 text-red-700 focus:ring-red-200'
+                    : 'border-gray-200 bg-gray-50 text-gray-900 focus:ring-[#4b2a8c]/30 focus:border-[#4b2a8c]'
                 }`}
-                placeholder="nome@instituicao.edu"
+                placeholder="teu@email.com"
                 aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? 'email-error' : 'email-helper'}
               />
+              {!errors.email && (
+                <p id="email-helper" className="text-gray-400 text-xs mt-1.5">
+                  Podes usar o e-mail da escola ou pessoal
+                </p>
+              )}
               {errors.email && (
-                <p className="text-red-100 text-xs mt-1.5 font-medium">{errors.email}</p>
+                <p id="email-error" className="text-red-500 text-xs mt-1.5" role="alert">
+                  {errors.email}
+                </p>
               )}
             </div>
 
+            {/* Palavra-passe */}
             <div>
-              <label htmlFor="password" className="block text-white text-sm font-semibold mb-2">
+              <label htmlFor="password" className="block text-gray-700 text-sm font-medium mb-1.5">
                 Palavra-passe
               </label>
               <div className="relative">
                 <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (errors.password) setErrors({ ...errors, password: '' });
-                  }}
-                  className={`w-full px-4 py-3 pr-12 rounded-xl border-0 focus:outline-none focus:ring-4 transition-all text-sm ${
-                    errors.password
-                      ? 'bg-error/5 text-error focus:ring-error/30'
-                      : 'bg-surface text-foreground focus:ring-primary/40'
-                  }`}
-                  placeholder="Min. 6 caracteres"
-                  aria-invalid={!!errors.password}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-primary hover:text-primary/80 transition-colors min-w-11 min-h-11 flex items-center justify-center"
-                  aria-label={showPassword ? "Ocultar palavra-passe" : "Mostrar palavra-passe"}
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                autoComplete="current-password"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors({ ...errors, password: '' });
+                }}
+                className={`w-full px-4 py-2.5 pr-11 rounded-lg border text-sm focus:outline-none focus:ring-2 transition-all ${
+                  errors.password
+                    ? 'border-red-400 bg-red-50 text-red-700 focus:ring-red-200'
+                    : 'border-gray-200 bg-gray-50 text-gray-900 focus:ring-[#4b2a8c]/30 focus:border-[#4b2a8c]'
+                }`}
+                placeholder="Mín. 6 caracteres"
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-error' : undefined}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#4b2a8c] transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-[#4b2a8c]/30"
+                aria-label={showPassword ? 'Ocultar palavra-passe' : 'Mostrar palavra-passe'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
               </div>
               {errors.password && (
-                <p className="text-red-100 text-xs mt-1.5 font-medium">{errors.password}</p>
+                <p id="password-error" className="text-red-500 text-xs mt-1.5" role="alert">
+                  {errors.password}
+                </p>
               )}
             </div>
 
+            {/* Lembrar-me + Esqueceste */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
+              <label htmlFor="rememberMe" className="flex items-center gap-2 py-1 cursor-pointer">
                 <input
                   type="checkbox"
                   id="rememberMe"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded accent-white cursor-pointer"
+                  className="w-4 h-4 rounded accent-[#4b2a8c] cursor-pointer"
                 />
-                <label htmlFor="rememberMe" className="ml-2 text-white text-xs cursor-pointer">
-                  Lembrar-me
-                </label>
-              </div>
-              <Link href="/recover" className="text-white text-xs hover:underline">Esqueceste a senha?</Link>
+                <span className="text-gray-500 text-xs">Lembrar-me</span>
+              </label>
+              <Link href="/recover" className="text-[#4b2a8c] text-xs hover:underline py-1">
+                Esqueceste a senha?
+              </Link>
             </div>
 
+            {/* Botão */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-surface text-primary font-bold py-3.5 rounded-xl hover:bg-background disabled:opacity-50 transition-all text-sm mt-4 shadow-lg active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-primary/40"
+              className="w-full bg-[#4b2a8c] hover:bg-[#3d2275] text-white font-semibold py-2.5 rounded-lg disabled:opacity-60 transition-all text-sm focus:outline-none focus:ring-2 focus:ring-[#4b2a8c]/40 active:scale-[0.98] flex items-center justify-center gap-2"
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading && (
+                <svg
+                  className="animate-spin w-4 h-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                </svg>
+              )}
+              {loading ? 'A entrar...' : 'Entrar'}
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-primary-foreground/80 text-xs">
-              Ainda não tens conta?{' '}
-              <button
-                type="button"
-                onClick={goToSignup}
-                className="text-primary-foreground hover:underline font-bold"
-              >
-                Criar agora
-              </button>
-            </p>
-          </div>
+          <p className="mt-6 text-center text-gray-500 text-xs">
+            Ainda não tens conta?{' '}
+            <button
+              type="button"
+              onClick={goToSignup}
+              className="text-[#4b2a8c] font-semibold hover:underline"
+            >
+              Criar agora
+            </button>
+          </p>
         </div>
       </div>
     </div>

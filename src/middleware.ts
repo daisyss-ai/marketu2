@@ -86,6 +86,9 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = AUTH_ROUTES.includes(
     path as (typeof AUTH_ROUTES)[number]
   );
+  // Pedidos de Server Action (ex: sendVerificationCode, verifyVerificationCode, signup)
+  // chegam como POST com este cabeçalho — não são navegação normal do utilizador.
+  const isServerAction = request.headers.get("next-action") !== null;
 
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
@@ -94,7 +97,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (isAuthRoute && user) {
+  if (isAuthRoute && user && !isServerAction) {
     const url = request.nextUrl.clone();
     url.pathname = "/home";
     url.search = "";

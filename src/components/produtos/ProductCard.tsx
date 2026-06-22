@@ -65,10 +65,11 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
             />
           </button>
           <Image
-            src={product.img || '/assets/placeholder-product.png'}
+            src={product.img || '/assets/placeholder-product.svg'}  // ← .svg
             alt={product.title}
             fill
             sizes="(max-width: 768px) 100vw, 25vw"
+            unoptimized={!!product.img}  // ← adiciona isto
             className="w-full h-full object-cover"
           />
         </div>

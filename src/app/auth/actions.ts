@@ -14,6 +14,85 @@ function sanitizeRedirectTo(value: FormDataEntryValue | null): string | null {
   return redirectTo;
 }
 
+function buildSignupErrorRedirect(message: string, redirectTo: string | null): string {
+  return (
+    "/signup?error=" +
+    encodeURIComponent(message) +
+    (redirectTo ? "&redirectTo=" + encodeURIComponent(redirectTo) : "")
+  );
+}
+
+type DuplicateCheckResult =
+  | { kind: "email" }
+  | { kind: "studentId" }
+  | { kind: "none" }
+  | { kind: "lookup_error"; message: string };
+
+async function checkDuplicates(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  email: string,
+  studentId: string,
+): Promise<DuplicateCheckResult> {
+  const safeMaybeSingle = async (table: string, column: string, value: string) => {
+    const { data, error } = await supabase
+      .from(table)
+      .select("*")
+      .eq(column, value)
+      .limit(1)
+      .maybeSingle();
+    return { data, error };
+  };
+
+  // Preferred path (if migration `check_signup_conflicts` is deployed)
+  const { data: conflictData, error: conflictError } = await supabase.rpc("check_signup_conflicts", {
+    p_email: email,
+    p_student_id: studentId,
+  });
+
+  if (!conflictError && conflictData) {
+    const row = Array.isArray(conflictData) ? conflictData[0] : conflictData;
+    if (row && typeof row === "object" && ("email_exists" in row || "student_id_exists" in row)) {
+      const { email_exists, student_id_exists } = row as {
+        email_exists?: boolean;
+        student_id_exists?: boolean;
+      };
+
+      if (email_exists) return { kind: "email" };
+      if (student_id_exists) return { kind: "studentId" };
+      return { kind: "none" };
+    }
+  }
+
+  // 1) enrollment_code (unique)
+  const { data: existingUser, error: existingUserError } = await safeMaybeSingle(
+    "users",
+    "enrollment_code",
+    studentId,
+  );
+
+  if (!existingUserError && existingUser) return { kind: "studentId" };
+
+  // 2) Optional: `profiles` table duplicates (common in many Supabase setups)
+  const profileEmailColumns = ["email", "user_email"] as const;
+  for (const column of profileEmailColumns) {
+    const { data, error } = await safeMaybeSingle("profiles", column, email);
+    if (!error && data) return { kind: "email" };
+    if (error?.message?.includes("column") && error.message.includes("does not exist")) continue;
+    if (error?.message?.includes("relation") && error.message.includes("does not exist")) break;
+  }
+
+  const profileStudentColumns = ["student_id", "studentId"] as const;
+  for (const column of profileStudentColumns) {
+    const { data, error } = await safeMaybeSingle("profiles", column, studentId);
+    if (!error && data) return { kind: "studentId" };
+    if (error?.message?.includes("column") && error.message.includes("does not exist")) continue;
+    if (error?.message?.includes("relation") && error.message.includes("does not exist")) break;
+  }
+
+  if (existingUserError) return { kind: "lookup_error", message: existingUserError.message };
+  return { kind: "none" };
+}
+
 export async function login(formData: FormData) {
   const supabase = await createClient();
 
@@ -49,97 +128,35 @@ export async function login(formData: FormData) {
   redirect("/home?message=" + encodeURIComponent("Login efectuado com sucesso"));
 }
 
-export async function signup(formData: FormData) {
+interface VerificationPayload {
+  studentId: string;
+  fullName: string;
+  email: string;
+  institutionId: string;
+}
+
+export async function sendVerificationCode(
+  payload: VerificationPayload,
+): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  const studentId = (formData.get("studentId") as string | null)?.trim() ?? "";
-  const fullName = (formData.get("fullName") as string | null)?.trim() ?? "";
-  const email = ((formData.get("email") as string | null)?.trim() ?? "").toLowerCase();
-  const institutionId = (formData.get("institution") as string | null)?.trim() ?? "";
-  const phone = (formData.get("phone") as string | null)?.trim() ?? "";
-  const password = (formData.get("password") as string | null) ?? "";
-  const redirectTo = sanitizeRedirectTo(formData.get("redirectTo"));
+  const studentId = payload.studentId.trim();
+  const fullName = payload.fullName.trim();
+  const email = payload.email.trim().toLowerCase();
+  const institutionId = payload.institutionId.trim();
 
-  if (!studentId || !fullName || !email || !institutionId || !password) {
-    redirect("/signup?error=" + encodeURIComponent("Preencha todos os campos obrigatórios."));
+  if (!studentId || !fullName || !email || !institutionId) {
+    return { success: false, error: "Preencha todos os campos obrigatórios." };
   }
 
-  const safeMaybeSingle = async (table: string, column: string, value: string) => {
-    const { data, error } = await supabase
-      .from(table)
-      .select("*")
-      .eq(column, value)
-      .limit(1)
-      .maybeSingle();
-    return { data, error };
-  };
-
-  const checkDuplicates = async () => {
-    // Preferred path (if migration `check_signup_conflicts` is deployed)
-    const { data: conflictData, error: conflictError } = await supabase.rpc("check_signup_conflicts", {
-      p_email: email,
-      p_student_id: studentId,
-    });
-
-    if (!conflictError && conflictData) {
-      const row = Array.isArray(conflictData) ? conflictData[0] : conflictData;
-      if (row && typeof row === "object" && ("email_exists" in row || "student_id_exists" in row)) {
-        const { email_exists, student_id_exists } = row as {
-          email_exists?: boolean;
-          student_id_exists?: boolean;
-        };
-
-        if (email_exists) return { kind: "email" as const };
-        if (student_id_exists) return { kind: "studentId" as const };
-        return { kind: "none" as const };
-      }
-    }
-
-    // 1) enrollment_code (unique)
-    const { data: existingUser, error: existingUserError } = await safeMaybeSingle(
-      "users",
-      "enrollment_code",
-      studentId,
-    );
-
-    if (!existingUserError && existingUser) return { kind: "studentId" as const };
-
-    // 2) Optional: `profiles` table duplicates (common in many Supabase setups)
-    //    Handle both `student_id` and `studentId` column naming.
-    const profileEmailColumns = ["email", "user_email"] as const;
-    for (const column of profileEmailColumns) {
-      const { data, error } = await safeMaybeSingle("profiles", column, email);
-      if (!error && data) return { kind: "email" as const };
-      if (error?.message?.includes("column") && error.message.includes("does not exist")) continue;
-      if (error?.message?.includes("relation") && error.message.includes("does not exist")) break;
-    }
-
-    const profileStudentColumns = ["student_id", "studentId"] as const;
-    for (const column of profileStudentColumns) {
-      const { data, error } = await safeMaybeSingle("profiles", column, studentId);
-      if (!error && data) return { kind: "studentId" as const };
-      if (error?.message?.includes("column") && error.message.includes("does not exist")) continue;
-      if (error?.message?.includes("relation") && error.message.includes("does not exist")) break;
-    }
-
-    if (existingUserError) return { kind: "lookup_error" as const, message: existingUserError.message };
-    return { kind: "none" as const };
-  };
-
-  // Pre-check duplicates so we can show a friendly message (instead of a generic 500).
-  const preDup = await checkDuplicates();
-  if (preDup.kind === "email") {
-    redirect("/signup?error=" + encodeURIComponent("Este email já está registado."));
-  }
-  if (preDup.kind === "studentId") {
-    redirect("/signup?error=" + encodeURIComponent("Este ID de estudante já está registado."));
-  }
-  if (preDup.kind === "lookup_error") {
-    console.error("Signup lookup error:", preDup.message);
-    redirect("/signup?error=" + encodeURIComponent(preDup.message));
+  const dup = await checkDuplicates(supabase, email, studentId);
+  if (dup.kind === "email") return { success: false, error: "Este email já está registado." };
+  if (dup.kind === "studentId") return { success: false, error: "Este ID de estudante já está registado." };
+  if (dup.kind === "lookup_error") {
+    console.error("Signup lookup error:", dup.message);
+    return { success: false, error: dup.message };
   }
 
-  // Verify institution exists
   const { data: institutionData, error: instError } = await supabase
     .from("institution")
     .select("id")
@@ -147,124 +164,148 @@ export async function signup(formData: FormData) {
     .single();
 
   if (instError || !institutionData) {
-    redirect("/signup?error=" + encodeURIComponent("Instituição não encontrada"));
+    return { success: false, error: "Instituição não encontrada." };
   }
 
-  const userMetadata = {
-    name: fullName,
-    fullName,
-    full_name: fullName,
-    institution: institutionId,
-    institutionId,
-    institution_id: institutionId,
-    studentId,
-    // IMPORTANT: your DB trigger `handle_new_user()` reads `raw_user_meta_data->>'student_id'`
-    // and inserts into `public.profiles.student_id` (unique). If we don't send it, it becomes '' and collides.
-    student_id: studentId,
-    enrollment_code: studentId,
-    phone,
-    role: "student",
-  };
-
-  const { data: authData, error: authError } = await supabase.auth.signUp({
+  const { error: otpError } = await supabase.auth.signInWithOtp({
     email,
-    password,
-    options: { data: userMetadata },
+    options: {
+      shouldCreateUser: true,
+      data: {
+        name: fullName,
+        fullName,
+        full_name: fullName,
+        institution: institutionId,
+        institutionId,
+        institution_id: institutionId,
+        studentId,
+        student_id: studentId,
+        enrollment_code: studentId,
+        role: "student",
+      },
+    },
   });
 
-  if (authError) {
-    console.error("Signup auth error:", {
-      message: authError.message,
-      status: (authError as any).status,
-      code: (authError as any).code,
-    });
+  if (otpError) {
+    console.error("sendVerificationCode error:", otpError);
+    return { success: false, error: "Não foi possível enviar o código. Tenta novamente." };
+  }
 
-    const status = (authError as any).status as number | undefined;
-    const code = (authError as any).code as string | undefined;
-    const msg = (authError.message ?? "").toLowerCase();
+  return { success: true };
+}
 
-    if (msg.includes("user already registered")) {
-      redirect("/signup?error=" + encodeURIComponent("Este email já está registado."));
-    }
+export async function verifyVerificationCode(payload: {
+  email: string;
+  token: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const email = payload.email.trim().toLowerCase();
+  const token = payload.token.trim();
 
-    // This is the case you reported ("Database error saving new user"),
-    // often caused by DB triggers hitting unique constraints (e.g. profiles_student_id_key).
-    if (status === 500 && code === "unexpected_failure") {
-      const postDup = await checkDuplicates();
-      if (postDup.kind === "email") {
-        redirect("/signup?error=" + encodeURIComponent("Este email já está registado."));
-      }
-      if (postDup.kind === "studentId") {
-        redirect("/signup?error=" + encodeURIComponent("Este ID de estudante já está registado."));
-      }
-    }
+  if (!/^\d{6}$/.test(token)) {
+    return { success: false, error: "Código inválido. Introduz os 6 dígitos." };
+  }
 
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: "email",
+  });
+
+  if (error) {
+    return { success: false, error: "Código incorreto ou expirado. Tenta novamente." };
+  }
+
+  return { success: true };
+}
+
+export async function signup(formData: FormData) {
+  const supabase = await createClient();
+
+  const studentId = (formData.get("studentId") as string | null)?.trim() ?? "";
+  const fullName = (formData.get("fullName") as string | null)?.trim() ?? "";
+  const institutionId = (formData.get("institution") as string | null)?.trim() ?? "";
+  const phone = (formData.get("phone") as string | null)?.trim() ?? "";
+  const password = (formData.get("password") as string | null) ?? "";
+  const redirectTo = sanitizeRedirectTo(formData.get("redirectTo"));
+
+  if (!studentId || !fullName || !institutionId || !password) {
+    redirect(buildSignupErrorRedirect("Preencha todos os campos obrigatórios.", redirectTo));
+  }
+
+  const { data: userData, error: userFetchError } = await supabase.auth.getUser();
+
+  if (userFetchError || !userData.user) {
     redirect(
-      "/signup?error=" +
-        encodeURIComponent("Não foi possível criar a conta. Verifique se o email/ID já existem e tente novamente."),
+      buildSignupErrorRedirect(
+        "A tua verificação expirou. Confirma o teu e-mail novamente para continuar.",
+        redirectTo,
+      ),
     );
   }
 
-  if (authData.user) {
-    let admin: ReturnType<typeof createAdminClient> | null = null;
-    try {
-      admin = createAdminClient();
-    } catch {
-      // Optional: if you don't provide SUPABASE_SERVICE_ROLE_KEY, we fall back to the session client.
-      // This may fail when RLS is enabled.
-    }
+  const { error: updateError } = await supabase.auth.updateUser({
+    password,
+    data: { phone },
+  });
 
-    const db = admin ?? supabase;
-
-    const { error: userError } = await db.from("users").upsert(
-      {
-        id: authData.user.id,
-        institution_id: institutionId,
-        enrollment_code: studentId,
-        password_hash: password, // TODO: hash in production
-        role: "student",
-        full_name: fullName,
-        status: "pending",
-        is_verified: false,
-      },
-      { onConflict: "id" },
-    );
-
-    if (userError) {
-      console.error("Signup users upsert error:", userError);
-      redirect("/signup?error=" + encodeURIComponent(userError.message));
-    }
-
-    const { error: studentError } = await db.from("students").upsert(
-      {
-        id: authData.user.id,
-        class_id: null,
-        enrollment_year: new Date().getFullYear(),
-        is_seller: false,
-        rating: 0.0,
-        total_reviews: 0,
-      },
-      { onConflict: "id" },
-    );
-
-    if (studentError) {
-      await db.from("users").delete().eq("id", authData.user.id);
-      console.error("Signup students upsert error:", studentError);
-      redirect("/signup?error=" + encodeURIComponent(studentError.message));
-    }
+  if (updateError) {
+    console.error("Signup updateUser error:", updateError);
+    redirect(buildSignupErrorRedirect("Não foi possível definir a senha. Tenta novamente.", redirectTo));
   }
 
-  if (authData.session) {
-    if (redirectTo && redirectTo !== "/login" && redirectTo !== "/signup") {
-      redirect(redirectTo);
-    }
-    redirect("/home?message=" + encodeURIComponent("Conta criada com sucesso."));
+  let admin: ReturnType<typeof createAdminClient> | null = null;
+  try {
+    admin = createAdminClient();
+  } catch {
+    // Optional: if you don't provide SUPABASE_SERVICE_ROLE_KEY, we fall back to the session client.
+    // This may fail when RLS is enabled.
   }
 
-  redirect(
-    "/login?message=" +
-      encodeURIComponent("Conta criada com sucesso. Verifique o email para confirmar e depois faça login."),
+  const db = admin ?? supabase;
+  const userId = userData.user.id;
+
+  const { error: userError } = await db.from("users").upsert(
+    {
+      id: userId,
+      institution_id: institutionId,
+      enrollment_code: studentId,
+      role: "student",
+      full_name: fullName,
+      status: "pending",
+      is_verified: true,
+    },
+    { onConflict: "id" },
   );
+
+  if (userError) {
+    console.error("Signup users upsert error:", userError);
+    redirect(buildSignupErrorRedirect(userError.message, redirectTo));
+  }
+
+  const { error: studentError } = await db.from("students").upsert(
+    {
+      id: userId,
+      class_id: null,
+      enrollment_year: new Date().getFullYear(),
+      is_seller: false,
+      rating: 0.0,
+      total_reviews: 0,
+    },
+    { onConflict: "id" },
+  );
+
+  if (studentError) {
+    await db.from("users").delete().eq("id", userId);
+    console.error("Signup students upsert error:", studentError);
+    redirect(buildSignupErrorRedirect(studentError.message, redirectTo));
+  }
+
+  if (redirectTo && redirectTo !== "/login" && redirectTo !== "/signup") {
+    redirect(redirectTo);
+  }
+
+  redirect("/home?message=" + encodeURIComponent("Conta criada com sucesso."));
 }
 
 export async function logout() {
