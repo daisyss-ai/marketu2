@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js';
 import { logAdminAction } from '@/lib/admin/logAction';
 import { revalidatePath } from 'next/cache';
 
@@ -327,6 +328,49 @@ export async function getInstitutionById(id: string) {
       success: false,
       error: error instanceof Error ? error.message : 'Erro ao carregar instituição.',
       data: null,
+    };
+  }
+}
+
+export async function uploadInstitutionLogo(
+  institutionId: string,
+  fileBase64: string,
+  fileName: string
+) {
+  try {
+    await getAdminUser();
+    const supabaseAdmin = createServiceRoleClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const ext = fileName.split('.').pop() ?? 'jpg';
+    const path = `${institutionId}/logo.${ext}`;
+    const buffer = Buffer.from(fileBase64, 'base64');
+    const mimeType = ext === 'png' ? 'image/png'
+      : ext === 'webp' ? 'image/webp'
+      : 'image/jpeg';
+
+    const { error, data: uploadData } = await supabaseAdmin.storage
+     .from('institutions')
+     .upload(path, buffer, { 
+      upsert: true,
+      contentType: mimeType
+    });
+
+console.log('UPLOAD RESULT:', { error, uploadData, path, bufferSize: buffer.length });
+
+if (error) throw new Error(error.message);
+
+    const { data } = supabaseAdmin.storage
+      .from('institutions')
+      .getPublicUrl(path);
+
+    return { success: true, publicUrl: data.publicUrl };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao fazer upload do logótipo.',
     };
   }
 }

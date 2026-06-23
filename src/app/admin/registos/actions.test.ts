@@ -166,7 +166,6 @@ describe("Registos Server Actions", () => {
     });
 
     it("rolls back verification status if user update fails", async () => {
-      // Auth Client Mocks
       const mockAuthSupabase = {
         auth: {
           getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-id" } }, error: null }),
@@ -181,14 +180,9 @@ describe("Registos Server Actions", () => {
       };
       vi.mocked(createClient).mockResolvedValue(mockAuthSupabase as any);
 
-      // Admin Client Mocks
-      const verifUpdateChain = {
-        eq: vi.fn().mockResolvedValue({ error: null }),
-      };
-      const userUpdateChain = {
-        eq: vi.fn().mockResolvedValue({ error: { message: "db constraint error" } }),
-      };
-      
+      const verifEq = vi.fn().mockResolvedValue({ error: null });
+      const userEq = vi.fn().mockResolvedValue({ error: { message: "db constraint error" } });
+
       const mockAdminSupabase = {
         from: vi.fn().mockImplementation((table) => {
           if (table === "enrollment_verifications") {
@@ -201,12 +195,12 @@ describe("Registos Server Actions", () => {
                   }),
                 }),
               }),
-              update: vi.fn().mockReturnValue(verifUpdateChain),
+              update: vi.fn().mockReturnValue({ eq: verifEq }),
             };
           }
           if (table === "users") {
             return {
-              update: vi.fn().mockReturnValue(userUpdateChain),
+              update: vi.fn().mockReturnValue({ eq: userEq }),
             };
           }
         }),
@@ -216,10 +210,9 @@ describe("Registos Server Actions", () => {
       const result = await processEnrollmentAction({ id: "v-1", status: "active" });
       expect(result.success).toBe(false);
       expect(result.error).toContain("db constraint error");
-      // Verify rollback called
-      expect(mockAdminSupabase.from).toHaveBeenCalledWith("enrollment_verifications");
-      // Rollback updates verification back to pending
-      expect(verifUpdateChain.eq).toHaveBeenCalled();
+      // First call = initial update, second call = rollback to pending
+      expect(verifEq).toHaveBeenCalledTimes(2);
+      expect(verifEq).toHaveBeenNthCalledWith(2, "id", "v-1");
     });
   });
 });

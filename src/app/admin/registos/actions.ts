@@ -33,7 +33,7 @@ export async function getPendingEnrollments(institutionId?: string) {
         enrollment_code,
         submitted_at,
         status,
-        users:users!inner (
+          users:users!user_id!inner (
           id,
           full_name,
           enrollment_code,
@@ -93,49 +93,48 @@ export async function processEnrollmentAction(params: {
   status: 'active' | 'suspended';
   rejectionNote?: string;
 }) {
+  const { id, status, rejectionNote } = params;
+
+  if (status === 'suspended' && (!rejectionNote || !rejectionNote.trim())) {
+    return { success: false, error: 'O motivo de rejeição é obrigatório.' };
+  }
+
+  const supabase = await createClient();
+  const { data: { user: adminUser }, error: authErr } = await supabase.auth.getUser();
+
+  if (authErr || !adminUser) {
+    return { success: false, error: 'Não autorizado.' };
+  }
+
+  const { data: adminProfile, error: profileErr } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', adminUser.id)
+    .single();
+
+  if (profileErr || adminProfile?.role !== 'admin') {
+    return { success: false, error: 'Acesso negado. Apenas administradores.' };
+  }
+
+  const adminDb = createAdminClient();
+
+  const { data: verification, error: fetchErr } = await adminDb
+    .from('enrollment_verifications')
+    .select('status, user_id')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (fetchErr || !verification) {
+    return { success: false, error: fetchErr?.message || 'Registo de verificação não encontrado.' };
+  }
+
+  if (verification.status !== 'pending') {
+    return { success: false, error: 'Este registo já foi processado.' };
+  }
+
+  let verificationUpdated = false;
+
   try {
-    const { id, status, rejectionNote } = params;
-    
-    if (status === 'suspended' && (!rejectionNote || !rejectionNote.trim())) {
-      return { success: false, error: 'O motivo de rejeição é obrigatório.' };
-    }
-
-    const supabase = await createClient();
-    const { data: { user: adminUser }, error: authErr } = await supabase.auth.getUser();
-    
-    if (authErr || !adminUser) {
-      return { success: false, error: 'Não autorizado.' };
-    }
-
-    // Double check that the user is an admin
-    const { data: adminProfile, error: profileErr } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', adminUser.id)
-      .single();
-
-    if (profileErr || adminProfile?.role !== 'admin') {
-      return { success: false, error: 'Acesso negado. Apenas administradores.' };
-    }
-
-    const adminDb = createAdminClient();
-
-    // Fetch the verification first to see if it exists and find the user_id
-    const { data: verification, error: fetchErr } = await adminDb
-      .from('enrollment_verifications')
-      .select('status, user_id')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (fetchErr || !verification) {
-      return { success: false, error: fetchErr?.message || 'Registo de verificação não encontrado.' };
-    }
-
-    if (verification.status !== 'pending') {
-      return { success: false, error: 'Este registo já foi processado.' };
-    }
-
-    // 1. Update verification
     const { error: verifUpdateErr } = await adminDb
       .from('enrollment_verifications')
       .update({
@@ -147,54 +146,51 @@ export async function processEnrollmentAction(params: {
       .eq('id', id);
 
     if (verifUpdateErr) {
-      return { success: false, error: `Erro ao atualizar verificação: ${verifUpdateErr.message}` };
+      throw new Error(`Erro ao atualizar verificação: ${verifUpdateErr.message}`);
     }
 
-    // 2. Update user
+    verificationUpdated = true;
+
     const { error: userUpdateErr } = await adminDb
       .from('users')
       .update({
         status,
-        is_verified: status === 'active' ? true : false
+        ...(status === 'active' ? { is_verified: true } : {})
       })
       .eq('id', verification.user_id);
 
     if (userUpdateErr) {
-      // Rollback verification to pending
+      throw new Error(`Erro ao atualizar utilizador: ${userUpdateErr.message}`);
+    }
+
+    await logAdminAction({
+      adminId: adminUser.id,
+      action: status === 'active' ? 'approve_enrollment' : 'reject_enrollment',
+      targetType: 'enrollment',
+      targetId: id,
+      reason: status === 'suspended' ? rejectionNote?.trim() : undefined,
+      metadata: {
+        user_id: verification.user_id,
+        ...(status === 'suspended' ? { rejection_note: rejectionNote?.trim() } : {}),
+      }
+    });
+
+    revalidatePath('/admin/registos');
+    revalidatePath('/admin');
+    return { success: true };
+  } catch (error) {
+    if (verificationUpdated) {
       await adminDb
         .from('enrollment_verifications')
         .update({
           status: 'pending',
           reviewed_by: null,
           reviewed_at: null,
-          rejection_note: null
+          rejection_note: null,
         })
         .eq('id', id);
-
-      return { success: false, error: `Erro ao atualizar utilizador: ${userUpdateErr.message}. Operação revertida.` };
     }
 
-    // 3. Log admin action
-    try {
-      await logAdminAction({
-        adminId: adminUser.id,
-        action: status === 'active' ? 'approve_enrollment' : 'reject_enrollment',
-        targetType: 'enrollment',
-        targetId: id,
-        reason: status === 'suspended' ? rejectionNote?.trim() : undefined,
-        metadata: {
-          user_id: verification.user_id,
-          rejection_note: status === 'suspended' ? rejectionNote?.trim() : undefined,
-        }
-      });
-    } catch (logErr) {
-      console.error('Error logging admin action:', logErr);
-    }
-
-    revalidatePath('/admin/registos');
-    revalidatePath('/admin');
-    return { success: true };
-  } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Erro ao processar registo.'

@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback, useState, useTransition } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell, Legend,
 } from 'recharts'
 import { Download } from 'lucide-react'
+import type { ActionResult } from './actions'
 
 // --- Types shared with page ---
 
@@ -33,45 +34,40 @@ export type CategoryDist = {
 
 export type OrderStatusPoint = { status: string; count: number }
 
-// --- Export CSV Button ---
+// --- Export Form (form-based Server Action) ---
 
-export function ExportCSVButton({ label, action }: {
+export function ExportForm({ action, label }: {
+  action: (prevState: ActionResult, formData: FormData) => Promise<{ csv: string; count: number }>
   label: string
-  action: () => Promise<{ csv: string; count: number }>
 }) {
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
+  const [state, formAction, pending] = useActionState(action, null as ActionResult)
+  const prevStateRef = useRef(state)
 
-  const handleExport = useCallback(() => {
-    setError(null)
-    startTransition(async () => {
-      try {
-        const result = await action()
-        const blob = new Blob(['\uFEFF' + result.csv], { type: 'text/csv;charset=utf-8;' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${label.toLowerCase().replace(/\s+/g, '_')}.csv`
-        a.click()
-        URL.revokeObjectURL(url)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao exportar')
-      }
-    })
-  }, [action, label])
+  useEffect(() => {
+    if (!state) return
+    if (prevStateRef.current === state) return
+    prevStateRef.current = state
+
+    const blob = new Blob(['\uFEFF' + state.csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${label.toLowerCase().replace(/\s+/g, '_')}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [state, label])
 
   return (
-    <div className="flex items-center gap-2">
+    <form action={formAction}>
       <button
-        onClick={handleExport}
+        type="submit"
         disabled={pending}
         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-500 bg-white border border-[#EDE7FF] rounded-xl hover:bg-[#f5f0ff] hover:text-[#4B187C] transition-colors disabled:opacity-50 cursor-pointer"
       >
         <Download className="w-3.5 h-3.5" />
         {pending ? 'A exportar...' : label}
       </button>
-      {error && <span className="text-xs text-red-500">{error}</span>}
-    </div>
+    </form>
   )
 }
 

@@ -1,15 +1,16 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   Building2,
   ExternalLink,
+  ImageUp,
   Plus,
   Users,
   X,
 } from 'lucide-react'
-import { getInstitutionsWithCount, createInstitution, deactivateInstitution, activateInstitution } from './actions'
+import { getInstitutionsWithCount, createInstitution, updateInstitution, uploadInstitutionLogo, deactivateInstitution, activateInstitution } from './actions'
 import type { InstitutionWithCount } from './actions'
 
 export default function InstituicoesPage() {
@@ -21,7 +22,23 @@ export default function InstituicoesPage() {
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
   const [logoUrl, setLogoUrl] = useState('')
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = reader.result as string
+        resolve(result.split(',')[1])
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
 
   const [showInactive, setShowInactive] = useState(false)
 
@@ -44,6 +61,8 @@ export default function InstituicoesPage() {
     setName('')
     setAddress('')
     setLogoUrl('')
+    setLogoFile(null)
+    setLogoPreview(null)
     setShowModal(true)
   }
 
@@ -54,16 +73,38 @@ export default function InstituicoesPage() {
     const res = await createInstitution({
       name: name.trim(),
       address: address.trim() || undefined,
-      logo_url: logoUrl.trim() || undefined,
     })
 
-    if (res.success) {
-      showToast('success', 'Instituição criada.')
-      setShowModal(false)
-      load()
-    } else {
+    if (!res.success) {
       showToast('error', res.error || 'Erro ao criar instituição.')
+      setSaving(false)
+      return
     }
+
+    if (logoFile && res.data?.id) {
+      setUploading(true)
+
+      const base64 = await fileToBase64(logoFile)
+      const uploadRes = await uploadInstitutionLogo(res.data.id, base64, logoFile.name)
+
+      if (!uploadRes.success) {
+        showToast('error', 'Instituição criada, mas erro ao fazer upload do logótipo.')
+        setUploading(false)
+        setSaving(false)
+        return
+      }
+
+      await updateInstitution(res.data.id, {
+        name: name.trim(),
+        address: address.trim() || undefined,
+        logo_url: uploadRes.publicUrl,
+      })
+      setUploading(false)
+    }
+
+    showToast('success', 'Instituição criada.')
+    setShowModal(false)
+    load()
     setSaving(false)
   }
 
@@ -146,9 +187,13 @@ export default function InstituicoesPage() {
                         href={`/admin/instituicoes/${inst.id}`}
                         className="flex items-center gap-3 hover:text-[#4B187C] transition-colors"
                       >
-                        <div className="w-9 h-9 rounded-full bg-[#EDE7FF] text-[#4B187C] flex items-center justify-center font-bold text-sm shrink-0">
-                          {inst.name.charAt(0).toUpperCase()}
-                        </div>
+                        {inst.logo_url ? (
+                          <img src={inst.logo_url} alt={inst.name} className="w-9 h-9 rounded-full object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-[#EDE7FF] text-[#4B187C] flex items-center justify-center font-bold text-sm shrink-0">
+                            {inst.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                         <span className="text-sm font-bold text-gray-800 group-hover:text-[#4B187C] transition-colors">
                           {inst.name}
                         </span>
@@ -161,7 +206,7 @@ export default function InstituicoesPage() {
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         inst.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-500'
                       }`}>
-                        {inst.is_active ? 'Ativa' : 'Inativa'}
+                        {inst.is_active ? 'Ativo' : 'Inativo'}
                       </span>
                     </td>
                     <td className="px-4 py-3.5 text-center">
@@ -228,21 +273,57 @@ export default function InstituicoesPage() {
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 mb-1.5">URL do Logótipo</label>
+                <label className="block text-[11px] font-bold text-gray-500 mb-1.5">Logótipo</label>
+                <div className="flex items-center gap-3">
+                  {(logoPreview || logoUrl) && (
+                    <div className="w-14 h-14 rounded-xl border border-[#EDE7FF] overflow-hidden shrink-0 bg-gray-50 flex items-center justify-center">
+                      <img
+                        src={logoPreview || logoUrl}
+                        alt="Logo preview"
+                        className="object-contain w-full h-full"
+                      />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2.5 border border-[#EDE7FF] rounded-xl text-xs font-bold text-gray-500 hover:bg-[#f8f7ff] hover:border-[#4B187C] hover:text-[#4B187C] transition-colors"
+                  >
+                    <ImageUp className="w-4 h-4" />
+                    {logoFile ? 'Alterar imagem' : 'Selecionar imagem'}
+                  </button>
+                  {(logoPreview || logoUrl) && (
+                    <button
+                      type="button"
+                      onClick={() => { setLogoFile(null); setLogoPreview(null); setLogoUrl('') }}
+                      className="px-3 py-2.5 rounded-xl text-[11px] font-bold text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      Remover
+                    </button>
+                  )}
+                </div>
                 <input
-                  value={logoUrl}
-                  onChange={(e) => setLogoUrl(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-[#EDE7FF] rounded-xl text-xs font-sans text-gray-700 focus:outline-none focus:border-[#4B187C]"
-                  placeholder="https://..."
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    setLogoFile(file)
+                    setLogoPreview(URL.createObjectURL(file))
+                    setLogoUrl('')
+                  }}
                 />
+                <p className="text-[10px] text-gray-400 mt-1.5">Formatos aceites: JPG, PNG, WebP</p>
               </div>
             </div>
             <div className="flex items-center gap-2 justify-end mt-6">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 border border-[#EDE7FF] rounded-xl text-[11px] font-bold text-gray-500 hover:bg-gray-50 transition-colors">
                 Cancelar
               </button>
-              <button onClick={handleCreate} disabled={saving || !name.trim()} className="px-4 py-2 bg-[#4B187C] text-white rounded-xl text-[11px] font-bold hover:bg-[#3d1266] transition-colors disabled:opacity-50">
-                {saving ? 'A criar...' : 'Criar'}
+              <button onClick={handleCreate} disabled={saving || uploading || !name.trim()} className="px-4 py-2 bg-[#4B187C] text-white rounded-xl text-[11px] font-bold hover:bg-[#3d1266] transition-colors disabled:opacity-50">
+                {uploading ? 'A enviar...' : saving ? 'A criar...' : 'Criar'}
               </button>
             </div>
           </div>

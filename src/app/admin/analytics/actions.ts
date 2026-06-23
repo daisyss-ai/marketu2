@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { logAdminAction } from '@/lib/admin/logAction'
 
+export type ActionResult = { csv: string; count: number } | null
+
 function escapeCSV(value: unknown): string {
   if (value === null || value === undefined) return ''
   const str = String(value)
@@ -21,7 +23,7 @@ async function getAdminUser() {
   return { adminId: user.id, supabase }
 }
 
-export async function exportActivityCSV(days: number) {
+export async function exportActivityCSV(days: number, _prevState: ActionResult, _formData: FormData) {
   const { adminId, supabase } = await getAdminUser()
 
   const since = new Date(Date.now() - days * 86400000).toISOString()
@@ -54,7 +56,7 @@ export async function exportActivityCSV(days: number) {
   return { csv, count: allDays.length }
 }
 
-export async function exportTopProductsCSV(type: 'sales' | 'reviews') {
+export async function exportTopProductsCSV(type: 'sales' | 'reviews', _prevState: ActionResult, _formData: FormData) {
   const { adminId, supabase } = await getAdminUser()
 
   const { data } = await supabase
@@ -79,7 +81,7 @@ export async function exportTopProductsCSV(type: 'sales' | 'reviews') {
   return { csv, count: products.length }
 }
 
-export async function exportTopVendorsCSV() {
+export async function exportTopVendorsCSV(_prevState: ActionResult, _formData: FormData) {
   const { adminId, supabase } = await getAdminUser()
 
   const { data } = await supabase
@@ -116,7 +118,7 @@ export async function exportTopVendorsCSV() {
   return { csv, count: vendors.length }
 }
 
-export async function exportCategoriesCSV() {
+export async function exportCategoriesCSV(_prevState: ActionResult, _formData: FormData) {
   const { adminId, supabase } = await getAdminUser()
 
   const { data } = await supabase
@@ -148,7 +150,7 @@ export async function exportCategoriesCSV() {
   return { csv, count: categories.length }
 }
 
-export async function exportOrderStatusCSV() {
+export async function exportOrderStatusCSV(_prevState: ActionResult, _formData: FormData) {
   const { adminId, supabase } = await getAdminUser()
 
   const { data } = await supabase.from('orders').select('status')

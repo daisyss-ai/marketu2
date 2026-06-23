@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   getPendingEnrollments, 
   getInstitutions, 
@@ -43,6 +44,7 @@ type Institution = {
 };
 
 export default function RegistosPage() {
+  const router = useRouter();
   const [verifications, setVerifications] = useState<EnrollmentVerification[]>([]);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [selectedInstId, setSelectedInstId] = useState<string>('all');
@@ -100,6 +102,7 @@ export default function RegistosPage() {
       if (res.success) {
         toast.success('Estudante aprovado com sucesso!');
         setVerifications(prev => prev.filter(v => v.id !== id));
+        router.refresh();
       } else {
         toast.error(res.error || 'Erro ao aprovar estudante.');
       }
@@ -137,6 +140,7 @@ export default function RegistosPage() {
         toast.success('Registo rejeitado e conta suspensa.');
         setVerifications(prev => prev.filter(v => v.id !== id));
         setRejectingItem(null);
+        router.refresh();
       } else {
         toast.error(res.error || 'Erro ao rejeitar estudante.');
       }

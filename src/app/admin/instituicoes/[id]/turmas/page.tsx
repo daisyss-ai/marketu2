@@ -6,7 +6,7 @@ import { GraduationCap, Plus, Users, X } from 'lucide-react'
 import { getClassesByInstitution, createClass, updateClass, deleteClass, getCourses, getAcademicYears } from '../actions'
 import type { ClassRow, CourseRow, AcademicYearRow } from '../actions'
 
-const GRADE_OPTIONS = [10, 11, 12]
+const GRADE_OPTIONS = [10, 11, 12, 13]
 
 export default function TurmasPage() {
   const params = useParams()

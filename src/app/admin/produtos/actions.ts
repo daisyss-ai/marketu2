@@ -35,7 +35,6 @@ export type ProductModerationRow = {
     seller: {
       id: string;
       full_name: string;
-      institution: { id: string; name: string } | null;
     } | null;
   } | null;
 };
@@ -96,11 +95,6 @@ export async function getProductsByModeration(
             url,
             position,
             is_preview
-          ),
-          seller:seller_id (
-            id,
-            full_name,
-            institution:institution_id (id, name)
           )
         )
       `)
@@ -119,11 +113,40 @@ export async function getProductsByModeration(
 
     let results = Array.from(productMap.values());
 
+    const sellerIds = [...new Set(results.map(r => r.products?.seller_id).filter((id): id is string => !!id))];
+
+    let sellerNameMap = new Map<string, string>();
+    let sellerInstMap = new Map<string, string | null>();
+
+    if (sellerIds.length > 0) {
+      const { data: sellers, error: sellerError } = await supabase
+        .from('users')
+        .select('id, full_name, institution_id')
+        .in('id', sellerIds);
+
+      if (sellerError) throw new Error(sellerError.message);
+
+      for (const s of sellers || []) {
+        sellerNameMap.set(s.id, s.full_name);
+        sellerInstMap.set(s.id, s.institution_id);
+      }
+    }
+
+    for (const item of results) {
+      const sid = item.products?.seller_id;
+      if (sid && sellerNameMap.has(sid)) {
+        (item.products as any).seller = { id: sid, full_name: sellerNameMap.get(sid) };
+      }
+    }
+
     if (filters?.categoryId) {
       results = results.filter(r => r.products?.category_id === filters.categoryId);
     }
     if (filters?.institutionId) {
-      results = results.filter(r => r.products?.seller?.institution?.id === filters.institutionId);
+      results = results.filter(r => {
+        const sid = r.products?.seller_id;
+        return sid ? sellerInstMap.get(sid) === filters.institutionId : false;
+      });
     }
     if (filters?.dateFrom) {
       const from = new Date(filters.dateFrom);

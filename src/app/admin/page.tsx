@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { 
   Users, 
@@ -15,13 +13,32 @@ import {
   Database,
   Globe
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { createAdminClient } from '@/lib/supabase/admin';
+
+function formatNumber(num: number): string {
+  return num.toLocaleString('en-US');
+}
+
+function formatKz(amount: number): string {
+  return `${amount.toLocaleString('en-US')} Kz`;
+}
+
+function calcGrowth(thisMonth: number, lastMonth: number): { change: string; isPositive: boolean } | null {
+  if (lastMonth === 0 && thisMonth === 0) return null;
+  if (lastMonth === 0) return { change: '+100%', isPositive: true };
+  const pct = ((thisMonth - lastMonth) / lastMonth) * 100;
+  const sign = pct >= 0 ? '+' : '';
+  return {
+    change: `${sign}${pct.toFixed(1)}%`,
+    isPositive: pct >= 0,
+  };
+}
 
 interface MetricCardProps {
   title: string;
   value: string | number;
-  change: string;
-  isPositive: boolean;
+  change?: string;
+  isPositive?: boolean;
   icon: React.ComponentType<{ className?: string }>;
   color: string;
   href?: string;
@@ -38,14 +55,16 @@ const MetricCard = ({ title, value, change, isPositive, icon: Icon, color, href 
       </div>
       <div>
         <h3 className="text-3xl font-black text-gray-800 tracking-tight">{value}</h3>
-        <div className="flex items-center gap-1.5 mt-2">
-          <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${
-            isPositive ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
-          }`}>
-            {change}
-          </span>
-          <span className="text-xs text-gray-400 font-medium">vs. mês passado</span>
-        </div>
+        {change && (
+          <div className="flex items-center gap-1.5 mt-2">
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${
+              isPositive ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
+            }`}>
+              {change}
+            </span>
+            <span className="text-xs text-gray-400 font-medium">vs. mês passado</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -61,43 +80,98 @@ const MetricCard = ({ title, value, change, isPositive, icon: Icon, color, href 
   return content;
 };
 
-export default function AdminDashboard() {
-  const [pendingCount, setPendingCount] = useState<number | string>('...');
+export default async function AdminDashboard() {
+  const admin = createAdminClient();
 
-  useEffect(() => {
-    const supabase = createClient();
-    async function fetchPendingCount() {
-      try {
-        const { count, error } = await supabase
-          .from('enrollment_verifications')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending');
-        
-        if (!error && count !== null) {
-          setPendingCount(count);
-        } else {
-          setPendingCount(0);
-        }
-      } catch (err) {
-        console.error('Erro ao buscar quantidade de registos pendentes:', err);
-        setPendingCount(0);
+  const now = new Date();
+  const firstOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+
+  const [
+    { count: totalUsers },
+    { count: usersThisMonthCount },
+    { count: usersLastMonthCount },
+    { count: totalActiveProducts },
+    { count: productsThisMonthCount },
+    { count: productsLastMonthCount },
+    { count: pendingCount },
+    { data: orders },
+  ] = await Promise.all([
+    admin.from('users').select('*', { count: 'exact', head: true }),
+    admin.from('users').select('*', { count: 'exact', head: true })
+      .gte('created_at', firstOfThisMonth),
+    admin.from('users').select('*', { count: 'exact', head: true })
+      .gte('created_at', firstOfLastMonth)
+      .lt('created_at', firstOfThisMonth),
+    admin.from('products').select('*', { count: 'exact', head: true })
+      .eq('is_active', true),
+    admin.from('products').select('*', { count: 'exact', head: true })
+      .gte('created_at', firstOfThisMonth),
+    admin.from('products').select('*', { count: 'exact', head: true })
+      .gte('created_at', firstOfLastMonth)
+      .lt('created_at', firstOfThisMonth),
+    admin.from('enrollment_verifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending'),
+    admin.from('orders')
+      .select('id, created_at')
+      .in('status', ['confirmed', 'delivered']),
+  ]);
+
+  const orderIds = orders?.map(o => o.id) ?? [];
+  let totalRevenue = 0;
+  let revenueThisMonth = 0;
+  let revenueLastMonth = 0;
+
+  if (orderIds.length > 0) {
+    const { data: items } = await admin
+      .from('order_items')
+      .select('order_id, total_price')
+      .in('order_id', orderIds);
+
+    const revenueByOrder = new Map<string, number>();
+    items?.forEach(item => {
+      const prev = revenueByOrder.get(item.order_id) ?? 0;
+      revenueByOrder.set(item.order_id, prev + Number(item.total_price));
+    });
+
+    const thisMonthStart = new Date(firstOfThisMonth);
+    const lastMonthStart = new Date(firstOfLastMonth);
+
+    for (const order of orders!) {
+      const rev = revenueByOrder.get(order.id) ?? 0;
+      totalRevenue += rev;
+      if (!order.created_at) continue;
+      const created = new Date(order.created_at);
+      if (created >= thisMonthStart) {
+        revenueThisMonth += rev;
+      } else if (created >= lastMonthStart) {
+        revenueLastMonth += rev;
       }
     }
-    fetchPendingCount();
-  }, []);
+  }
+
+  const userGrowth = calcGrowth(
+    usersThisMonthCount ?? 0,
+    usersLastMonthCount ?? 0,
+  );
+  const productGrowth = calcGrowth(
+    productsThisMonthCount ?? 0,
+    productsLastMonthCount ?? 0,
+  );
+  const revenueGrowth = calcGrowth(revenueThisMonth, revenueLastMonth);
 
   const metrics: MetricCardProps[] = [
     {
       title: 'Utilizadores',
-      value: '1,248',
-      change: '+18.2%',
-      isPositive: true,
+      value: formatNumber(totalUsers ?? 0),
       icon: Users,
       color: 'bg-blue-50 text-blue-600',
+      ...(userGrowth ?? {}),
     },
     {
       title: 'Registos Pendentes',
-      value: pendingCount,
+      value: pendingCount ?? 0,
       change: 'Ação requerida',
       isPositive: false,
       icon: Clock,
@@ -105,23 +179,20 @@ export default function AdminDashboard() {
       href: '/admin/registos',
     },
     {
-      title: 'Produtos Anunciados',
-      value: '3,842',
-      change: '+12.4%',
-      isPositive: true,
+      title: 'Produtos Activos',
+      value: formatNumber(totalActiveProducts ?? 0),
       icon: Package,
       color: 'bg-[#EDE7FF] text-[#4B187C]',
+      ...(productGrowth ?? {}),
     },
     {
-      title: 'Vendas (Simuladas)',
-      value: '452,000 Kz',
-      change: '+24.5%',
-      isPositive: true,
+      title: 'Vendas',
+      value: totalRevenue > 0 ? formatKz(totalRevenue) : '0 Kz',
       icon: TrendingUp,
       color: 'bg-emerald-50 text-emerald-600',
+      ...(revenueGrowth ?? {}),
     },
   ];
-
 
   return (
     <div className="flex flex-col gap-8 font-mono">

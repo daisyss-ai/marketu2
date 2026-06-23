@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { IntervalSelector } from './interval-selector'
 import {
-  ActivityChart, ExportCSVButton, TopProductsTabs, DataTable, OrderStatusChart,
+  ActivityChart, ExportForm, TopProductsTabs, DataTable, OrderStatusChart,
 } from './charts-client'
 import {
   exportActivityCSV, exportTopProductsCSV, exportTopVendorsCSV,
@@ -390,7 +390,7 @@ export default async function AnalyticsPage({
         title="Atividade ao Longo do Tempo"
         icon={BarChart3}
         description={`Novos utilizadores e novos produtos por dia (últimos ${intervalLabel}).`}
-        exportButton={<ExportCSVButton label="Exportar CSV" action={() => exportActivityCSV(interval)} />}
+        exportButton={<ExportForm action={exportActivityCSV.bind(null, interval)} label="Exportar CSV" />}
       >
         <ActivityChart data={activity} />
       </Section>
@@ -401,8 +401,8 @@ export default async function AnalyticsPage({
         description="Produtos com mais vendas e mais reviews."
         exportButton={
           <div className="flex gap-2">
-            <ExportCSVButton label="Exportar Vendas" action={() => exportTopProductsCSV('sales')} />
-            <ExportCSVButton label="Exportar Reviews" action={() => exportTopProductsCSV('reviews')} />
+            <ExportForm action={exportTopProductsCSV.bind(null, 'sales')} label="Exportar Vendas" />
+            <ExportForm action={exportTopProductsCSV.bind(null, 'reviews')} label="Exportar Reviews" />
           </div>
         }
       >
@@ -413,7 +413,7 @@ export default async function AnalyticsPage({
         title="Top Vendedores"
         icon={Store}
         description="Vendedores com mais produtos e maior volume de vendas."
-        exportButton={<ExportCSVButton label="Exportar CSV" action={exportTopVendorsCSV} />}
+        exportButton={<ExportForm action={exportTopVendorsCSV} label="Exportar CSV" />}
       >
         <DataTable
           columns={[
@@ -433,7 +433,7 @@ export default async function AnalyticsPage({
         title="Categorias mais Ativas"
         icon={Tag}
         description="Número de produtos por categoria."
-        exportButton={<ExportCSVButton label="Exportar CSV" action={exportCategoriesCSV} />}
+        exportButton={<ExportForm action={exportCategoriesCSV} label="Exportar CSV" />}
       >
         <DataTable
           columns={[
@@ -451,7 +451,7 @@ export default async function AnalyticsPage({
         title="Distribuição de Orders"
         icon={Star}
         description="Distribuição de orders por estado."
-        exportButton={<ExportCSVButton label="Exportar CSV" action={exportOrderStatusCSV} />}
+        exportButton={<ExportForm action={exportOrderStatusCSV} label="Exportar CSV" />}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <OrderStatusChart data={orderStatus} />
