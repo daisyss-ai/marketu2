@@ -72,9 +72,38 @@ export const useUserProducts = (userId?: string, page = 1, limit = 20) => {
       try {
         setLoading(true);
         setError(null);
-        const data = await usersAPI.getVendorProducts(userId, { page, limit });
-        setProducts(data.products || []);
-        setPagination(data.pagination);
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+        const { data, error: queryError, count } = await supabase
+          .from('products')
+          .select(`
+            *,
+            product_media!left(url, is_preview, position),
+            product_stock!left(quantity)
+          `, { count: 'exact' })
+          .eq('seller_id', userId)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .range((page - 1) * limit, page * limit - 1);
+
+        if (queryError) throw queryError;
+
+        const mapped = (data || []).map((p: any) => {
+          const media = Array.isArray(p.product_media) ? p.product_media : [];
+          const preview = media.find((m: any) => m.is_preview) || media[0] || null;
+          const stock = Array.isArray(p.product_stock) ? p.product_stock[0]?.quantity ?? 0 : 0;
+          return {
+            ...p,
+            preview_url: preview?.url ?? null,
+            stock,
+            product_media: undefined,
+            product_stock: undefined,
+          };
+        });
+
+        const total = count || 0;
+        setProducts(mapped);
+        setPagination({ page, limit, total, pages: Math.ceil(total / limit) });
       } catch (err: any) {
         const errorMessage = err?.message || err?.error || 'Erro ao carregar produtos';
         setError(errorMessage);

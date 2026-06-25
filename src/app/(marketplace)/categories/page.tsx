@@ -1,15 +1,14 @@
-'use client';
 import { Suspense } from 'react';
-import EditProfile from '../../home/EditProfile';
+import CategoriesPage from '@/home/CategoriesPage';
 
-function EditProfileContent() {
-  return <EditProfile />;
+function CategoriesContent() {
+  return <CategoriesPage />;
 }
 
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <EditProfileContent />
+      <CategoriesContent />
     </Suspense>
   );
 }

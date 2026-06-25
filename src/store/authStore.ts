@@ -24,6 +24,7 @@ interface AuthState {
   user: User | null;
   login: (userData: User) => void;
   logout: () => void;
+  setUser: (userData: User) => void;
 }
 
 // Obter usuário do localStorage de forma segura (evita erro SSR do Next.js)
@@ -55,5 +56,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       window.localStorage.removeItem('marketu_user');
     }
     set({ user: null });
+  },
+
+  setUser: (userData: User) => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('marketu_user', JSON.stringify(userData));
+    }
+    set({ user: userData });
   },
 }));

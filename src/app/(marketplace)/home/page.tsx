@@ -1,14 +1,14 @@
 import { Suspense } from 'react';
-import Profile from '../../home/Profile';
+import Home from '@/home/Home';
 
-function ProfileContent() {
-  return <Profile />;
+function HomeContent() {
+  return <Home />;
 }
 
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ProfileContent />
+      <HomeContent />
     </Suspense>
   );
 }

@@ -1,14 +1,14 @@
 import { Suspense } from 'react';
-import Home from '../../home/Home';
+import Recommendations from '@/home/Recommendations';
 
-function HomeContent() {
-  return <Home />;
+function RecommendationsContent() {
+  return <Recommendations />;
 }
 
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <HomeContent />
+      <RecommendationsContent />
     </Suspense>
   );
 }

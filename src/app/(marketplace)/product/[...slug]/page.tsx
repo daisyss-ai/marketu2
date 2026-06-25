@@ -1,6 +1,6 @@
 import { Suspense, type ComponentProps } from 'react';
 import { notFound } from 'next/navigation';
-import ProductPage from '../../../home/ProductPage';
+import ProductPage from '@/home/ProductPage';
 import { createClient } from '@/lib/supabase/server';
 import { getProductDetail } from '@/lib/products/getProductDetail';
 

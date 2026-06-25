@@ -62,8 +62,8 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
   const [categoryId, setCategoryId] = useState(product.category_id ?? '');
   const [condition, setCondition] = useState<ProductCondition>(product.type === 'digital' ? 'digital' : 'used');
   const [price, setPrice] = useState(String(product.price ?? 0));
-  const [isFree, setIsFree] = useState(!!product.is_free);
-  const [quantity, setQuantity] = useState(String(product.quantity ?? 1));
+  const isFree = !!product.is_free;
+  
 
   const [existingMedia, setExistingMedia] = useState<ExistingMedia[]>(product.media);
   const [removedMedia, setRemovedMedia] = useState<ExistingMedia[]>([]);
@@ -110,7 +110,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
   );
 
   const canSubmit = useMemo(() => {
-    if (!title.trim()) return false;
+    if (!title.trim() || title.trim().length < 3) return false;
     if (title.trim().length > 100) return false;
     const desc = description.trim();
     if (desc.length < 20 || desc.length > 500) return false;
@@ -120,15 +120,12 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
     if (currentMediaCount < 1 || currentMediaCount > 5) return false;
     if (newImages.some((f) => !isAllowedImage(f))) return false;
 
-    const q = Number(quantity);
-    if (!Number.isFinite(q) || q < 0) return false;
-
     if (!isFree) {
       const p = toPriceNumber(price);
-      if (!Number.isFinite(p) || p < 0) return false;
+      if (!Number.isFinite(p) || p <= 0) return false;
     }
     return true;
-  }, [categoryId, description, existingMedia.length, isFree, newImages, price, quantity, title]);
+  }, [categoryId, description, existingMedia.length, isFree, newImages, price, title]);
 
   const onNewFilesSelected = (files: File[]) => {
     // total max 5
@@ -157,7 +154,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
     if (categories.length === 0) {
       const msg =
         categoriesError ||
-        'Sem categorias disponÃ­veis. Ative/crie categorias no Supabase (tabela categories com is_active=true) e garanta permissÃ£o de leitura (RLS).';
+        'Sem categorias disponíveis. Ative/crie categorias no Supabase (tabela categories com is_active=true) e garanta permissão de leitura (RLS).';
       setError(msg);
       toast.error(msg);
       return;
@@ -166,10 +163,10 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
     const trimmedTitle = title.trim();
     const trimmedDesc = description.trim();
     const priceNumber = isFree ? 0 : toPriceNumber(price);
-    const quantityNumber = Math.floor(Number(quantity));
+    const quantityNumber = product.quantity;
 
     if (!canSubmit) {
-      const msg = 'Verifique os campos do formulÃ¡rio.';
+      const msg = 'Verifique os campos do formulário.';
       setError(msg);
       toast.error(msg);
       return;
@@ -199,7 +196,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
       const remainingHasPreview = existingMedia.some((m) => m.is_preview);
       for (let i = 0; i < newImages.length; i++) {
         const file = newImages[i];
-        if (!isAllowedImage(file)) throw new Error('Apenas imagens JPG/PNG atÃ© 5MB.');
+        if (!isAllowedImage(file)) throw new Error('Apenas imagens JPG/PNG até 5MB.');
 
         const path = `${product.seller_id}/${product.id}/${file.name}`;
         const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
@@ -211,7 +208,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
           const msg = uploadError.message || 'Erro desconhecido';
           if (msg.toLowerCase().includes('row-level security')) {
             throw new Error(
-              "Falha ao enviar imagem: permissÃ£o negada (RLS) no Storage. Crie/ajuste a policy do bucket `product-media` para permitir INSERT a utilizadores autenticados no caminho `{auth.uid()}/{product_id}/*`."
+              "Falha ao enviar imagem: permissão negada (RLS) no Storage. Crie/ajuste a policy do bucket `product-media` para permitir INSERT a utilizadores autenticados no caminho `{auth.uid()}/{product_id}/*`."
             );
           }
           throw new Error(`Falha ao enviar imagem: ${msg}`);
@@ -219,7 +216,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
 
         const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
         const publicUrl = pub.publicUrl;
-        if (!publicUrl) throw new Error('Falha ao obter URL pÃºblica da imagem');
+        if (!publicUrl) throw new Error('Falha ao obter URL pública da imagem');
 
         const shouldBePreview = !remainingHasPreview && i === 0 && existingMedia.length === 0;
         mediaToAdd.push({
@@ -261,11 +258,12 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-6 pt-10 pb-16">
+    <div className="bg-gray-50 min-h-screen">
+      <div className="max-w-2xl mx-auto px-6 py-8">
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900">Editar Produto</h1>
-          <p className="text-sm text-gray-600 mt-1">Atualize as informaÃ§Ãµes e imagens do seu produto.</p>
+          <p className="text-sm text-gray-600 mt-1">Atualize as informações e imagens do seu produto.</p>
         </div>
         <button
           type="button"
@@ -282,7 +280,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
       <form onSubmit={onSubmit} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormSelect
-            label="CondiÃ§Ã£o"
+            label="Condição"
             name="condition"
             value={condition}
             onChange={(e) => setCondition(e.target.value as ProductCondition)}
@@ -301,7 +299,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
         </div>
 
         <FormInput
-          label="TÃ­tulo"
+          label="Título"
           name="title"
           value={title}
           onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
@@ -310,53 +308,27 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
         />
 
         <FormTextarea
-          label="DescriÃ§Ã£o"
+          label="Descrição"
           name="description"
           value={description}
           onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
           rows={5}
           maxLength={500}
           required
-          hint="MÃ­nimo 20 caracteres."
+          hint="Mínimo 20 caracteres."
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormInput
-            label="PreÃ§o (Kz)"
-            name="price"
-            type="number"
-            value={price}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setPrice(e.target.value)}
-            min="0"
-            step="100"
-            required={!isFree}
-            disabled={isFree}
-          />
-
-          <div className="flex items-center justify-between gap-4">
-            <label className="flex items-center gap-3 mt-6 select-none">
-              <input
-                type="checkbox"
-                className="h-5 w-5 accent-[#4B187C]"
-                checked={isFree}
-                onChange={(e) => setIsFree(e.target.checked)}
-                disabled={loading}
-              />
-              <span className="text-sm font-semibold text-gray-900">Gratuito</span>
-            </label>
-
-            <FormInput
-              label="Quantidade"
-              name="quantity"
-              type="number"
-              value={quantity}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setQuantity(e.target.value)}
-              min="0"
-              step="1"
-              required
-            />
-          </div>
-        </div>
+        <FormInput
+          label="Preço (Kz)"
+          name="price"
+          type="number"
+          value={price}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setPrice(e.target.value)}
+          min="1"
+          step="100"
+          required={!isFree}
+          disabled={isFree}
+        />
 
         <div className="mt-2">
           <div className="flex items-center justify-between">
@@ -384,7 +356,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
                     disabled={loading}
                   >
                     <span className="text-xl" aria-hidden="true">
-                      Ã—
+                      ×
                     </span>
                   </button>
                 </div>
@@ -401,7 +373,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
                 acceptedTypes="image/jpeg,image/png"
                 required={existingMedia.length === 0}
               />
-              <p className="text-xs text-gray-500 mt-2">JPG/PNG atÃ© 5MB. MÃ¡ximo 5 no total.</p>
+              <p className="text-xs text-gray-500 mt-2">JPG/PNG até 5MB. Máximo 5 no total.</p>
             </div>
           )}
         </div>
@@ -425,6 +397,7 @@ export default function EditProductForm({ product }: { product: ProductInput }) 
           </button>
         </div>
       </form>
-    </div>
+        </div>
+      </div>
   );
 }

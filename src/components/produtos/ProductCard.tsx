@@ -1,6 +1,6 @@
 'use client';
 
-import { Bookmark, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import type { MouseEvent } from 'react';
@@ -17,16 +17,6 @@ interface ProductCardProps {
 const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false }: ProductCardProps) => {
   const router = useRouter();
   const [showToast, setShowToast] = useState(false);
-  const isGreen = product.statusColor === 'bg-green-400';
-  const ratingValue = typeof product.rating === 'number' ? product.rating : 0;
-  const totalReviews =
-    typeof product.total_reviews === 'number'
-      ? product.total_reviews
-      : typeof product.reviewCount === 'number'
-        ? product.reviewCount
-        : typeof product.reviews === 'number'
-          ? product.reviews
-          : 0;
 
   const handleFavoriteClick = (e: MouseEvent) => {
     e.preventDefault();
@@ -44,7 +34,7 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
     <>
       <div
         onClick={handleCardClick}
-        className="group overflow-hidden cursor-pointer flex flex-col h-full"
+        className="group overflow-hidden cursor-pointer flex flex-col h-full hover:shadow-lg transition-shadow duration-300"
       >
         {/* Image area */}
         <div className="relative aspect-[3/2] bg-gray-100 overflow-hidden">
@@ -65,52 +55,30 @@ const ProductCard = ({ product, onToggleFavorite = () => {}, isFavorited = false
             />
           </button>
           <Image
-            src={product.img || '/assets/placeholder-product.svg'}  // ← .svg
+            src={product.img || '/assets/placeholder-product.svg'}
             alt={product.title}
             fill
             sizes="(max-width: 768px) 100vw, 25vw"
-            unoptimized={!!product.img}  // ← adiciona isto
-            className="w-full h-full object-cover"
+            unoptimized={!!product.img}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         </div>
 
         {/* Card body */}
         <div className="p-4 flex flex-col flex-1">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Bookmark className="w-3 h-3 text-[#4B187C]" />
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              {product.category}
-            </span>
-          </div>
-
-          <h3 className="font-bold text-sm text-gray-900 line-clamp-2 mb-2 hover:text-[#4B187C] transition-colors">
+          <h3 className="font-bold text-sm text-gray-900 line-clamp-2 mb-1 hover:text-[#4B187C] transition-colors">
             {product.title}
           </h3>
 
-          <div className="flex items-baseline gap-1 mb-3">
+          <p className="text-sm text-muted-foreground mb-2">
+            por {product.seller || 'MarketU'}
+          </p>
+
+          <div className="flex items-baseline gap-1">
             <span className="text-base font-bold text-gray-900">
               {typeof product.price === 'number' ? product.price.toLocaleString('pt-AO') : product.price}
             </span>
             <span className="text-[10px] font-black text-gray-400 uppercase">KZS</span>
-          </div>
-
-          {totalReviews > 0 && (
-            <div className="flex items-center gap-1 mb-3">
-              <span className="text-yellow-400 text-xs">{'★'.repeat(Math.round(ratingValue))}</span>
-              <span className="text-xs text-gray-400">({totalReviews})</span>
-            </div>
-          )}
-
-          <div className="border-t border-gray-100 mt-auto pt-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${isGreen ? 'bg-green-400' : 'bg-orange-400'}`} />
-              <span className="text-xs text-gray-500 font-medium truncate max-w-[80px]">
-                {product.seller || 'MarketU'}
-              </span>
-            </div>
-            <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${isGreen ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-500'}`}>
-              {isGreen ? 'Em stock' : 'Poucas unidades'}
-            </span>
           </div>
         </div>
       </div>

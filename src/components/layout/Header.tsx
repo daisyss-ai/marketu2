@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ShoppingCart, MessageCircle, Bell, X, Search, Menu } from 'lucide-react';
 import { logout } from '@/app/auth/actions';
 import ProductSearchBar from '../search/ProductSearchBar';
@@ -101,6 +101,24 @@ const Header = ({ searchValue: controlledSearchValue, onSearchChange, onSearchSu
   const searchParams = useSearchParams();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [profileMenuOpen]);
 
   const currentSearch = searchParams.get('search') || '';
   const isSearchControlled = controlledSearchValue !== undefined;
@@ -192,10 +210,33 @@ const Header = ({ searchValue: controlledSearchValue, onSearchChange, onSearchSu
 
             {/* Links desktop */}
             <div className="hidden md:flex items-center gap-1">
-              <Link href="/profile" className="text-sm font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all rounded-full px-3 py-1.5">Perfil</Link>
-              <form action={logout}>
-                <button type="submit" className="text-sm font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all rounded-full px-3 py-1.5">Sair</button>
-              </form>
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  onClick={() => setProfileMenuOpen(prev => !prev)}
+                  className="text-sm font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all rounded-full px-3 py-1.5"
+                >
+                  Perfil
+                </button>
+                {profileMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-lg border border-gray-100 py-1 z-50">
+                    <Link href="/profile" onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#EDE7FF] rounded-xl mx-1">
+                      Ver Perfil
+                    </Link>
+                    <Link href="/edit-profile" onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#EDE7FF] rounded-xl mx-1">
+                      Configurações
+                    </Link>
+                    <Link href="/orders" onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#EDE7FF] rounded-xl mx-1">
+                      Minhas Compras
+                    </Link>
+                    <div className="border-t border-gray-100 my-1" />
+                    <form action={logout}>
+                      <button type="submit" className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl mx-1">
+                        Sair
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
               {pathname !== '/profile' && (
                 <Link href="/sell" className="text-sm font-semibold text-white bg-[#4B187C] hover:bg-[#3a1260] transition-all rounded-full px-4 py-1.5">Vender</Link>
               )}
@@ -228,18 +269,24 @@ const Header = ({ searchValue: controlledSearchValue, onSearchChange, onSearchSu
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-gray-100 bg-white px-4 py-3 flex flex-col gap-1">
             <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all rounded-xl px-3 py-2.5">
-              Perfil
+              Ver Perfil
             </Link>
-            {pathname !== '/profile' && (
-              <Link href="/sell" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-[#4B187C] hover:bg-[#EDE7FF] transition-all rounded-xl px-3 py-2.5">
-                Vender
-              </Link>
-            )}
+            <Link href="/edit-profile" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all rounded-xl px-3 py-2.5">
+              Configurações
+            </Link>
+            <Link href="/orders" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all rounded-xl px-3 py-2.5">
+              Minhas Compras
+            </Link>
             <form action={logout}>
               <button type="submit" className="w-full text-left text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-all rounded-xl px-3 py-2.5">
                 Sair
               </button>
             </form>
+            {pathname !== '/profile' && (
+              <Link href="/sell" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-[#4B187C] hover:bg-[#EDE7FF] transition-all rounded-xl px-3 py-2.5">
+                Vender
+              </Link>
+            )}
           </div>
         )}
       </header>

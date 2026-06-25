@@ -1,14 +1,14 @@
 import { Suspense } from 'react';
-import Sell from '../../home/Sell';
+import Profile from '@/home/Profile';
 
-function SellContent() {
-  return <Sell />;
+function ProfileContent() {
+  return <Profile />;
 }
 
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <SellContent />
+      <ProfileContent />
     </Suspense>
   );
 }

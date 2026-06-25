@@ -1,14 +1,14 @@
 import { Suspense } from 'react';
-import CategoriesPage from '../../home/CategoriesPage';
+import Sell from '@/home/Sell';
 
-function CategoriesContent() {
-  return <CategoriesPage />;
+function SellContent() {
+  return <Sell />;
 }
 
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <CategoriesContent />
+      <SellContent />
     </Suspense>
   );
 }
