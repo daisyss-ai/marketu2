@@ -51,39 +51,38 @@ const Home = () => {
     getActiveFilterCount,
   } = useFilters();
 
-  
-const isSearching = searchQuery.trim().length > 0;
+  const isSearching = searchQuery.trim().length > 0;
 
   useEffect(() => {
-  const fetchUser = async () => {
-    try {
-      const authUser = await getCachedAuthUser();
-      if (!authUser) return;
-      const supabase = createClient();
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id, enrollment_code, full_name, role, status, institution:institution(name)')
-        .eq('id', authUser.id)
-        .maybeSingle();
-      if (userError) console.error('Error fetching user data:', userError);
-      const { data: profileData } = await supabase
-        .from('profiles').select('course').eq('id', authUser.id).maybeSingle();
-      const enrollmentCode = userData?.enrollment_code ?? (authUser.user_metadata as any)?.enrollment_code ?? (authUser.user_metadata as any)?.studentId;
-      const fullName = userData?.full_name ?? (authUser.user_metadata as any)?.full_name ?? (authUser.user_metadata as any)?.fullName;
-      login({
-        id: authUser.id,
-        email: authUser.email ?? undefined,
-        enrollment_code: enrollmentCode,
-        full_name: fullName,
-        role: userData?.role ?? (authUser.user_metadata as any)?.role,
-        status: userData?.status ?? undefined,
-        institution: (userData as any)?.institution ?? undefined,
-        course: profileData?.course ?? null,
-      });
-    } catch (err) { console.error('Failed to fetch user:', err); }
-  };
-  fetchUser();
-}, [login]);
+    const fetchUser = async () => {
+      try {
+        const authUser = await getCachedAuthUser();
+        if (!authUser) return;
+        const supabase = createClient();
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('id, enrollment_code, full_name, role, status, institution:institution(name)')
+          .eq('id', authUser.id)
+          .maybeSingle();
+        if (userError) console.error('Error fetching user data:', userError);
+        const { data: profileData } = await supabase
+          .from('profiles').select('course').eq('id', authUser.id).maybeSingle();
+        const enrollmentCode = userData?.enrollment_code ?? (authUser.user_metadata as any)?.enrollment_code ?? (authUser.user_metadata as any)?.studentId;
+        const fullName = userData?.full_name ?? (authUser.user_metadata as any)?.full_name ?? (authUser.user_metadata as any)?.fullName;
+        login({
+          id: authUser.id,
+          email: authUser.email ?? undefined,
+          enrollment_code: enrollmentCode,
+          full_name: fullName,
+          role: userData?.role ?? (authUser.user_metadata as any)?.role,
+          status: userData?.status ?? undefined,
+          institution: (userData as any)?.institution ?? undefined,
+          course: profileData?.course ?? null,
+        });
+      } catch (err) { console.error('Failed to fetch user:', err); }
+    };
+    fetchUser();
+  }, [login]);
 
   useEffect(() => {
     const fetchTopSellers = async () => {
@@ -315,7 +314,6 @@ const isSearching = searchQuery.trim().length > 0;
       )}
 
       <Footer />
-      
     </div>
   );
 };
