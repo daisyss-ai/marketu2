@@ -301,6 +301,19 @@ export async function signup(formData: FormData) {
     redirect(buildSignupErrorRedirect(studentError.message, redirectTo));
   }
 
+  // Alimentar a fila de aprovação do admin.
+  // Não bloqueamos o signup em caso de falha — a conta já foi criada com sucesso.
+  const { error: enrollmentError } = await db.from("enrollment_verifications").insert({
+    user_id: userId,
+    enrollment_code: studentId,
+    submitted_at: new Date().toISOString(),
+    status: "pending",
+  });
+
+  if (enrollmentError) {
+    console.error("Signup enrollment_verifications insert error:", enrollmentError);
+  }
+
   if (redirectTo && redirectTo !== "/login" && redirectTo !== "/signup") {
     redirect(redirectTo);
   }
@@ -312,4 +325,48 @@ export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+// ─── Recuperação de password ──────────────────────────────────────────────────
+
+export async function sendPasswordReset(payload: {
+  email: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const email = payload.email.trim().toLowerCase();
+
+  if (!email || !email.includes("@")) {
+    return { success: false, error: "Introduz um email válido." };
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/recover/update`,
+  });
+
+  if (error) {
+    console.error("sendPasswordReset error:", error);
+    return { success: false, error: "Não foi possível enviar o email. Tenta novamente." };
+  }
+
+  return { success: true };
+}
+
+export async function updatePassword(payload: {
+  password: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { password } = payload;
+
+  if (!password || password.length < 6) {
+    return { success: false, error: "A senha deve ter no mínimo 6 caracteres." };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    console.error("updatePassword error:", error);
+    return { success: false, error: "Não foi possível atualizar a senha. Tenta novamente." };
+  }
+
+  return { success: true };
 }

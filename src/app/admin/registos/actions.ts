@@ -163,6 +163,22 @@ export async function processEnrollmentAction(params: {
       throw new Error(`Erro ao atualizar utilizador: ${userUpdateErr.message}`);
     }
 
+    // Notificar o estudante sobre o resultado da aprovação.
+    // Não lançamos erro em caso de falha — o fluxo principal já concluiu com sucesso.
+    const { error: notifErr } = await adminDb.from('notifications').insert({
+      user_id: verification.user_id,
+      type: status === 'active' ? 'enrollment_approved' : 'enrollment_rejected',
+      title: status === 'active' ? 'Conta aprovada' : 'Conta rejeitada',
+      body: status === 'active'
+        ? 'A tua conta foi aprovada. Já podes usar o MarketU!'
+        : `A tua conta foi rejeitada. Motivo: ${rejectionNote?.trim()}`,
+      is_read: false,
+    });
+
+    if (notifErr) {
+      console.error('Erro ao criar notificação de matrícula:', notifErr);
+    }
+
     await logAdminAction({
       adminId: adminUser.id,
       action: status === 'active' ? 'approve_enrollment' : 'reject_enrollment',

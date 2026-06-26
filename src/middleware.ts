@@ -97,6 +97,23 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Bloquear acesso às rotas protegidas enquanto a conta está pendente de aprovação.
+  // Redireciona para /pending-approval sem fazer query extra se o utilizador não estiver autenticado.
+  if (isProtectedRoute && user && path !== "/pending-approval") {
+    const { data: dbUser } = await supabase
+      .from("users")
+      .select("status")
+      .eq("id", user.id)
+      .single();
+
+    if (dbUser?.status === "pending") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/pending-approval";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+  }
+
   if (isAuthRoute && user && !isServerAction) {
     const url = request.nextUrl.clone();
     url.pathname = "/home";
