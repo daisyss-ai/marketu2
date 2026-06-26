@@ -115,8 +115,8 @@ export async function getProductsByModeration(
 
     const sellerIds = [...new Set(results.map(r => r.products?.seller_id).filter((id): id is string => !!id))];
 
-    let sellerNameMap = new Map<string, string>();
-    let sellerInstMap = new Map<string, string | null>();
+    const sellerNameMap = new Map<string, string>();
+    const sellerInstMap = new Map<string, string | null>();
 
     if (sellerIds.length > 0) {
       const { data: sellers, error: sellerError } = await supabase

@@ -40,6 +40,12 @@ export default function ConversationMenu({
   const [isBlocking, setIsBlocking] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
+  function closeAll() {
+    setOpen(false)
+    setConfirmDelete(false)
+    setConfirmBlock(false)
+  }
+  
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -58,11 +64,7 @@ export default function ConversationMenu({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [open])
 
-  function closeAll() {
-    setOpen(false)
-    setConfirmDelete(false)
-    setConfirmBlock(false)
-  }
+  
 
   async function handleDelete() {
     if (!confirmDelete) {

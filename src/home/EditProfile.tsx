@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '../store/authStore';
 import Header from '../components/layout/Header';
-import { ChevronLeft, Camera, User, X } from 'lucide-react';
+import { ChevronLeft, Camera, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserProfile {
@@ -125,7 +125,7 @@ const EditProfile = () => {
     path: string
   ): Promise<string | null> => {
     try {
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from(bucket)
         .upload(path, file, { upsert: true });
 
