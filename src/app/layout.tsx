@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ToastProvider from "@/components/ToastProvider";
+import AuthHydrator from "@/components/AuthHydrator";
 import { Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
@@ -8,7 +9,6 @@ import { Toaster } from "@/components/ui/sonner";
 export const metadata: Metadata = {
   title: "MARKETU",
   description: "MARKETPLACE PARA ESTUDANTES",
-
 };
 
 export default function RootLayout({
@@ -23,12 +23,12 @@ export default function RootLayout({
         <meta charSet="UTF-8" />
       </head>
       <body className="antialiased">
+        <AuthHydrator />
         <Suspense fallback={null}>
           <ToastProvider />
           <Toaster />
         </Suspense>
         {children}
-
       </body>
     </html>
   );

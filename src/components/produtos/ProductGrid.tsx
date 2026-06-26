@@ -12,11 +12,8 @@ interface ProductGridProps {
   totalPages?: number;
   showPagination?: boolean;
   onPageChange?: (page: number) => void;
-  onToggleFavorite?: (id: string | number) => void;
-  favorites?: (string | number)[];
 }
 
-// Skeleton loader component
 const SkeletonCard = () => (
   <div className="bg-white rounded-2xl border border-gray-100 p-4 animate-pulse">
     <div className="relative mb-3 overflow-hidden rounded-xl bg-gray-200 h-40 md:h-44" />
@@ -34,10 +31,7 @@ const ProductGrid = ({
   totalPages = 1,
   showPagination = true,
   onPageChange = () => {},
-  onToggleFavorite = () => {},
-  favorites = [],
 }: ProductGridProps) => {
-  // Show loading skeletons
   if (loading && products.length === 0) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
@@ -48,7 +42,6 @@ const ProductGrid = ({
     );
   }
 
-  // Show error message
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -60,17 +53,12 @@ const ProductGrid = ({
     );
   }
 
-  // Show empty state
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <div className="text-center">
-          <p className="text-gray-600 text-lg font-medium mb-2">
-            📦 Nenhum produto encontrado
-          </p>
-          <p className="text-gray-500 text-sm">
-            Tente mudar os filtros ou verifique sua busca
-          </p>
+          <p className="text-gray-600 text-lg font-medium mb-2">📦 Nenhum produto encontrado</p>
+          <p className="text-gray-500 text-sm">Tente mudar os filtros ou verifique sua busca</p>
         </div>
       </div>
     );
@@ -78,52 +66,37 @@ const ProductGrid = ({
 
   return (
     <div>
-      {/* Product grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         {products.map((product) => (
           <div
             key={product.id}
             className="animate-fade-in"
-            style={{
-              animation: 'fadeIn 0.3s ease-in-out',
-            } as CSSProperties}
+            style={{ animation: 'fadeIn 0.3s ease-in-out' } as CSSProperties}
           >
-            <ProductCard
-              product={product}
-              onToggleFavorite={onToggleFavorite}
-              isFavorited={favorites.includes(product.id)}
-            />
+            <ProductCard product={product} />
           </div>
         ))}
       </div>
 
-      {/* Pagination */}
       {showPagination && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 py-8">
           <button
             onClick={() => onPageChange(page - 1)}
             disabled={page === 1}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              page === 1
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+              page === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
             }`}
           >
             Anterior
           </button>
-
           <div className="px-4 py-2 text-sm text-gray-600">
-            Página <span className="font-semibold">{page}</span> de{' '}
-            <span className="font-semibold">{totalPages}</span>
+            Página <span className="font-semibold">{page}</span> de <span className="font-semibold">{totalPages}</span>
           </div>
-
           <button
             onClick={() => onPageChange(page + 1)}
             disabled={page === totalPages}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              page === totalPages
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+              page === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
             }`}
           >
             Próximo
@@ -131,17 +104,10 @@ const ProductGrid = ({
         </div>
       )}
 
-      {/* Fade in animation */}
       <style>{`
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>

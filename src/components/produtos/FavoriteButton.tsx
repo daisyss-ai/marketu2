@@ -4,8 +4,8 @@ import { saveProductAction, unsaveProductAction } from '@/app/actions/saved';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
-import { useCartStore } from '@/store/cartStore';
-import { Loader2, ShoppingCart } from 'lucide-react';
+import { useFavoritesStore } from '@/store/favoritesStore';
+import { Heart, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -26,14 +26,10 @@ function invalidateSavedProductsCache(userId: string) {
 
 async function getSavedProductsCacheEntry(userId: string): Promise<SavedProductCacheEntry> {
   const cachedEntry = savedProductsCache.get(userId);
-  if (cachedEntry) {
-    return cachedEntry;
-  }
+  if (cachedEntry) return cachedEntry;
 
   const pendingEntry = savedProductsPromiseCache.get(userId);
-  if (pendingEntry) {
-    return pendingEntry;
-  }
+  if (pendingEntry) return pendingEntry;
 
   const promise = (async () => {
     try {
@@ -43,9 +39,7 @@ async function getSavedProductsCacheEntry(userId: string): Promise<SavedProductC
         .select('product_id')
         .eq('user_id', userId);
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
 
       const productIds = new Set<string>(
         ((data ?? []) as Array<{ product_id: string }>).map((row) => row.product_id)
@@ -62,20 +56,20 @@ async function getSavedProductsCacheEntry(userId: string): Promise<SavedProductC
   return promise;
 }
 
-interface AddToCartButtonProps {
+interface FavoriteButtonProps {
   productId: string;
   sellerId?: string | null;
   className?: string;
 }
 
-export default function AddToCartButton({
+export default function FavoriteButton({
   productId,
   sellerId = null,
   className,
-}: AddToCartButtonProps) {
+}: FavoriteButtonProps) {
   const router = useRouter();
   const storeUserId = useAuthStore((state) => state.user?.id ?? null);
-  const { increment, decrement } = useCartStore();
+  const { increment, decrement } = useFavoritesStore();
   const [authState, setAuthState] = useState<AuthState>('loading');
   const [currentUserId, setCurrentUserId] = useState<string | null>(storeUserId);
   const [isSaved, setIsSaved] = useState(false);
@@ -85,13 +79,8 @@ export default function AddToCartButton({
   const currentUserIdRef = useRef<string | null>(storeUserId);
   const isHiddenRef = useRef(false);
 
-  useEffect(() => {
-    currentUserIdRef.current = currentUserId;
-  }, [currentUserId]);
-
-  useEffect(() => {
-    isHiddenRef.current = isHidden;
-  }, [isHidden]);
+  useEffect(() => { currentUserIdRef.current = currentUserId; }, [currentUserId]);
+  useEffect(() => { isHiddenRef.current = isHidden; }, [isHidden]);
 
   useEffect(() => {
     let isMounted = true;
@@ -100,9 +89,7 @@ export default function AddToCartButton({
       try {
         const resolvedUserId = storeUserId
           ? storeUserId
-          : (
-              await createClient().auth.getUser()
-            ).data.user?.id ?? null;
+          : (await createClient().auth.getUser()).data.user?.id ?? null;
 
         if (!isMounted) return;
 
@@ -156,9 +143,7 @@ export default function AddToCartButton({
 
     const handleSavedProductsChanged = () => {
       const resolvedUserId = currentUserIdRef.current;
-      if (!resolvedUserId || isHiddenRef.current) {
-        return;
-      }
+      if (!resolvedUserId || isHiddenRef.current) return;
 
       invalidateSavedProductsCache(resolvedUserId);
       void (async () => {
@@ -174,7 +159,6 @@ export default function AddToCartButton({
     };
 
     window.addEventListener('saved-products-changed', handleSavedProductsChanged);
-
     return () => {
       isMounted = false;
       window.removeEventListener('saved-products-changed', handleSavedProductsChanged);
@@ -185,10 +169,11 @@ export default function AddToCartButton({
     window.dispatchEvent(new Event('saved-products-changed'));
   };
 
-  const handleClick = async () => {
-    if (authState === 'loading' || isPending || isHidden) {
-      return;
-    }
+  const handleClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (authState === 'loading' || isPending || isHidden) return;
 
     if (authState === 'guest' || !currentUserId) {
       router.push('/login');
@@ -202,27 +187,19 @@ export default function AddToCartButton({
     const nextSavedState = !isSaved;
 
     try {
-      // Optimistic UI - atualiza imediatamente
       setIsSaved(nextSavedState);
-      if (nextSavedState) {
-        increment();
-      } else {
-        decrement();
-      }
+      if (nextSavedState) increment();
+      else decrement();
 
       const actionResult = previousSavedState
         ? await unsaveProductAction(productId)
         : await saveProductAction(productId);
 
       if (!actionResult.success) {
-        // Reverte se falhar
         setIsSaved(previousSavedState);
-        if (previousSavedState) {
-          increment();
-        } else {
-          decrement();
-        }
-        setError(actionResult.error || 'Nao foi possivel actualizar o carrinho.');
+        if (previousSavedState) increment();
+        else decrement();
+        setError(actionResult.error || 'Não foi possível atualizar os favoritos.');
         return;
       }
 
@@ -233,29 +210,27 @@ export default function AddToCartButton({
     }
   };
 
-  if (isHidden) {
-    return null;
-  }
+  if (isHidden) return null;
 
   return (
     <button
       type="button"
-      onClick={handleClick}
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); void handleClick(e); }}
       disabled={authState === 'loading' || isPending}
       className={cn(
         'inline-flex h-9 w-9 items-center justify-center rounded-full border shadow-sm backdrop-blur-sm transition-all focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:cursor-not-allowed',
         isSaved
-          ? 'border-primary bg-primary text-white hover:scale-105'
-          : 'border-muted/10 bg-surface/90 text-muted hover:scale-105 hover:text-primary',
+          ? 'border-red-400 bg-white text-red-500 hover:scale-110'
+          : 'border-muted/10 bg-surface/90 text-muted hover:scale-105 hover:text-red-400',
         authState === 'loading' ? 'cursor-wait opacity-70' : '',
         className
       )}
-      aria-label={isSaved ? 'Remover do carrinho' : 'Adicionar ao carrinho'}
+      aria-label={isSaved ? 'Remover dos favoritos' : 'Guardar nos favoritos'}
     >
       {authState === 'loading' || isPending ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
-        <ShoppingCart className={cn('h-4 w-4', isSaved ? 'fill-current' : 'fill-none')} />
+        <Heart className={cn('h-4 w-4 transition-all duration-200', isSaved ? 'fill-red-500 text-red-500' : 'fill-none')} />
       )}
       {error ? <span className="sr-only">{error}</span> : null}
     </button>
