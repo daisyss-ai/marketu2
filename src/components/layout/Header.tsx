@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { Route } from 'next';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Heart, MessageCircle, X, Search, Menu, ChevronDown, User, ClipboardList, LogOut } from 'lucide-react';
+import { Heart, MessageCircle, X, Search, Menu, ChevronDown, User, ClipboardList, LogOut, Settings } from 'lucide-react';
 import { logout } from '@/app/auth/actions';
 import { getCachedUserId } from '@/hooks/useCurrentUser';
 import ProductSearchBar from '../search/ProductSearchBar';
@@ -41,7 +41,6 @@ function FavoritesLink() {
     window.addEventListener('saved-products-changed', handle);
     return () => { isMounted = false; window.removeEventListener('saved-products-changed', handle); };
   }, []);
-
 
   return (
     <Link href="/favorites" className="relative group focus:outline-none rounded-full p-2 hover:bg-[#EDE7FF] transition-all duration-200" aria-label="Os meus favoritos">
@@ -80,7 +79,6 @@ function MessagesLink() {
     return () => { isMounted = false; supabase.removeChannel(channel); };
   }, []);
 
-
   return (
     <Link href="/chat" className="relative group focus:outline-none rounded-full p-2 hover:bg-[#EDE7FF] transition-all duration-200" aria-label="Mensagens">
       <MessageCircle className="w-5 h-5 md:w-6 md:h-6 text-gray-900" />
@@ -92,8 +90,6 @@ function MessagesLink() {
     </Link>
   );
 }
-
-
 
 function ProfileDropdown() {
   const [open, setOpen] = useState(false);
@@ -116,7 +112,6 @@ function ProfileDropdown() {
     };
     void fetchUser();
   }, []);
-
 
   // Fecha ao clicar fora
   useEffect(() => {
@@ -149,6 +144,14 @@ function ProfileDropdown() {
           >
             <User className="w-4 h-4 text-gray-400" />
             Perfil
+          </Link>
+          <Link
+            href="/edit-profile"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-[#EDE7FF] transition-colors"
+          >
+            <Settings className="w-4 h-4 text-gray-400" />
+            Configurações
           </Link>
           <Link
             href="/orders"
@@ -298,6 +301,9 @@ const Header = ({ searchValue: controlledSearchValue, onSearchChange, onSearchSu
           <div className="md:hidden border-t border-gray-100 bg-white px-4 py-3 flex flex-col gap-1">
             <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-sm font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all rounded-xl px-3 py-2.5">
               <User className="w-4 h-4 text-gray-400" /> Perfil
+            </Link>
+            <Link href="/edit-profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-sm font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all rounded-xl px-3 py-2.5">
+              <Settings className="w-4 h-4 text-gray-400" /> Configurações
             </Link>
             <Link href="/orders" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-sm font-semibold text-gray-900 hover:bg-[#EDE7FF] transition-all rounded-xl px-3 py-2.5">
               <ClipboardList className="w-4 h-4 text-gray-400" /> Os meus pedidos

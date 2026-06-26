@@ -145,6 +145,8 @@ const Sell = () => {
 
     if (!formData.title.trim()) {
       errors.title = 'Título é obrigatório';
+    } else if (formData.title.trim().length < 3) {
+      errors.title = 'Título deve ter pelo menos 3 caracteres';
     } else if (formData.title.length > 100) {
       errors.title = 'Título não pode exceder 100 caracteres';
     }
@@ -167,8 +169,8 @@ const Sell = () => {
 
     if (!formData.price) {
       errors.price = 'Preço é obrigatório';
-    } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
-      errors.price = 'Preço deve ser um número válido';
+    } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) <= 0) {
+      errors.price = 'Preço deve ser maior que 0 Kz';
     }
 
     if (formData.image_urls.length === 0) {
@@ -271,16 +273,16 @@ const Sell = () => {
               error={validationErrors.images || undefined}
               required
             />
-            <p className="text-xs text-gray-500 mt-2">MÃ¡ximo 5 imagens. Use alta qualidade para melhor visualizaÃ§Ã£o.</p>
+            <p className="text-xs text-gray-500 mt-2">Máximo 5 imagens. Use alta qualidade para melhor visualização.</p>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">InformaÃ§Ãµes do Produto</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Informações do Produto</h2>
 
             <FormInput
-              label="TÃ­tulo do Produto"
+              label="Título do Produto"
               name="title"
-              placeholder="Ex: Livro de CÃ¡lculo - 1Âª EdiÃ§Ã£o"
+              placeholder="Ex: Livro de Cálculo - 1ª Edição"
               value={formData.title}
               onChange={handleInputChange}
               error={validationErrors.title || undefined}
@@ -289,16 +291,16 @@ const Sell = () => {
             />
 
             <FormTextarea
-              label="DescriÃ§Ã£o Detalhada"
+              label="Descrição Detalhada"
               name="description"
-              placeholder="Descreva seu produto em detalhes: estado, caracterÃ­sticas, motivo da venda, defeitos (se houver), etc."
+              placeholder="Descreva seu produto em detalhes: estado, características, motivo da venda, defeitos (se houver), etc."
               value={formData.description}
               onChange={handleInputChange}
               error={validationErrors.description || undefined}
               required
               maxLength={500}
               rows={5}
-              hint="MÃ­nimo 20 caracteres, mÃ¡ximo 500"
+              hint="Mínimo 20 caracteres, máximo 500"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -315,20 +317,20 @@ const Sell = () => {
               />
 
               <FormSelect
-                label="CondiÃ§Ã£o"
+                label="Condição"
                 name="condition"
                 value={formData.condition}
                 onChange={handleInputChange}
                 options={conditions}
                 error={validationErrors.condition || undefined}
                 required
-                placeholder="Selecione a condiÃ§Ã£o"
+                placeholder="Selecione a condição"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormInput
-                label="PreÃ§o (em Kz)"
+                label="Preço (em Kz)"
                 name="price"
                 type="number"
                 placeholder="Ex: 5000"
@@ -336,7 +338,7 @@ const Sell = () => {
                 onChange={handleInputChange}
                 error={validationErrors.price || undefined}
                 required
-                min="0"
+                min="1"
                 step="100"
               />
             </div>

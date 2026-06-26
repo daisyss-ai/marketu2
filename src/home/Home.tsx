@@ -315,6 +315,7 @@ const isSearching = searchQuery.trim().length > 0;
       )}
 
       <Footer />
+      
     </div>
   );
 };

@@ -1,7 +1,7 @@
 'use client';
 import type { CSSProperties } from 'react';
-import type { ProductCardItem } from '../../types';
 import ProductCard from './ProductCard';
+import type { ProductCardItem } from '../../types';
 
 interface ProductGridProps {
   products: ProductCardItem[];
@@ -27,6 +27,7 @@ const ProductGrid = ({
   products = [],
   loading = false,
   error = null,
+  totalProducts = 0,
   page = 1,
   totalPages = 1,
   showPagination = true,
@@ -66,6 +67,15 @@ const ProductGrid = ({
 
   return (
     <div>
+      {/* Product count */}
+      {totalProducts > 0 && (
+        <div className="mb-4 text-sm text-gray-600">
+          Mostrando <span className="font-semibold">{products.length}</span> de{' '}
+          <span className="font-semibold">{totalProducts}</span> produtos
+        </div>
+      )}
+
+      {/* Product grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         {products.map((product) => (
           <div

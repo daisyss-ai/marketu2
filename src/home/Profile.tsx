@@ -1,24 +1,21 @@
-﻿'use client';
+'use client';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import {
   Edit2,
   Trash2,
-  Heart,
-  MessageCircle,
-  ShoppingCart,
   Plus,
   Package,
   TrendingUp,
   Award,
   GraduationCap,
   Check,
-  UserPen,
   Star,
 } from 'lucide-react';
 import Header from '../components/layout/Header';
 import { useAuthStore } from '../store/authStore';
-import { useUserProfile, useUserProducts, useDeleteProduct } from '../hooks/useAPI';
+import { useUserProfile, useUserProducts } from '../hooks/useAPI';
+import { createClient } from '@/lib/supabase/client';
 import { LoadingSpinner, FormAlert } from '../components/FormFields';
 import type { ProductWithDetails } from '../types';
 
@@ -123,28 +120,6 @@ const TabButton = ({ active, onClick, children }: TabButtonProps) => (
   </button>
 );
 
-interface ActionCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  onClick: () => void;
-}
-
-const ActionCard = ({ icon, title, description, onClick }: ActionCardProps) => (
-  <button
-    onClick={onClick}
-    className="p-4 bg-white rounded-2xl border border-gray-100 flex items-center gap-4 hover:border-[#4B187C] cursor-pointer transition-colors text-left"
-  >
-    <div className="w-12 h-12 bg-[#EDE7FF] text-[#4B187C] rounded-xl flex items-center justify-center flex-shrink-0">
-      {icon}
-    </div>
-    <div className="flex-1">
-      <h3 className="font-bold text-gray-800">{title}</h3>
-      <p className="text-xs text-gray-500">{description}</p>
-    </div>
-  </button>
-);
-
 const Profile = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);
@@ -159,19 +134,22 @@ const Profile = () => {
 
   const { stats, loading: profileLoading } = useUserProfile(authUser?.id);
   const { products, loading: productsLoading } = useUserProducts(authUser?.id, 1, 12);
-  const { deleteProduct, loading: deleteLoading } = useDeleteProduct();
 
   const handleDeleteProduct = async (productId: string | number) => {
     try {
-      await deleteProduct(productId);
-      setAlertMessage({ type: 'success', text: 'Produto eliminado com sucesso!' });
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('products')
+        .update({ is_active: false })
+        .eq('id', productId);
+
+      if (error) throw new Error(error.message);
+
+      setAlertMessage({ type: 'success', text: 'Produto desactivado com sucesso!' });
       setDeleteConfirm(null);
       setTimeout(() => window.location.reload(), 1500);
     } catch (error: any) {
-      setAlertMessage({
-        type: 'error',
-        text: error.message || 'Erro ao eliminar produto',
-      });
+      setAlertMessage({ type: 'error', text: error.message || 'Erro ao desactivar produto' });
     }
   };
 
@@ -191,7 +169,7 @@ const Profile = () => {
       <div>
         <Header />
         <div className="max-w-md mx-auto mt-12 p-6 bg-white rounded shadow text-center">
-          <p className="text-gray-600 mb-4">VocÃª nÃ£o estÃ¡ autenticado.</p>
+          <p className="text-gray-600 mb-4">Não estás autenticado.</p>
           <button
             onClick={() => router.push('/login')}
             className="bg-[#4B187C] text-white px-4 py-2 rounded hover:bg-[#3E1367]"
@@ -204,7 +182,6 @@ const Profile = () => {
   }
 
   const displayName = (authUser as any)?.username || authUser?.full_name || 'Utilizador';
-  const studentInfo = `${authUser?.student_id || 'N/A'} â€¢ ${authUser?.course || 'Curso'} â€¢ ${authUser?.classroom || 'Sala'}`;
   const avgRating = stats?.stats?.avgRating || 0;
   const reviewCount = stats?.stats?.reviewCount || 0;
   const avatarUrl = (authUser as any)?.avatar_url;
@@ -245,40 +222,36 @@ const Profile = () => {
             {/* Name and info */}
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">{displayName}</h1>
-              <div className="flex items-center gap-1 text-gray-600 text-sm">
+              {/* Turma, Curso, Sala */}
+              <div className="flex items-center gap-1 text-gray-500 text-sm mt-1">
                 <GraduationCap className="w-3.5 h-3.5" />
-                <span>{studentInfo}</span>
+                <span>{authUser?.student_id || 'N/A'} • {authUser?.course || 'Curso'} • {authUser?.classroom || 'Sala'}</span>
               </div>
+
+              {/* Biografia */}
+              {(authUser as any)?.bio && (
+                <p className="text-gray-600 text-sm mt-2 max-w-md">{(authUser as any).bio}</p>
+              )}
+
+              {/* Seguidores e Seguindo */}
+              <div className="flex items-center gap-4 mt-2 text-sm">
+                <span className="text-gray-700"><strong>{stats?.stats?.followersCount || 0}</strong> <span className="text-gray-400">seguidores</span></span>
+                <span className="text-gray-700"><strong>{stats?.stats?.followingCount || 0}</strong> <span className="text-gray-400">a seguir</span></span>
+              </div>
+
+              {/* Redes sociais */}
+              {(authUser as any)?.social_url && (
+                <a
+                  href={(authUser as any).social_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#4B187C] text-sm mt-1 underline underline-offset-2 hover:text-[#3E1367] inline-block"
+                >
+                  {(authUser as any).social_url}
+                </a>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            icon={<Package className="w-5 h-5" />}
-            label="Produtos Ã  Venda"
-            value={stats?.stats?.productCount || 0}
-          />
-          <StatCard
-            icon={<TrendingUp className="w-5 h-5" />}
-            label="Vendas ConcluÃ­das"
-            value={stats?.stats?.completedSales || 0}
-          />
-          <StatCard
-            icon={<Star className="w-5 h-5" />}
-            label="AvaliaÃ§Ã£o"
-            value={avgRating}
-            isRating
-            reviewCount={reviewCount}
-          />
-          <StatCard
-            icon={<Award className="w-5 h-5" />}
-            label="Taxa Positiva"
-            value={stats?.stats?.positiveRating || '0%'}
-          />
         </div>
       </div>
 
@@ -296,8 +269,8 @@ const Profile = () => {
           <TabButton active={activeTab === 'products'} onClick={() => setActiveTab('products')}>
             Meus Produtos
           </TabButton>
-          <TabButton active={activeTab === 'actions'} onClick={() => setActiveTab('actions')}>
-            Minhas AÃ§Ãµes & ConfiguraÃ§Ãµes
+          <TabButton active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')}>
+            Avaliações & Vendas
           </TabButton>
         </div>
 
@@ -328,7 +301,7 @@ const Profile = () => {
                     <Plus className="w-6 h-6" />
                   </div>
                   <p className="font-semibold text-[#4B187C]">Anunciar Algo</p>
-                  <p className="text-xs text-gray-400">RÃ¡pido e fÃ¡cil</p>
+                  <p className="text-xs text-gray-400">Rápido e fácil</p>
                 </div>
 
                 {products && products.length > 0 ? (
@@ -345,7 +318,7 @@ const Profile = () => {
                     <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum produto publicado</h3>
                     <p className="text-gray-600 mb-6">
-                      Ainda nÃ£o tens nenhum produto. Clica no botÃ£o para publicar o teu primeiro!
+                      Ainda não tens nenhum produto. Clica no botão para publicar o teu primeiro!
                     </p>
                     <button
                       onClick={() => router.push('/sell')}
@@ -360,32 +333,32 @@ const Profile = () => {
           </div>
         )}
 
-        {activeTab === 'actions' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ActionCard
-              icon={<ShoppingCart className="w-5 h-5" />}
-              title="Minhas Compras"
-              description="Acompanhe as suas compras e transaÃ§Ãµes"
-              onClick={() => setActiveTab('purchases')}
-            />
-            <ActionCard
-              icon={<Heart className="w-5 h-5" />}
-              title="Favoritos"
-              description="Veja os produtos que guardou"
-              onClick={() => router.push('/favorites')}
-            />
-            <ActionCard
-              icon={<MessageCircle className="w-5 h-5" />}
-              title="Mensagens"
-              description="Converse com vendedores e compradores"
-              onClick={() => router.push('/messages')}
-            />
-            <ActionCard
-              icon={<UserPen className="w-5 h-5" />}
-              title="Editar Perfil"
-              description="Actualize as suas informaÃ§Ãµes"
-              onClick={() => router.push('/edit-profile')}
-            />
+        {activeTab === 'reviews' && (
+          <div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <StatCard
+                icon={<Package className="w-5 h-5" />}
+                label="Produtos à Venda"
+                value={stats?.stats?.productCount || 0}
+              />
+              <StatCard
+                icon={<TrendingUp className="w-5 h-5" />}
+                label="Vendas Concluídas"
+                value={stats?.stats?.completedSales || 0}
+              />
+              <StatCard
+                icon={<Star className="w-5 h-5" />}
+                label="Avaliação"
+                value={avgRating}
+                isRating
+                reviewCount={reviewCount}
+              />
+              <StatCard
+                icon={<Award className="w-5 h-5" />}
+                label="Taxa Positiva"
+                value={stats?.stats?.positiveRating || '0%'}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -393,24 +366,22 @@ const Profile = () => {
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-sm">
-            <h3 className="text-xl font-bold mb-2">Eliminar Produto?</h3>
+            <h3 className="text-xl font-bold mb-2">Desactivar Produto?</h3>
             <p className="text-gray-600 mb-6">
-              Tens a certeza que queres eliminar este produto? Esta acÃ§Ã£o nÃ£o pode ser desfeita.
+              O produto ficará invisível no marketplace mas pode ser reactivado depois.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                disabled={deleteLoading}
               >
                 Cancelar
               </button>
               <button
                 onClick={() => handleDeleteProduct(deleteConfirm)}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
-                disabled={deleteLoading}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
               >
-                {deleteLoading ? 'Eliminando...' : 'Eliminar'}
+                Desactivar
               </button>
             </div>
           </div>
@@ -421,4 +392,3 @@ const Profile = () => {
 };
 
 export default Profile;
-

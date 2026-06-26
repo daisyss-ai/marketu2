@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '../store/authStore';
 import Header from '../components/layout/Header';
-import { ChevronLeft, Camera, /* User, */ X } from 'lucide-react';
+import { ChevronLeft, Camera, User, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserProfile {
@@ -18,6 +18,7 @@ interface UserProfile {
 const EditProfile = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const supabase = createClient();
 
   const [isHydrated, setIsHydrated] = useState(false);
@@ -26,7 +27,7 @@ const EditProfile = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   // Form state
-  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -59,7 +60,7 @@ const EditProfile = () => {
 
         if (data) {
           setUserProfile(data);
-          setUsername(authUser.username || '');
+          setFullName(data.full_name || '');
           setBio(data.bio || '');
           setAvatarPreview(data.avatar_url);
           setBannerPreview(data.banner_url);
@@ -124,7 +125,7 @@ const EditProfile = () => {
     path: string
   ): Promise<string | null> => {
     try {
-      const { error } = await supabase.storage
+      const { data, error } = await supabase.storage
         .from(bucket)
         .upload(path, file, { upsert: true });
 
@@ -143,7 +144,7 @@ const EditProfile = () => {
 
   // Check if form has changes
   const hasChanges = (): boolean => {
-    if (username !== (authUser?.username || '')) return true;
+    if (fullName !== (userProfile?.full_name || '')) return true;
     if (bio !== (userProfile?.bio || '')) return true;
     if (avatarFile) return true;
     if (bannerFile) return true;
@@ -160,8 +161,8 @@ const EditProfile = () => {
       return;
     }
 
-    if (!username.trim()) {
-      toast.error('Username é obrigatório');
+    if (!fullName.trim()) {
+      toast.error('Nome completo é obrigatório');
       return;
     }
 
@@ -175,14 +176,16 @@ const EditProfile = () => {
       if (avatarFile) {
         const ext = getFileExtension(avatarFile);
         const path = `avatars/${authUser.id}/avatar.${ext}`;
-        avatarUrl = await uploadFile(avatarFile, 'avatars', path);
+        const cacheBuster = `?t=${Date.now()}`;
+        avatarUrl = (await uploadFile(avatarFile, 'avatars', path)) + cacheBuster;
       }
 
       // Upload banner if selected
       if (bannerFile) {
         const ext = getFileExtension(bannerFile);
         const path = `avatars/${authUser.id}/banner.${ext}`;
-        bannerUrl = await uploadFile(bannerFile, 'avatars', path);
+        const cacheBuster = `?t=${Date.now()}`;
+        bannerUrl = (await uploadFile(bannerFile, 'avatars', path)) + cacheBuster;
       }
 
       // Handle banner removal
@@ -194,7 +197,7 @@ const EditProfile = () => {
       const { error } = await supabase
         .from('users')
         .update({
-          username: username.trim(),
+          full_name: fullName.trim(),
           bio: bio.trim() || null,
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
@@ -204,27 +207,13 @@ const EditProfile = () => {
 
       if (error) throw error;
 
-      // Merge current user data with new values and update auth store
-      const { login } = useAuthStore.getState();
-      const currentUser = useAuthStore.getState().user;
-      login({
-        ...currentUser,
-        id: currentUser?.id ?? authUser.id,
-        username: username.trim() || null,
-        avatar_url: avatarUrl ?? currentUser?.avatar_url ?? null,
-        banner_url: bannerUrl ?? currentUser?.banner_url ?? null,
-      });
-
-      // Update localStorage directly to ensure profile page reads new values immediately
-      if (typeof window !== 'undefined') {
-        const updated = {
-          ...currentUser,
-          username: username.trim() || null,
-          avatar_url: avatarUrl ?? currentUser?.avatar_url ?? null,
-          banner_url: bannerUrl ?? currentUser?.banner_url ?? null,
-        };
-        window.localStorage.setItem('marketu_user', JSON.stringify(updated));
-      }
+      setUser({
+        ...authUser,
+        full_name: fullName.trim(),
+        bio: bio.trim() || null,
+        avatar_url: avatarUrl,
+        banner_url: bannerUrl,
+      } as any);
 
       toast.success('Perfil atualizado!');
       router.push('/profile');
@@ -369,7 +358,7 @@ const EditProfile = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  getInitials(userProfile?.full_name || '')
+                  getInitials(fullName)
                 )}
               </div>
 
@@ -387,7 +376,7 @@ const EditProfile = () => {
 
           {/* Form fields */}
           <div className="px-6 pb-6">
-            {/* Full name field (read-only) */}
+            {/* Full name field */}
             <div className="mb-6">
               <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
                 Nome Completo
@@ -395,28 +384,14 @@ const EditProfile = () => {
               <input
                 id="fullName"
                 type="text"
-                value={userProfile?.full_name || ''}
-                readOnly
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
-              />
-            </div>
-
-            {/* Username field */}
-            <div className="mb-6">
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value.slice(0, 50))}
-                maxLength={50}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value.slice(0, 100))}
+                maxLength={100}
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4B187C] focus:border-transparent transition-all"
-                placeholder="Seu username"
+                placeholder="Seu nome completo"
               />
-              <p className="text-xs text-gray-500 mt-1">{username.length}/50</p>
+              <p className="text-xs text-gray-500 mt-1">{fullName.length}/100</p>
             </div>
 
             {/* Bio field */}

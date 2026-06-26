@@ -25,6 +25,7 @@ interface AuthState {
   login: (userData: User) => void;
   logout: () => void;
   hydrate: () => void;
+  setUser: (userData: User) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -58,5 +59,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       window.localStorage.removeItem('marketu_user');
     }
     set({ user: null, hasHydrated: true });
+  },
+
+  setUser: (userData: User) => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('marketu_user', JSON.stringify(userData));
+    }
+    set({ user: userData, hasHydrated: true });
   },
 }));
