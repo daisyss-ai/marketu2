@@ -1,44 +1,56 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
 
 const supabase = createClient()
 
-let cachedUserId: string | null = null
-let cachedUserPromise: Promise<string | null> | null = null
+let cachedUser: User | null = null
+let cachedUserPromise: Promise<User | null> | null = null
 let listenerRegistered = false
 
 // Garante que o listener de auth state só é registado uma vez,
-// mesmo que getCachedUserId() seja chamado antes de qualquer componente usar o hook.
+// mesmo que getCachedUserId()/getCachedAuthUser() sejam chamados antes de qualquer componente usar o hook.
 function ensureAuthListener() {
   if (listenerRegistered) return
   listenerRegistered = true
 
   supabase.auth.onAuthStateChange((_event, session) => {
-    cachedUserId = session?.user?.id ?? null
+    cachedUser = session?.user ?? null
     cachedUserPromise = null
   })
 }
 
 // Garante que getUser() só é chamado uma vez, depois reutiliza o resultado.
 // Invalida automaticamente quando a sessão muda (login/logout/troca de conta).
-export async function getCachedUserId(): Promise<string | null> {
+async function getCachedAuthUserInternal(): Promise<User | null> {
   ensureAuthListener()
 
-  if (cachedUserId) return cachedUserId
+  if (cachedUser) return cachedUser
   if (cachedUserPromise) return cachedUserPromise
 
   cachedUserPromise = supabase.auth.getUser().then(({ data: { user } }) => {
-    cachedUserId = user?.id ?? null
+    cachedUser = user ?? null
     cachedUserPromise = null
-    return cachedUserId
+    return cachedUser
   })
 
   return cachedUserPromise
 }
 
+// Devolve o objeto completo do utilizador (email, user_metadata, etc.)
+export async function getCachedAuthUser(): Promise<User | null> {
+  return getCachedAuthUserInternal()
+}
+
+// Devolve só o id — atalho para o caso mais comum
+export async function getCachedUserId(): Promise<string | null> {
+  const user = await getCachedAuthUserInternal()
+  return user?.id ?? null
+}
+
 // Invalidar cache manualmente — útil para chamar logo após o login
 export function clearCachedUserId() {
-  cachedUserId = null
+  cachedUser = null
   cachedUserPromise = null
 }
 
@@ -54,8 +66,8 @@ export function useCurrentUserId() {
     })
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      cachedUserId = session?.user?.id ?? null
-      if (mounted) setUserId(cachedUserId)
+      cachedUser = session?.user ?? null
+      if (mounted) setUserId(cachedUser?.id ?? null)
     })
 
     return () => {

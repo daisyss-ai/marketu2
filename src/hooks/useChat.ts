@@ -524,6 +524,7 @@ export function useChat(conversationId: string) {
           : '❌ Proposta recusada.',
         type: 'system',
         status: 'sent',
+        payload: { source: 'offer_response', response },
       })
 
     return { error: null }
@@ -778,51 +779,30 @@ export function useChat(conversationId: string) {
 
 export function useStartConversation() {
   const [isLoading, setIsLoading] = useState(false)
+  const inFlightRef = useRef(false)
 
   const startConversation = useCallback(async (
     productId: string,
     sellerId: string
   ): Promise<{ conversationId: string | null; error: string | null }> => {
+    if (inFlightRef.current) {
+      return { conversationId: null, error: 'A iniciar conversa, aguarda…' }
+    }
+    inFlightRef.current = true
     setIsLoading(true)
 
-    const userId = await getCachedUserId()
-    if (!userId) {
-      setIsLoading(false)
-      return { conversationId: null, error: 'Não autenticado' }
-    }
+    const { data, error } = await supabase.rpc('start_or_resume_conversation', {
+      p_product_id: productId,
+      p_seller_id: sellerId,
+    })
 
-    const { data: existing } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('product_id', productId)
-      .eq('buyer_id', userId)
-      .eq('seller_id', sellerId)
-      .single()
-
-    if (existing) {
-      setIsLoading(false)
-      return { conversationId: existing.id, error: null }
-    }
-
-    const { data, error } = await supabase
-      .from('conversations')
-      .insert({
-        product_id: productId,
-        buyer_id: userId,
-        seller_id: sellerId,
-      })
-      .select('id')
-      .single()
-
+    inFlightRef.current = false
     setIsLoading(false)
 
     if (error) {
-      if (error.code === '42501' || error.message.includes('policy')) {
-        return { conversationId: null, error: 'Não é possível iniciar esta conversa.' }
-      }
       return { conversationId: null, error: error.message }
     }
-    return { conversationId: data.id, error: null }
+    return { conversationId: data as string, error: null }
   }, [])
 
   return { startConversation, isLoading }

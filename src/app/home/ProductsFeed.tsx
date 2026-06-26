@@ -13,19 +13,15 @@ type ProductsApiResponse = {
 
 function buildQuery(filters: FilterState, sorting: string, page: number) {
   const params = new URLSearchParams();
-
   params.set('page', String(page));
   params.set('limit', '12');
   if (sorting && sorting !== 'newest') params.set('sort', sorting);
-
   if (filters.condition) params.set('condition', String(filters.condition));
   if (filters.category) params.set('category', String(filters.category));
   if (filters.search) params.set('search', filters.search);
   if (filters.rating) params.set('rating', String(filters.rating));
-
   if (filters.priceMin && filters.priceMin > 0) params.set('minPrice', String(filters.priceMin));
   if (filters.priceMax && filters.priceMax !== Infinity) params.set('maxPrice', String(filters.priceMax));
-
   return params.toString();
 }
 
@@ -33,32 +29,21 @@ export default function ProductsFeed({
   filters,
   sorting,
   page,
-  favorites,
   onPageChange,
-  onToggleFavorite,
 }: {
   filters: FilterState;
   sorting: string;
   page: number;
-  favorites: (string | number)[];
   onPageChange: (page: number) => void;
-  onToggleFavorite: (id: string | number) => void;
 }) {
   const qs = useMemo(() => buildQuery(filters, sorting, page), [filters, sorting, page]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<ProductsApiResponse>({
-    products: [],
-    total: 0,
-    page: 1,
-    limit: 12,
-  });
+  const [data, setData] = useState<ProductsApiResponse>({ products: [], total: 0, page: 1, limit: 12 });
 
   useEffect(() => {
     const url = `/api/products?${qs}`;
     const controller = new AbortController();
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
     setData((prev) => ({ ...prev, products: [] }));
@@ -66,10 +51,7 @@ export default function ProductsFeed({
     fetch(url, { method: 'GET', signal: controller.signal })
       .then(async (res) => {
         const json = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          const msg = (json && (json.error || json.message)) || 'Erro ao carregar produtos';
-          throw new Error(msg);
-        }
+        if (!res.ok) throw new Error((json?.error || json?.message) || 'Erro ao carregar produtos');
         return (json?.data ?? json) as ProductsApiResponse;
       })
       .then((next) => {
@@ -82,8 +64,7 @@ export default function ProductsFeed({
       })
       .catch((e: unknown) => {
         if (e instanceof Error && e.name === 'AbortError') return;
-        const msg = e instanceof Error ? e.message : 'Erro ao carregar produtos';
-        setError(msg);
+        setError(e instanceof Error ? e.message : 'Erro ao carregar produtos');
       })
       .finally(() => setLoading(false));
 
@@ -101,8 +82,6 @@ export default function ProductsFeed({
       page={page}
       totalPages={totalPages}
       onPageChange={onPageChange}
-      onToggleFavorite={onToggleFavorite}
-      favorites={favorites}
     />
   );
 }

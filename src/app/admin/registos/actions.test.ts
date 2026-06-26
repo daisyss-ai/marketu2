@@ -28,6 +28,8 @@ describe("Registos Server Actions", () => {
     vi.clearAllMocks();
   });
 
+  // ─── getPendingEnrollments ────────────────────────────────────────────────
+
   describe("getPendingEnrollments", () => {
     it("fails if not authenticated", async () => {
       const mockSupabase = {
@@ -71,7 +73,7 @@ describe("Registos Server Actions", () => {
         auth: {
           getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null }),
         },
-        from: vi.fn().mockImplementation((table) => {
+        from: vi.fn().mockImplementation((table: string) => {
           if (table === "users") {
             return {
               select: vi.fn().mockReturnValue({
@@ -99,6 +101,8 @@ describe("Registos Server Actions", () => {
     });
   });
 
+  // ─── processEnrollmentAction ──────────────────────────────────────────────
+
   describe("processEnrollmentAction", () => {
     it("fails if rejecting without note", async () => {
       const result = await processEnrollmentAction({ id: "v-1", status: "suspended" });
@@ -106,85 +110,19 @@ describe("Registos Server Actions", () => {
       expect(result.error).toContain("motivo de rejeição é obrigatório");
     });
 
-    it("approves and updates both tables successfully", async () => {
-      // Auth Client Mocks
-      const mockAuthSupabase = {
-        auth: {
-          getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-id" } }, error: null }),
-        },
-        from: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({ data: { role: "admin" }, error: null }),
-            }),
-          }),
-        }),
-      };
-      vi.mocked(createClient).mockResolvedValue(mockAuthSupabase as any);
-
-      // Admin Client Mocks
-      const updateMock = vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ error: null }),
-      });
-      const mockAdminSupabase = {
-        from: vi.fn().mockImplementation((table) => {
-          if (table === "enrollment_verifications") {
-            return {
-              select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  maybeSingle: vi.fn().mockResolvedValue({
-                    data: { status: "pending", user_id: "student-id" },
-                    error: null,
-                  }),
-                }),
-              }),
-              update: updateMock,
-            };
-          }
-          if (table === "users") {
-            return {
-              update: updateMock,
-            };
-          }
-        }),
-      };
-      vi.mocked(createAdminClient).mockReturnValue(mockAdminSupabase as any);
-
-      const result = await processEnrollmentAction({ id: "v-1", status: "active" });
-      expect(result.success).toBe(true);
-      expect(mockAdminSupabase.from).toHaveBeenCalledWith("enrollment_verifications");
-      expect(mockAdminSupabase.from).toHaveBeenCalledWith("users");
-      expect(logAdminAction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          adminId: "admin-id",
-          action: "approve_enrollment",
-          targetType: "enrollment",
-          targetId: "v-1",
-        }),
-      );
-      expect(revalidatePath).toHaveBeenCalledWith("/admin/registos");
-    });
-
-    it("rolls back verification status if user update fails", async () => {
-      const mockAuthSupabase = {
-        auth: {
-          getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-id" } }, error: null }),
-        },
-        from: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({ data: { role: "admin" }, error: null }),
-            }),
-          }),
-        }),
-      };
-      vi.mocked(createClient).mockResolvedValue(mockAuthSupabase as any);
-
+    function buildAdminMock({
+      userUpdateError = null,
+      notifInsertError = null,
+    }: {
+      userUpdateError?: { message: string } | null;
+      notifInsertError?: { message: string } | null;
+    } = {}) {
       const verifEq = vi.fn().mockResolvedValue({ error: null });
-      const userEq = vi.fn().mockResolvedValue({ error: { message: "db constraint error" } });
+      const userEq = vi.fn().mockResolvedValue({ error: userUpdateError });
+      const insertMock = vi.fn().mockResolvedValue({ data: null, error: notifInsertError });
 
-      const mockAdminSupabase = {
-        from: vi.fn().mockImplementation((table) => {
+      const adminSupabase = {
+        from: vi.fn().mockImplementation((table: string) => {
           if (table === "enrollment_verifications") {
             return {
               select: vi.fn().mockReturnValue({
@@ -199,18 +137,116 @@ describe("Registos Server Actions", () => {
             };
           }
           if (table === "users") {
-            return {
-              update: vi.fn().mockReturnValue({ eq: userEq }),
-            };
+            return { update: vi.fn().mockReturnValue({ eq: userEq }) };
           }
+          if (table === "notifications") {
+            return { insert: insertMock };
+          }
+          // fallback para tabelas não mapeadas
+          return { insert: vi.fn().mockResolvedValue({ data: null, error: null }) };
         }),
       };
-      vi.mocked(createAdminClient).mockReturnValue(mockAdminSupabase as any);
+
+      return { verifEq, userEq, insertMock, adminSupabase };
+    }
+
+    function buildAuthMock() {
+      return {
+        auth: {
+          getUser: vi.fn().mockResolvedValue({ data: { user: { id: "admin-id" } }, error: null }),
+        },
+        from: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { role: "admin" }, error: null }),
+            }),
+          }),
+        }),
+      };
+    }
+
+    it("approves and updates both tables and sends notification", async () => {
+      vi.mocked(createClient).mockResolvedValue(buildAuthMock() as any);
+
+      const { adminSupabase, insertMock } = buildAdminMock();
+      vi.mocked(createAdminClient).mockReturnValue(adminSupabase as any);
 
       const result = await processEnrollmentAction({ id: "v-1", status: "active" });
+
+      expect(result.success).toBe(true);
+      expect(adminSupabase.from).toHaveBeenCalledWith("enrollment_verifications");
+      expect(adminSupabase.from).toHaveBeenCalledWith("users");
+      expect(adminSupabase.from).toHaveBeenCalledWith("notifications");
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: "student-id",
+          type: "enrollment_approved",
+          title: "Conta aprovada",
+          is_read: false,
+        }),
+      );
+      expect(logAdminAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          adminId: "admin-id",
+          action: "approve_enrollment",
+          targetType: "enrollment",
+          targetId: "v-1",
+        }),
+      );
+      expect(revalidatePath).toHaveBeenCalledWith("/admin/registos");
+    });
+
+    it("rejects and sends notification with rejection note in body", async () => {
+      vi.mocked(createClient).mockResolvedValue(buildAuthMock() as any);
+
+      const { adminSupabase, insertMock } = buildAdminMock();
+      vi.mocked(createAdminClient).mockReturnValue(adminSupabase as any);
+
+      const result = await processEnrollmentAction({
+        id: "v-1",
+        status: "suspended",
+        rejectionNote: "Documentos inválidos",
+      });
+
+      expect(result.success).toBe(true);
+      expect(insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: "student-id",
+          type: "enrollment_rejected",
+          title: "Conta rejeitada",
+          is_read: false,
+        }),
+      );
+      const insertArg = insertMock.mock.calls[0][0];
+      expect(insertArg.body).toContain("Documentos inválidos");
+    });
+
+    it("succeeds even if notification insert fails", async () => {
+      vi.mocked(createClient).mockResolvedValue(buildAuthMock() as any);
+
+      const { adminSupabase } = buildAdminMock({
+        notifInsertError: { message: "notif db error" },
+      });
+      vi.mocked(createAdminClient).mockReturnValue(adminSupabase as any);
+
+      const result = await processEnrollmentAction({ id: "v-1", status: "active" });
+
+      expect(result.success).toBe(true);
+      expect(revalidatePath).toHaveBeenCalledWith("/admin/registos");
+    });
+
+    it("rolls back verification status if user update fails", async () => {
+      vi.mocked(createClient).mockResolvedValue(buildAuthMock() as any);
+
+      const { adminSupabase, verifEq } = buildAdminMock({
+        userUpdateError: { message: "db constraint error" },
+      });
+      vi.mocked(createAdminClient).mockReturnValue(adminSupabase as any);
+
+      const result = await processEnrollmentAction({ id: "v-1", status: "active" });
+
       expect(result.success).toBe(false);
       expect(result.error).toContain("db constraint error");
-      // First call = initial update, second call = rollback to pending
       expect(verifEq).toHaveBeenCalledTimes(2);
       expect(verifEq).toHaveBeenNthCalledWith(2, "id", "v-1");
     });

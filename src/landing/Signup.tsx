@@ -10,13 +10,25 @@ import InstitutionSelect from '@/components/InstitutionSelect';
 import { signup, sendVerificationCode, verifyVerificationCode } from '@/app/auth/actions';
 
 const signupSchema = z.object({
-  studentId: z.string().regex(/^\d{5}$/, 'O ID deve conter exatamente 5 números'),
+  studentId: z.string()
+  .min(1, 'O ID é obrigatório')
+  .refine(
+    (val) => /^\d{5}$/.test(val),
+    {
+      message: 'O ID deve conter exatamente 5 dígitos numéricos (ex: 12345). IDs negativos não são válidos.',
+    }
+  ),
   fullName: z.string()
-    .min(1, 'Obrigatório')
+    .min(3, 'O nome deve ter pelo menos 3 caracteres')
     .regex(/^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/, 'O nome não pode conter números ou símbolos'),
   email: z.string().email('Email inválido'),
-  institution: z.string().min(1,'Instituição inválida'),
-  phone: z.string().regex(/^9\d{8}$/, 'Número inválido, usa o formato 9xx xxx xxx'),
+  institution: z.string().min(1, 'Instituição inválida'),
+  phone: z.string()
+    .optional()
+    .refine(
+      (val) => !val || /^9\d{8}$/.test(val),
+      { message: 'Número inválido, usa o formato 9xx xxx xxx' }
+    ),
   password: z.string().min(6, 'Mínimo 6 caracteres'),
   confirmPassword: z.string().min(1, 'Obrigatório'),
 }).superRefine(({ password, confirmPassword }, ctx) => {
@@ -184,27 +196,31 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
               <h2 className="text-2xl font-extrabold text-foreground mb-1">Criar Conta</h2>
               <p className="text-muted text-sm mb-6">Começa o teu registo como estudante</p>
             </div>
-            
+
             <div className="space-y-4">
               <div>
-                <label htmlFor="studentId" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">ID Estudante</label>
-                <input 
+                <label htmlFor="studentId" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">
+                  ID Estudante
+                </label>
+                <input
                   id="studentId"
-                  placeholder="Ex: 12345" 
+                  placeholder="Ex: 12345"
                   inputMode="numeric"
-                  maxLength={5}
+                  maxLength={6}
                   {...register('studentId')}
                   className={inputClass}
                   aria-invalid={!!errors.studentId}
                 />
-                {errors.studentId && <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.studentId.message}</p>}
+                {errors.studentId && (
+                  <p className="text-error text-xs mt-1 ml-1 font-medium">{errors.studentId.message}</p>
+                )}
               </div>
 
               <div>
                 <label htmlFor="fullName" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Nome Completo</label>
-                <input 
+                <input
                   id="fullName"
-                  placeholder="Teu nome como no BI" 
+                  placeholder="Teu nome como no BI"
                   {...register('fullName')}
                   className={inputClass}
                   aria-invalid={!!errors.fullName}
@@ -213,11 +229,11 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Email Institucional</label>
-                <input 
+                <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Email</label>
+                <input
                   id="email"
                   type="email"
-                  placeholder="nome@instituicao.edu" 
+                  placeholder="nome@email.com"
                   {...register('email')}
                   className={inputClass}
                   aria-invalid={!!errors.email}
@@ -244,6 +260,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
             <button type="button" onClick={handleStep1Next} className={buttonClass} disabled={loading}>Continuar</button>
           </div>
         );
+
       case 2:
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -274,6 +291,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
             </div>
           </div>
         );
+
       case 3:
         return (
           <div className="space-y-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -316,20 +334,23 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
             </button>
           </div>
         );
+
       case 4:
         return (
           <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
               <h2 className="text-2xl font-extrabold text-foreground mb-1">Telemóvel</h2>
-              <p className="text-muted text-sm mb-6">Deixa um número de contacto</p>
+              <p className="text-muted text-sm mb-6">Deixa um número de contacto (opcional)</p>
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Número de Telemóvel</label>
-              <input 
+              <label htmlFor="phone" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">
+                Número de Telemóvel <span className="text-muted font-normal">(opcional)</span>
+              </label>
+              <input
                 id="phone"
                 type="tel"
-                placeholder="9xx xxx xxx" 
+                placeholder="9xx xxx xxx"
                 {...register('phone')}
                 className={inputClass}
                 aria-invalid={!!errors.phone}
@@ -343,6 +364,7 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
             </div>
           </div>
         );
+
       case 5:
         return (
           <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -355,10 +377,10 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
               <div>
                 <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Nova Senha</label>
                 <div className="relative">
-                  <input 
+                  <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Min. 6 caracteres" 
+                    placeholder="Min. 6 caracteres"
                     {...register('password')}
                     className={`${inputClass} pr-11`}
                     aria-invalid={!!errors.password}
@@ -377,10 +399,10 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Confirmar Senha</label>
                 <div className="relative">
-                  <input 
+                  <input
                     id="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="Repete a senha" 
+                    placeholder="Repete a senha"
                     {...register('confirmPassword')}
                     className={`${inputClass} pr-11`}
                     aria-invalid={!!errors.confirmPassword}
@@ -402,23 +424,18 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
 
             <div className="flex gap-3">
               <button type="button" onClick={() => setStep(4)} className={secondaryButtonClass} disabled={loading}>Voltar</button>
-              <button type="button" onClick={handleFinalSubmit} disabled={loading} className="flex-[2] bg-primary text-white py-3 rounded-xl font-bold hover:opacity-90 shadow-md">Criar Conta</button>
+              <button
+                type="button"
+                onClick={handleFinalSubmit}
+                disabled={loading}
+                className="flex-[2] bg-primary text-white py-3 rounded-xl font-bold hover:opacity-90 shadow-md disabled:opacity-60"
+              >
+                {loading ? 'A criar conta...' : 'Criar Conta'}
+              </button>
             </div>
           </div>
         );
-      case 6:
-        return (
-          <div className="space-y-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <div>
-              <h2 className="text-2xl font-extrabold text-foreground mb-1">Tudo Pronto!</h2>
-              <p className="text-muted leading-relaxed">A tua conta Marketu foi criada com sucesso. Bem-vindo à comunidade!</p>
-            </div>
-            <button type="button" onClick={() => router.push(redirectTo || '/home')} className={buttonClass}>Começar agora</button>
-          </div>
-        );
+
       default:
         return null;
     }
@@ -509,3 +526,4 @@ const Signup = ({ onFlipToLogin, onSlideToLogin }: SignupProps) => {
 };
 
 export default Signup;
+

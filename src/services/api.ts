@@ -211,16 +211,6 @@ export const favoritesAPI = {
     apiRequest(`/favorites/${productId}`, { method: 'DELETE' }),
 };
 
-export const cartAPI = {
-  getCart: () => apiRequest('/cart', { method: 'GET' }),
-  addToCart: (itemData: any) =>
-    apiRequest('/cart', { method: 'POST', body: JSON.stringify(itemData) }),
-  updateCartItem: (itemId: string, quantity: number) =>
-    apiRequest(`/cart/${itemId}`, { method: 'PUT', body: JSON.stringify({ quantity }) }),
-  removeFromCart: (itemId: string) =>
-    apiRequest(`/cart/${itemId}`, { method: 'DELETE' }),
-};
-
 export const createSampleProducts = async () => {
   try {
     return apiRequest('/products/dev-seed', {
