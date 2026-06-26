@@ -12,20 +12,9 @@ import Header from '../components/layout/Header';
 import ProductGrid from '../components/produtos/ProductGrid';
 import { useFilters } from '../hooks/useFilters';
 import { useAuthStore } from '../store/authStore';
+import CategoryCards from '@/src/components/CategoryCards';
 
-const CATEGORIES = [
-  { name: 'Material Escolar', color: '#C4B5FD' },
-  { name: 'Tecnologia', color: '#93C5FD' },
-  { name: 'Livros & Apontamentos', color: '#6EE7B7' },
-  { name: 'Roupas & Calçados', color: '#FCA5A5' },
-  { name: 'Saúde & Beleza', color: '#FCD34D' },
-  { name: 'Desporto & Fitness', color: '#A5B4FC' },
-  { name: 'Electrónica', color: '#67E8F9' },
-  { name: 'Serviços', color: '#86EFAC' },
-  { name: 'Outros', color: '#E9D5FF' },
-];
-
-const Home = () => {
+const Home = () => { 
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
   const authUser = useAuthStore((state) => state.user);
@@ -260,52 +249,49 @@ const Home = () => {
 
       {/* Hero section */}
       {!isSearching && (
-        <section className="pt-7 pb-6">
-        <div className="w-full px-10">
-          <div className="bg-[#EDE7FF] px-8 py-20 flex flex-col items-center justify-center gap-8 shadow-sm h-106">
-            <div className="text-center max-w-md">
-              <h1 className="text-2xl md:text-[50px] font-extrabold text-[#2C1A4A] leading-tight">
-                De Estudante Para Estudante
-              </h1>
-              <p className="text-2xl text-gray-600 mt-3 mb-5">
-                Encontre tudo o que você precisa para o seu dia a dia no IPIL com preços que cabem no seu bolso.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <button
-                  onClick={handleCompraJaClick}
-                  className="bg-[#4B187C] hover:bg-[#3E1367] text-white px-5 py-2.5 rounded-full text-2xl font-semibold shadow-sm no-underline transition-all duration-200 hover:shadow-lg"
-                >
-                  Explorar
-                </button>
-              </div>
-            </div>
+  <section className="pt-7 pb-6">
+    <div className="w-full px-10">
+      <div
+        className="relative px-8 py-20 flex flex-col items-center justify-center gap-8 shadow-sm h-106 overflow-hidden"
+        style={{
+          backgroundImage: "url('/assets/hero-bg.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Overlay escuro para legibilidade */}
+        <div className="absolute inset-0 bg-[#2C1A4A]/50" />
+
+        <div className="relative z-10 text-center max-w-md">
+          <h1 className="text-2xl md:text-[50px] font-extrabold text-white leading-tight">
+            De Estudante Para Estudante
+          </h1>
+          <p className="text-2xl text-white/85 mt-3 mb-5">
+            Encontre tudo o que você precisa para o seu dia a dia no IPIL com preços que cabem no seu bolso.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={handleCompraJaClick}
+              className="bg-[#4B187C] hover:bg-[#3E1367] text-white px-5 py-2.5 rounded-full text-2xl font-semibold shadow-sm no-underline transition-all duration-200 hover:shadow-lg"
+            >
+              Explorar
+            </button>
           </div>
         </div>
-        </section>
-      )}
+      </div>
+    </div>
+  </section>
+)}
+
 
       {!isSearching && (
-        <section className="max-w-7xl mx-auto px-4 py-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">
-          Explorar Categorias
-        </h2>
-        <div className="grid grid-cols-3 gap-4">
-          {CATEGORIES.map((cat) => (
-            <div key={cat.name} className="relative overflow-hidden cursor-pointer group w-full h-100">
-              <div 
-                className="w-full h-full transition-transform duration-300 group-hover:scale-105"
-                style={{ backgroundColor: cat.color }}
-              />
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-                <button className="bg-white text-gray-900 font-semibold text-sm px-5 py-2 rounded-full shadow-md hover:bg-[#EDE7FF] hover:text-[#4B187C] transition-colors whitespace-nowrap">
-                  {cat.name}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-        </section>
-      )}
+  <section className="max-w-7xl mx-auto px-4 py-8">
+    <h2 className="text-xl font-bold text-gray-900 mb-6">
+      Explorar Categorias
+    </h2>
+    <CategoryCards />
+  </section>
+)}
 
       {/* Products section */}
       {isSearching && (
@@ -487,7 +473,7 @@ const Home = () => {
                   </p>
                   
                   <button
-                    onClick={() => router.push(`/store/${seller.id}`)}
+                    onClick={() => router.push(`/vendedor/${seller.id}`)}
                     className="mt-3 w-full border border-gray-300 text-gray-700 text-xs font-semibold py-1.5 rounded-full hover:bg-[#EDE7FF] hover:border-[#4B187C] hover:text-[#4B187C] transition-colors"
                   >
                     Ver Loja
